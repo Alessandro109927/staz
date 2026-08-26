@@ -1,0 +1,8 @@
+@use '../../../styles/variables' as *;
+
+.staking-rule-form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  min-width: 0;
+}

@@ -1,0 +1,201 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.odds-range-section {
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+}
+
+.odds-range-section__label {
+  margin: 0;
+  font-size: $font-size-sm;
+}
+
+.odds-range-section__title {
+  margin: 0;
+  font-size: $font-size-xl;
+  line-height: 1.25;
+}
+
+.odds-range-charts__intro {
+  margin: 0;
+  max-width: 52rem;
+  font-size: $font-size-base;
+  color: $color-neutral-600;
+  line-height: 1.6;
+}
+
+.odds-range-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-5;
+
+  @include down($bp-md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.odds-range-chart {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  padding: $space-5 $space-5 $space-4;
+  border-radius: $radius-md;
+  background: $color-neutral-50;
+  border: 1px solid $color-neutral-100;
+  min-width: 0;
+}
+
+.odds-range-chart__title {
+  margin: 0;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-neutral-900;
+  line-height: 1.3;
+}
+
+.odds-range-chart__desc {
+  margin: 0;
+  font-size: $font-size-base;
+  color: $color-neutral-600;
+  line-height: 1.5;
+}
+
+.odds-range-chart__body {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+  margin-top: $space-2;
+  min-height: 220px;
+
+  @include down($bp-lg) {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+  }
+}
+
+.odds-range-chart__well {
+  flex: 1 1 55%;
+  min-width: 0;
+  min-height: 220px;
+}
+
+.odds-range-chart__stats {
+  flex: 1 1 45%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  justify-content: center;
+}
+
+.odds-range-chart__stat {
+  display: flex;
+  align-items: stretch;
+  border-radius: $radius-md;
+  background: $color-surface;
+  border: 1px solid $color-neutral-200;
+  overflow: hidden;
+}
+
+.odds-range-chart__stat-accent {
+  width: 5px;
+  flex-shrink: 0;
+}
+
+.odds-range-chart__stat-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-3 $space-4;
+}
+
+.odds-range-chart__stat-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-neutral-600;
+  line-height: 1.3;
+}
+
+.odds-range-chart__stat-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2;
+}
+
+.odds-range-chart__stat-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-1 $space-3;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  line-height: 1.35;
+  border: 1px solid transparent;
+  white-space: nowrap;
+
+  &--primary {
+    background: $color-primary-light;
+    color: $color-primary;
+    border-color: rgba($color-primary, 0.18);
+  }
+
+  &--success {
+    background: $color-success-light;
+    color: $color-success;
+    border-color: rgba($color-success, 0.2);
+  }
+
+  &--danger {
+    background: $color-danger-light;
+    color: $color-danger;
+    border-color: rgba($color-danger, 0.2);
+  }
+
+  &--percent {
+    background: $color-neutral-100;
+    color: $color-neutral-800;
+    border-color: $color-neutral-200;
+    font-variant-numeric: tabular-nums;
+    min-width: 3rem;
+  }
+}
+
+.odds-range-section__table {
+  margin-top: $space-2;
+
+  .vs-table {
+    font-size: $font-size-base;
+
+    th {
+      font-size: $font-size-sm;
+      padding: $space-4 $space-5;
+    }
+
+    td {
+      padding: $space-5;
+      line-height: 1.5;
+    }
+
+    td:not(:first-child),
+    th:not(:first-child) {
+      text-align: right;
+    }
+  }
+}
+
+.odds-range-section__footnote {
+  margin: 0;
+  padding-top: $space-2;
+  font-size: $font-size-sm;
+  color: $color-neutral-600;
+  line-height: 1.5;
+}

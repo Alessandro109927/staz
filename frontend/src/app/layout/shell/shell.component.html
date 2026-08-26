@@ -1,0 +1,92 @@
+<div class="shell-layout" [class.shell-layout--nav-open]="navOpen">
+  @if (navOpen) {
+    <button
+      type="button"
+      class="shell-backdrop"
+      aria-label="Chiudi menu"
+      (click)="closeNav()"
+    ></button>
+  }
+
+  <aside class="shell-sidenav" [class.shell-sidenav--open]="navOpen">
+    <div class="brand">
+      <div class="brand__icon">
+        <mat-icon>bolt</mat-icon>
+      </div>
+      <span class="brand__name">Staz</span>
+      <button
+        type="button"
+        class="shell-sidenav__close"
+        aria-label="Chiudi menu"
+        (click)="closeNav()"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <nav class="nav-list">
+      <a routerLink="/dashboard" routerLinkActive="active" (click)="closeNav()">
+        <mat-icon>dashboard</mat-icon>
+        <span>Dashboard</span>
+      </a>
+      <a routerLink="/history" routerLinkActive="active" (click)="closeNav()">
+        <mat-icon>history</mat-icon>
+        <span>Storico Scommesse</span>
+      </a>
+      <a routerLink="/monthly-report" routerLinkActive="active" (click)="closeNav()">
+        <mat-icon>calendar_month</mat-icon>
+        <span>Report mensile</span>
+      </a>
+      <a routerLink="/settings" routerLinkActive="active" (click)="closeNav()">
+        <mat-icon>tune</mat-icon>
+        <span>Impostazioni</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-cta">
+      <button
+        type="button"
+        class="vs-btn-primary vs-btn-primary--block"
+        (click)="openNewBet()"
+      >
+        <mat-icon>add</mat-icon>
+        <span>Nuova Scommessa</span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <a routerLink="/settings" fragment="capitale" routerLinkActive="active" (click)="closeNav()">
+        <mat-icon>account_balance_wallet</mat-icon>
+        <span>Analisi Capitale</span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="shell-main">
+    <header class="shell-header">
+      <button
+        type="button"
+        class="shell-menu-btn"
+        aria-label="Apri menu"
+        (click)="toggleNav()"
+      >
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      @if (capital) {
+        <div class="header-balance">
+          <div class="header-balance__value" [class.header-balance__value--negative]="profit < 0">
+            {{ profit >= 0 ? '+' : '' }}€ {{ profit | number: '1.2-2' }}
+          </div>
+          <div class="header-balance__roi" [class.header-balance__roi--negative]="roi < 0">
+            {{ roi >= 0 ? '+' : '' }}{{ roi | number: '1.1-1' }}% ROI
+          </div>
+        </div>
+      }
+    </header>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

@@ -1,0 +1,314 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100vh;
+}
+
+.shell-layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
+  background: $color-background;
+
+  &--nav-open {
+    overflow: hidden;
+  }
+}
+
+.shell-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  border: 0;
+  padding: 0;
+  background: rgba($color-neutral-900, 0.45);
+  cursor: pointer;
+
+  @include down($bp-lg) {
+    display: block;
+  }
+}
+
+.shell-sidenav {
+  width: $sidebar-width;
+  flex-shrink: 0;
+  height: 100vh;
+  background: $color-surface;
+  border-right: 1px solid $color-neutral-200;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  z-index: 50;
+
+  @include down($bp-lg) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: $shadow-lg;
+
+    &--open {
+      transform: translateX(0);
+    }
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-6 $space-5 $space-5;
+  flex-shrink: 0;
+}
+
+.brand__icon {
+  @include flex-center;
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+  background: $color-primary;
+  color: #fff;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.brand__name {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-neutral-900;
+  flex: 1;
+  min-width: 0;
+}
+
+.shell-sidenav__close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-left: auto;
+  border: 1px solid $color-neutral-200;
+  border-radius: $radius-sm;
+  background: $color-neutral-50;
+  color: $color-neutral-600;
+  cursor: pointer;
+
+  @include down($bp-lg) {
+    display: inline-flex;
+  }
+
+  mat-icon {
+    font-size: 1.125rem;
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+}
+
+.nav-list {
+  flex: 1;
+  padding: 0 $space-4;
+  overflow-y: auto;
+  min-height: 0;
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3 $space-4;
+    margin-bottom: $space-1;
+    border-radius: $radius-md;
+    text-decoration: none;
+    color: $color-neutral-600;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    border-left: 3px solid transparent;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    min-width: 0;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    mat-icon {
+      color: $color-neutral-400;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    &:hover {
+      background: $color-neutral-50;
+      color: $color-neutral-800;
+    }
+
+    &.active {
+      background: $color-primary-light;
+      color: $color-primary;
+      border-left-color: $color-primary;
+      font-weight: $font-weight-semibold;
+
+      mat-icon {
+        color: $color-primary;
+      }
+    }
+  }
+}
+
+.sidebar-cta {
+  padding: $space-4;
+  flex-shrink: 0;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.sidebar-footer {
+  padding: $space-4 $space-4 $space-6;
+  border-top: 1px solid $color-neutral-200;
+  flex-shrink: 0;
+  min-width: 0;
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-2 0;
+    text-decoration: none;
+    color: $color-neutral-600;
+    font-size: $font-size-sm;
+    min-width: 0;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: $color-neutral-400;
+      flex-shrink: 0;
+    }
+  }
+}
+
+.shell-main {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: $color-background;
+}
+
+.shell-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $space-3;
+  flex-shrink: 0;
+  height: $header-height;
+  padding: 0 $space-6;
+  background: $color-surface;
+  border-bottom: 1px solid $color-neutral-200;
+  min-width: 0;
+
+  @include down($bp-md) {
+    height: 60px;
+    padding: 0 $space-4;
+    justify-content: space-between;
+  }
+}
+
+.shell-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid $color-neutral-200;
+  border-radius: $radius-md;
+  background: $color-surface;
+  color: $color-neutral-800;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  @include down($bp-lg) {
+    display: inline-flex;
+  }
+
+  mat-icon {
+    font-size: 1.375rem;
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+}
+
+.header-balance {
+  text-align: right;
+  min-width: 0;
+
+  @include down($bp-md) {
+    text-align: right;
+  }
+}
+
+.header-balance__value {
+  font-size: clamp(1rem, 3vw, $font-size-lg);
+  font-weight: $font-weight-bold;
+  color: $color-success;
+  white-space: nowrap;
+
+  &--negative {
+    color: $color-danger;
+  }
+}
+
+.header-balance__roi {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-success;
+
+  &--negative {
+    color: $color-danger;
+  }
+}
+
+.content {
+  flex: 1;
+  width: 100%;
+  padding: $space-6;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-width: 0;
+  box-sizing: border-box;
+
+  @include down($bp-md) {
+    padding: $space-4;
+  }
+
+  @include down($bp-sm) {
+    padding: $space-3;
+  }
+}

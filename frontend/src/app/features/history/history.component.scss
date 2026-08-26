@@ -1,0 +1,445 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.history-page {
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+}
+
+.history-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $space-4;
+  flex-wrap: wrap;
+}
+
+.history-header__title {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  min-width: 0;
+
+  .vs-heading-page {
+    margin: 0;
+  }
+
+  .vs-text-muted {
+    margin: 0;
+  }
+}
+
+.history-filter {
+  min-width: 11rem;
+  max-width: 14rem;
+}
+
+.history-section {
+  overflow: hidden;
+}
+
+.history-table {
+  min-width: 980px;
+  font-size: $font-size-base;
+
+  th {
+    font-size: $font-size-sm;
+    padding: $space-4 $space-5;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: $space-5;
+    vertical-align: middle;
+  }
+
+  th:not(:first-child):not(:nth-child(2)),
+  td:not(:first-child):not(:nth-child(2)) {
+    text-align: right;
+  }
+
+  th:last-child,
+  td:last-child {
+    text-align: center;
+  }
+
+  td:nth-child(6),
+  td:nth-child(7) {
+    .vs-badge,
+    .history-value,
+    .history-empty {
+      vertical-align: middle;
+    }
+  }
+}
+
+.history-row--pending {
+  background: rgba($color-primary, 0.03);
+}
+
+.history-date {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-neutral-600;
+  white-space: nowrap;
+}
+
+.history-events-cell {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  min-width: 12rem;
+  text-align: left;
+}
+
+.history-type {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: $space-1 $space-2;
+  border-radius: $radius-sm;
+  background: $color-primary-light;
+  color: $color-primary;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.history-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.history-events__item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: $space-2;
+  min-height: 1.625rem;
+}
+
+.history-events__name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-neutral-800;
+  line-height: 1.35;
+  flex: 0 1 auto;
+}
+
+.history-events__outcome {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 $space-2;
+  min-height: 1.375rem;
+  border-radius: $radius-sm;
+  background: rgba($color-primary, 0.08);
+  border: 1px solid rgba($color-primary, 0.18);
+  color: $color-primary;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  line-height: 1;
+}
+
+.history-events__single {
+  margin: 0;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-neutral-800;
+  line-height: 1.35;
+}
+
+.history-odds-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 1.375rem;
+  padding: 0 $space-2;
+  border-radius: $radius-sm;
+  background: $color-neutral-100;
+  border: 1px solid $color-neutral-200;
+  color: $color-neutral-600;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.history-quota {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 4.5rem;
+  min-height: 2.75rem;
+  padding: $space-2 $space-3;
+  border-radius: $radius-md;
+  background: $color-primary-light;
+  border: 1px solid rgba($color-primary, 0.2);
+  vertical-align: middle;
+
+  strong {
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+    color: $color-primary;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.history-quota--multi {
+  background: $color-success-light;
+  border-color: rgba($color-success, 0.28);
+
+  strong {
+    color: #15803d;
+  }
+}
+
+.history-quota__tag {
+  font-size: 0.625rem;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $color-success;
+}
+
+.history-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-1 $space-3;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid transparent;
+}
+
+.history-value--stake {
+  background: $color-neutral-100;
+  color: $color-neutral-800;
+  border-color: $color-neutral-200;
+}
+
+.history-value--win {
+  background: $color-success-light;
+  color: $color-success;
+  border-color: rgba($color-success, 0.2);
+}
+
+.history-value--profit {
+  background: $color-success-light;
+  color: $color-success;
+  border-color: rgba($color-success, 0.2);
+}
+
+.history-value--loss {
+  background: $color-danger-light;
+  color: $color-danger;
+  border-color: rgba($color-danger, 0.2);
+}
+
+.history-empty {
+  color: $color-neutral-400;
+}
+
+.history-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  flex-wrap: nowrap;
+  vertical-align: middle;
+}
+
+.history-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-1;
+  min-height: 2rem;
+  padding: $space-1 $space-2;
+  border: 1px solid transparent;
+  border-radius: $radius-sm;
+  background: transparent;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  font-family: inherit;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  mat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
+    line-height: 1;
+  }
+}
+
+.history-action--won {
+  color: $color-success;
+  background: $color-success-light;
+  border-color: rgba($color-success, 0.2);
+
+  &:hover {
+    background: rgba($color-success, 0.18);
+  }
+}
+
+.history-action--lost {
+  color: $color-danger;
+  background: $color-danger-light;
+  border-color: rgba($color-danger, 0.2);
+
+  &:hover {
+    background: rgba($color-danger, 0.14);
+  }
+}
+
+.history-action--edit {
+  width: 2rem;
+  min-width: 2rem;
+  padding: 0;
+  color: $color-neutral-600;
+  border-color: $color-neutral-200;
+  background: $color-neutral-50;
+
+  mat-icon {
+    font-size: 1.125rem;
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  &:hover {
+    color: $color-primary;
+    border-color: rgba($color-primary, 0.25);
+    background: $color-primary-light;
+  }
+}
+
+.history-action--delete {
+  width: 2rem;
+  min-width: 2rem;
+  padding: 0;
+  color: $color-neutral-600;
+
+  mat-icon {
+    font-size: 1.125rem;
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  &:hover {
+    color: $color-danger;
+    background: $color-danger-light;
+  }
+}
+
+.history-empty-state {
+  margin: 0;
+  padding: $space-8 $space-6;
+  text-align: center;
+  color: $color-neutral-600;
+  font-size: $font-size-base;
+}
+
+.history-cards {
+  flex-direction: column;
+  gap: $space-3;
+  padding: $space-4;
+}
+
+.history-card {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  padding: $space-4;
+  border: 1px solid $color-neutral-200;
+  border-radius: $radius-md;
+  background: $color-surface;
+
+  &--pending {
+    background: rgba($color-primary, 0.03);
+    border-color: rgba($color-primary, 0.15);
+  }
+}
+
+.history-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  flex-wrap: wrap;
+}
+
+.history-card__events {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.history-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-3;
+  margin: 0;
+
+  @include down($bp-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.history-card__metric {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  min-width: 0;
+
+  dt {
+    margin: 0;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $color-neutral-600;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.history-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-2;
+  padding-top: $space-2;
+  border-top: 1px solid $color-neutral-100;
+}
+
+@include down($bp-lg) {
+  .history-header {
+    align-items: stretch;
+  }
+
+  .history-filter {
+    max-width: none;
+    width: 100%;
+  }
+}

@@ -1,0 +1,28 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.setup-card {
+  max-width: 480px;
+  margin: 2rem auto;
+  padding: 0 $space-4;
+
+  @include down($bp-sm) {
+    margin: $space-4 auto;
+    padding: 0 $space-3;
+  }
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.hint {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.9rem;
+}
+
+.reset-toggle {
+  display: block;
+  margin-bottom: 1rem;
+}

@@ -1,0 +1,37 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+:host {
+  display: block;
+}
+
+.edit-bet-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: $space-3;
+  margin-bottom: $space-4;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.edit-bet-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: $space-2;
+
+  @include down($bp-sm) {
+    justify-content: flex-end;
+  }
+}
+
+.edit-bet-actions__spacer {
+  flex: 1;
+}
+
+.edit-bet-delete {
+  color: $color-danger;
+}

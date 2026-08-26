@@ -1,0 +1,224 @@
+<div class="vs-page history-page">
+  <header class="history-header">
+    <div class="history-header__title">
+      <h1 class="vs-heading-page">Storico scommesse</h1>
+      <p class="vs-text-muted">Tutte le giocate, esiti e movimenti di capitale.</p>
+    </div>
+
+    <label class="vs-field history-filter">
+      <span class="vs-field__label">Filtro stato</span>
+      <select class="vs-input" [formControl]="statusFilter">
+        <option value="ALL">Tutte</option>
+        <option value="PENDING">In attesa</option>
+        <option value="WON">Vinte</option>
+        <option value="LOST">Perse</option>
+      </select>
+    </label>
+  </header>
+
+  <section class="vs-card--flush history-section">
+    @if (bets.length) {
+      <div class="table-scroll vs-hide-mobile">
+        <table class="vs-table history-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Eventi</th>
+              <th>Quota</th>
+              <th>Puntata</th>
+              <th>Vincita</th>
+              <th>Stato</th>
+              <th>Profitto</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (bet of bets; track bet.id) {
+              <tr [class.history-row--pending]="bet.status === 'PENDING'">
+                <td>
+                  <span class="history-date">{{ bet.betDate | date: 'dd/MM/yyyy' }}</span>
+                </td>
+                <td>
+                  <div class="history-events-cell">
+                    <span class="history-type">{{ betTypeLabel(bet) }}</span>
+                    @if (bet.events?.length) {
+                      <ul class="history-events">
+                        @for (event of bet.events; track event.id) {
+                          <li class="history-events__item">
+                            <span class="history-events__name">{{ event.eventName }}</span>
+                            @if (event.outcome) {
+                              <span class="history-events__outcome">{{ event.outcome }}</span>
+                            }
+                            <span class="history-odds-chip">{{ event.odds }}</span>
+                          </li>
+                        }
+                      </ul>
+                    } @else {
+                      <p class="history-events__single">{{ bet.eventName }}</p>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div
+                    class="history-quota"
+                    [class.history-quota--multi]="(bet.events?.length ?? 0) > 1"
+                  >
+                    <strong>{{ bet.odds }}</strong>
+                    @if ((bet.events?.length ?? 0) > 1) {
+                      <span class="history-quota__tag">combinata</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span class="history-value history-value--stake">€ {{ bet.amountStaked }}</span>
+                </td>
+                <td>
+                  <span class="history-value history-value--win">
+                    € {{ potentialWin(bet) | number: '1.2-2' }}
+                  </span>
+                </td>
+                <td>
+                  <span [class]="statusBadgeClass(bet.status)">
+                    <mat-icon class="vs-icon-sm">{{ statusIcon(bet.status) }}</mat-icon>
+                    {{ statusLabel(bet.status) }}
+                  </span>
+                </td>
+                <td>
+                  @if (bet.capitalDelta != null) {
+                    <span
+                      class="history-value"
+                      [class.history-value--profit]="+bet.capitalDelta >= 0"
+                      [class.history-value--loss]="+bet.capitalDelta < 0"
+                    >
+                      {{ +bet.capitalDelta >= 0 ? '+' : '' }}€ {{ bet.capitalDelta }}
+                    </span>
+                  } @else {
+                    <span class="history-empty">—</span>
+                  }
+                </td>
+                <td>
+                  <div class="history-actions">
+                    <button
+                      type="button"
+                      class="history-action history-action--edit"
+                      aria-label="Modifica scommessa"
+                      (click)="editBet(bet)"
+                    >
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button
+                      type="button"
+                      class="history-action history-action--delete"
+                      aria-label="Elimina scommessa"
+                      (click)="deleteBet(bet)"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="history-cards vs-show-mobile-flex">
+        @for (bet of bets; track bet.id) {
+          <article class="history-card" [class.history-card--pending]="bet.status === 'PENDING'">
+            <header class="history-card__head">
+              <span class="history-date">{{ bet.betDate | date: 'dd/MM/yyyy' }}</span>
+              <span [class]="statusBadgeClass(bet.status)">
+                <mat-icon class="vs-icon-sm">{{ statusIcon(bet.status) }}</mat-icon>
+                {{ statusLabel(bet.status) }}
+              </span>
+            </header>
+
+            <div class="history-card__events">
+              <span class="history-type">{{ betTypeLabel(bet) }}</span>
+              @if (bet.events?.length) {
+                <ul class="history-events">
+                  @for (event of bet.events; track event.id) {
+                    <li class="history-events__item">
+                      <span class="history-events__name">{{ event.eventName }}</span>
+                      @if (event.outcome) {
+                        <span class="history-events__outcome">{{ event.outcome }}</span>
+                      }
+                      <span class="history-odds-chip">{{ event.odds }}</span>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="history-events__single">{{ bet.eventName }}</p>
+              }
+            </div>
+
+            <dl class="history-card__metrics">
+              <div class="history-card__metric">
+                <dt>Quota</dt>
+                <dd>
+                  <span
+                    class="history-quota"
+                    [class.history-quota--multi]="(bet.events?.length ?? 0) > 1"
+                  >
+                    <strong>{{ bet.odds }}</strong>
+                  </span>
+                </dd>
+              </div>
+              <div class="history-card__metric">
+                <dt>Puntata</dt>
+                <dd>
+                  <span class="history-value history-value--stake">€ {{ bet.amountStaked }}</span>
+                </dd>
+              </div>
+              <div class="history-card__metric">
+                <dt>Vincita</dt>
+                <dd>
+                  <span class="history-value history-value--win">
+                    € {{ potentialWin(bet) | number: '1.2-2' }}
+                  </span>
+                </dd>
+              </div>
+              <div class="history-card__metric">
+                <dt>Profitto</dt>
+                <dd>
+                  @if (bet.capitalDelta != null) {
+                    <span
+                      class="history-value"
+                      [class.history-value--profit]="+bet.capitalDelta >= 0"
+                      [class.history-value--loss]="+bet.capitalDelta < 0"
+                    >
+                      {{ +bet.capitalDelta >= 0 ? '+' : '' }}€ {{ bet.capitalDelta }}
+                    </span>
+                  } @else {
+                    <span class="history-empty">—</span>
+                  }
+                </dd>
+              </div>
+            </dl>
+
+            <footer class="history-card__actions">
+              <button
+                type="button"
+                class="history-action history-action--edit"
+                aria-label="Modifica scommessa"
+                (click)="editBet(bet)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                type="button"
+                class="history-action history-action--delete"
+                aria-label="Elimina scommessa"
+                (click)="deleteBet(bet)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </footer>
+          </article>
+        }
+      </div>
+    } @else {
+      <p class="history-empty-state">Nessuna scommessa trovata.</p>
+    }
+  </section>
+</div>

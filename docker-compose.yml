@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: staz-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: staz
+      POSTGRES_PASSWORD: staz
+      POSTGRES_DB: staz
+    ports:
+      - '5433:5432'
+    volumes:
+      - staz_pgdata:/var/lib/postgresql/data
+
+volumes:
+  staz_pgdata:

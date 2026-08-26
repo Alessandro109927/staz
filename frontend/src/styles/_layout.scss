@@ -1,0 +1,93 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.vs-page {
+  width: 100%;
+  min-width: 0;
+}
+
+.vs-page-header {
+  @include flex-between;
+  align-items: flex-start;
+  gap: $space-4;
+  margin-bottom: $space-6;
+  flex-wrap: wrap;
+}
+
+.vs-page-header__actions {
+  display: flex;
+  gap: $space-2;
+  flex-wrap: wrap;
+}
+
+.vs-grid-kpi {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: $space-4;
+  margin-bottom: $space-6;
+  align-items: stretch;
+
+  @include down($bp-lg) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vs-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $space-4;
+
+  @include down($bp-md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.vs-hide-mobile {
+  @include down($bp-lg) {
+    display: none !important;
+  }
+}
+
+.vs-show-mobile {
+  display: none !important;
+
+  @include down($bp-lg) {
+    display: block !important;
+  }
+}
+
+.vs-show-mobile-flex {
+  display: none !important;
+
+  @include down($bp-lg) {
+    display: flex !important;
+  }
+}
+
+.vs-flex-row {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+}
+
+.vs-flex-between {
+  @include flex-between;
+}
+
+.vs-mt-4 {
+  margin-top: $space-4;
+}
+
+.vs-mb-4 {
+  margin-bottom: $space-4;
+}
+
+.vs-gap-2 {
+  gap: $space-2;
+}
