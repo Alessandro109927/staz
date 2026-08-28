@@ -55,10 +55,23 @@
     </div>
 
     <div class="sidebar-footer">
+      @if (user) {
+        <div class="sidebar-user">
+          <mat-icon>person</mat-icon>
+          <div class="sidebar-user__info">
+            <span class="sidebar-user__name">{{ user.firstName }} {{ user.lastName }}</span>
+            <span class="sidebar-user__username">{{ user.username }}</span>
+          </div>
+        </div>
+      }
       <a routerLink="/settings" fragment="capitale" routerLinkActive="active" (click)="closeNav()">
         <mat-icon>account_balance_wallet</mat-icon>
         <span>Analisi Capitale</span>
       </a>
+      <button type="button" class="sidebar-logout" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Esci</span>
+      </button>
     </div>
   </aside>
 

@@ -1,0 +1,58 @@
+<div class="auth-page">
+  <div class="auth-card vs-card">
+    <div class="auth-card__brand">
+      <div class="auth-card__icon">
+        <mat-icon>bolt</mat-icon>
+      </div>
+      <h1>Accedi a Staz</h1>
+      <p>Inserisci username e password per continuare</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+      <div class="vs-field">
+        <label class="vs-field__label" for="username">Username</label>
+        <input
+          id="username"
+          class="vs-input"
+          type="text"
+          autocomplete="username"
+          formControlName="username"
+          placeholder="Il tuo username o email"
+        />
+      </div>
+
+      <div class="vs-field">
+        <label class="vs-field__label" for="password">Password</label>
+        <input
+          id="password"
+          class="vs-input"
+          type="password"
+          autocomplete="current-password"
+          formControlName="password"
+          placeholder="••••••••"
+        />
+      </div>
+
+      @if (errorMessage) {
+        <p class="auth-form__error">{{ errorMessage }}</p>
+      }
+
+      <button
+        type="submit"
+        class="vs-btn-primary vs-btn-primary--block"
+        [disabled]="form.invalid || loading"
+      >
+        @if (loading) {
+          Accesso in corso...
+        } @else {
+          Accedi
+        }
+      </button>
+    </form>
+
+    <p class="auth-card__footer">
+      Non hai un account?
+      <a routerLink="/register">Registrati</a>
+    </p>
+  </div>
+</div>

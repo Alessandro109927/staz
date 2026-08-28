@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: staz-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - staz_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - staz
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: staz-backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET}
+      LEGACY_OWNER_EMAIL: ${LEGACY_OWNER_EMAIL:-}
+      LEGACY_OWNER_FIRST_NAME: ${LEGACY_OWNER_FIRST_NAME:-}
+      LEGACY_OWNER_LAST_NAME: ${LEGACY_OWNER_LAST_NAME:-}
+      LEGACY_OWNER_USERNAME: ${LEGACY_OWNER_USERNAME:-}
+      LEGACY_OWNER_PASSWORD: ${LEGACY_OWNER_PASSWORD:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - staz
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: staz-frontend
+    restart: unless-stopped
+    ports:
+      - '${HTTP_PORT:-80}:80'
+    depends_on:
+      - backend
+    networks:
+      - staz
+
+volumes:
+  staz_pgdata:
+
+networks:
+  staz:
+    driver: bridge

@@ -3,8 +3,9 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { DecimalPipe } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 import { BetChangeService } from '../../core/services/bet-change.service';
-import { Capital, profitFromCapital, startingCapitalValue } from '../../core/models';
+import { Capital, User, profitFromCapital, startingCapitalValue } from '../../core/models';
 import { NewBetDialogService } from '../../features/new-bet/new-bet-dialog.service';
 
 @Component({
@@ -22,11 +23,13 @@ import { NewBetDialogService } from '../../features/new-bet/new-bet-dialog.servi
 })
 export class ShellComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly auth = inject(AuthService);
   private readonly newBetDialog = inject(NewBetDialogService);
   private readonly betChange = inject(BetChangeService);
 
   capital: Capital | null = null;
   navOpen = false;
+  user: User | null = this.auth.currentUser();
 
   ngOnInit(): void {
     this.loadCapital();
@@ -51,6 +54,11 @@ export class ShellComponent implements OnInit {
   openNewBet(): void {
     this.closeNav();
     this.newBetDialog.open().subscribe();
+  }
+
+  logout(): void {
+    this.closeNav();
+    this.auth.logout();
   }
 
   private loadCapital(): void {

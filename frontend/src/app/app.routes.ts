@@ -1,27 +1,32 @@
-import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
-import { catchError, map, of } from 'rxjs';
-import { ApiService } from './core/services/api.service';
+import { authGuard } from './core/guards/auth.guard';
+import { capitalGuard } from './core/guards/capital.guard';
+import { guestGuard } from './core/guards/guest.guard';
 import { ShellComponent } from './layout/shell/shell.component';
 
 export const routes: Routes = [
   {
+    path: 'login',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'register',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/register.component').then((m) => m.RegisterComponent),
+  },
+  {
     path: 'setup',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/setup/setup.component').then((m) => m.SetupComponent),
   },
   {
     path: '',
     component: ShellComponent,
-    canActivate: [
-      () => {
-        const api = inject(ApiService);
-        return api.getCapital().pipe(
-          map((capital) => (capital ? true : '/setup')),
-          catchError(() => of(true)),
-        );
-      },
-    ],
+    canActivate: [authGuard, capitalGuard],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       {

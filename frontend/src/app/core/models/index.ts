@@ -1,5 +1,18 @@
 export type BetStatus = 'PENDING' | 'WON' | 'LOST';
 
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  user: User;
+}
+
 export interface Capital {
   id: number;
   initialCapital: string;
@@ -23,10 +36,13 @@ export interface StakingRule {
   stakePercentage: string;
 }
 
+export type EventResultStatus = 'WON' | 'LOST' | null;
+
 export interface BetEventItem {
   eventName: string;
   outcome: string;
   odds: number;
+  resultStatus?: EventResultStatus;
 }
 
 export interface BetEvent {
@@ -35,6 +51,7 @@ export interface BetEvent {
   outcome: string | null;
   odds: string;
   sortOrder: number;
+  resultStatus: EventResultStatus;
 }
 
 export interface StakePreview {

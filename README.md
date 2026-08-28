@@ -8,7 +8,16 @@ Applicazione web per la gestione di scommesse calcistiche con calcolo automatico
 - **Backend**: NestJS + TypeORM
 - **Database**: PostgreSQL (Docker)
 
-## Avvio rapido
+## Deploy produzione (Docker / VPS OVH)
+
+Vedi **[DEPLOY.md](./DEPLOY.md)** per la guida completa con Docker Compose, HTTPS e GitHub Actions.
+
+```bash
+cp .env.production.example .env.production   # configura password e JWT
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+```
+
+## Avvio rapido (sviluppo locale)
 
 ### 1. Database
 

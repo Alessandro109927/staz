@@ -1,0 +1,90 @@
+<div class="auth-page">
+  <div class="auth-card vs-card">
+    <div class="auth-card__brand">
+      <div class="auth-card__icon">
+        <mat-icon>person_add</mat-icon>
+      </div>
+      <h1>Crea il tuo account</h1>
+      <p>Registrati per iniziare a gestire le tue scommesse</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+      <div class="auth-form__row">
+        <div class="vs-field">
+          <label class="vs-field__label" for="firstName">Nome</label>
+          <input
+            id="firstName"
+            class="vs-input"
+            type="text"
+            autocomplete="given-name"
+            formControlName="firstName"
+            placeholder="Mario"
+          />
+        </div>
+
+        <div class="vs-field">
+          <label class="vs-field__label" for="lastName">Cognome</label>
+          <input
+            id="lastName"
+            class="vs-input"
+            type="text"
+            autocomplete="family-name"
+            formControlName="lastName"
+            placeholder="Rossi"
+          />
+        </div>
+      </div>
+
+      <div class="vs-field">
+        <label class="vs-field__label" for="email">Email</label>
+        <input
+          id="email"
+          class="vs-input"
+          type="email"
+          autocomplete="email"
+          formControlName="email"
+          placeholder="mario.rossi@email.com"
+        />
+      </div>
+
+      <div class="vs-field">
+        <label class="vs-field__label" for="password">Password</label>
+        <input
+          id="password"
+          class="vs-input"
+          type="password"
+          autocomplete="new-password"
+          formControlName="password"
+          placeholder="Minimo 6 caratteri"
+        />
+      </div>
+
+      @if (errorMessage) {
+        <p class="auth-form__error">{{ errorMessage }}</p>
+      }
+
+      @if (createdUsername) {
+        <p class="auth-form__success">
+          Account creato. Il tuo username è <strong>{{ createdUsername }}</strong>
+        </p>
+      }
+
+      <button
+        type="submit"
+        class="vs-btn-primary vs-btn-primary--block"
+        [disabled]="form.invalid || loading"
+      >
+        @if (loading) {
+          Registrazione in corso...
+        } @else {
+          Registrati
+        }
+      </button>
+    </form>
+
+    <p class="auth-card__footer">
+      Hai già un account?
+      <a routerLink="/login">Accedi</a>
+    </p>
+  </div>
+</div>

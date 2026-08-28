@@ -42,17 +42,15 @@
                   <div class="history-events-cell">
                     <span class="history-type">{{ betTypeLabel(bet) }}</span>
                     @if (bet.events?.length) {
-                      <ul class="history-events">
+                      <div class="history-events-list">
                         @for (event of bet.events; track event.id) {
-                          <li class="history-events__item">
-                            <span class="history-events__name">{{ event.eventName }}</span>
-                            @if (event.outcome) {
-                              <span class="history-events__outcome">{{ event.outcome }}</span>
-                            }
-                            <span class="history-odds-chip">{{ event.odds }}</span>
-                          </li>
+                          <app-bet-event-result-row
+                            [betId]="bet.id"
+                            [event]="event"
+                            (resultChanged)="onEventResultChanged()"
+                          />
                         }
-                      </ul>
+                      </div>
                     } @else {
                       <p class="history-events__single">{{ bet.eventName }}</p>
                     }
@@ -136,17 +134,15 @@
             <div class="history-card__events">
               <span class="history-type">{{ betTypeLabel(bet) }}</span>
               @if (bet.events?.length) {
-                <ul class="history-events">
+                <div class="history-events-list">
                   @for (event of bet.events; track event.id) {
-                    <li class="history-events__item">
-                      <span class="history-events__name">{{ event.eventName }}</span>
-                      @if (event.outcome) {
-                        <span class="history-events__outcome">{{ event.outcome }}</span>
-                      }
-                      <span class="history-odds-chip">{{ event.odds }}</span>
-                    </li>
+                    <app-bet-event-result-row
+                      [betId]="bet.id"
+                      [event]="event"
+                      (resultChanged)="onEventResultChanged()"
+                    />
                   }
-                </ul>
+                </div>
               } @else {
                 <p class="history-events__single">{{ bet.eventName }}</p>
               }

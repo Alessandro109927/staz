@@ -7,13 +7,14 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/services/api.service';
 import { BetChangeService } from '../../core/services/bet-change.service';
 import { Bet, BetStatus, betPotentialWin } from '../../core/models';
+import { BetEventResultRowComponent } from '../../shared/components/bet-event-result-row/bet-event-result-row.component';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { EditBetDialogService } from './edit-bet-dialog.service';
 
 @Component({
   selector: 'app-history',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatIconModule, MatDialogModule, MatSnackBarModule],
+  imports: [CommonModule, ReactiveFormsModule, MatIconModule, MatDialogModule, MatSnackBarModule, BetEventResultRowComponent],
   templateUrl: './history.component.html',
   styleUrl: './history.component.scss',
 })
@@ -38,6 +39,11 @@ export class HistoryComponent implements OnInit {
     this.api
       .getBets(status && status !== 'ALL' ? { status } : undefined)
       .subscribe((bets) => (this.bets = bets));
+  }
+
+  onEventResultChanged(): void {
+    this.betChange.notifyChanged();
+    this.loadBets();
   }
 
   editBet(bet: Bet): void {

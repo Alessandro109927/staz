@@ -1,0 +1,103 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-6 $space-4;
+  background:
+    radial-gradient(circle at top right, rgba($color-primary, 0.08), transparent 45%),
+    $color-background;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+}
+
+.auth-card__brand {
+  text-align: center;
+  margin-bottom: $space-6;
+
+  h1 {
+    margin: $space-4 0 $space-2;
+    font-size: $font-size-xl;
+    color: $color-neutral-900;
+  }
+
+  p {
+    margin: 0;
+    color: $color-neutral-600;
+    font-size: $font-size-sm;
+  }
+}
+
+.auth-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: $radius-full;
+  background: $color-primary-light;
+  color: $color-primary;
+
+  mat-icon {
+    font-size: 1.75rem;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+.auth-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-3;
+
+  @include down($bp-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.auth-form__error {
+  margin: 0;
+  padding: $space-3;
+  border-radius: $radius-sm;
+  background: $color-danger-light;
+  color: $color-danger;
+  font-size: $font-size-sm;
+}
+
+.auth-form__success {
+  margin: 0;
+  padding: $space-3;
+  border-radius: $radius-sm;
+  background: $color-success-light;
+  color: $color-success;
+  font-size: $font-size-sm;
+}
+
+.auth-card__footer {
+  margin: $space-6 0 0;
+  text-align: center;
+  color: $color-neutral-600;
+  font-size: $font-size-sm;
+
+  a {
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

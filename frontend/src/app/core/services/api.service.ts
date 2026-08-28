@@ -121,6 +121,17 @@ export class ApiService {
     return this.http.delete<{ deleted: boolean }>(`${this.baseUrl}/bets/${id}`);
   }
 
+  updateEventResult(
+    betId: number,
+    eventId: number,
+    result: 'WON' | 'LOST' | null,
+  ): Observable<Bet> {
+    return this.http.patch<Bet>(
+      `${this.baseUrl}/bets/${betId}/events/${eventId}/result`,
+      { result },
+    );
+  }
+
   getBetStats(): Observable<BetStats> {
     return this.http.get<BetStats>(`${this.baseUrl}/bets/stats`);
   }
