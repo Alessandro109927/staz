@@ -10,6 +10,7 @@ import { BetStatus } from '../common/enums/bet-status.enum';
 import { formatMoney, parseMoney } from '../common/decimal.util';
 import { StakingRulesService } from '../staking-rules/staking-rules.service';
 import { normalizeEvents } from './bet.helpers';
+import { deriveBetStatusFromEvents } from './event-result.helpers';
 import {
   accumulateBetStats,
   buildMonthlyReport,
@@ -24,6 +25,7 @@ import {
   SettleBetDto,
   UpdateBetDto,
 } from './dto/bet.dto';
+import { UpdateEventResultDto } from './dto/update-event-result.dto';
 import { BetEvent } from './entities/bet-event.entity';
 import { Bet } from './entities/bet.entity';
 
@@ -38,10 +40,11 @@ export class BetsService {
     private readonly stakingRulesService: StakingRulesService,
   ) {}
 
-  async calculateStake(dto: CalculateStakeDto) {
+  async calculateStake(userId: number, dto: CalculateStakeDto) {
     const { combinedOdds } = normalizeEvents(dto.events);
-    const initialCapital = await this.capitalService.getInitialCapitalValue();
+    const initialCapital = await this.capitalService.getInitialCapitalValue(userId);
     const calculation = await this.stakingRulesService.calculateStake(
+      userId,
       combinedOdds,
       initialCapital,
     );
@@ -57,11 +60,12 @@ export class BetsService {
     };
   }
 
-  async create(dto: CreateBetDto) {
+  async create(userId: number, dto: CreateBetDto) {
     const normalized = normalizeEvents(dto.events);
-    const initialCapital = await this.capitalService.getInitialCapitalValue();
-    const currentCapital = await this.capitalService.getCurrentCapitalValue();
+    const initialCapital = await this.capitalService.getInitialCapitalValue(userId);
+    const currentCapital = await this.capitalService.getCurrentCapitalValue(userId);
     const calculation = await this.stakingRulesService.calculateStake(
+      userId,
       normalized.combinedOdds,
       initialCapital,
     );
@@ -84,6 +88,7 @@ export class BetsService {
     }
 
     const bet = this.betRepository.create({
+      userId,
       eventName: normalized.eventSummary,
       odds: formatMoney(normalized.combinedOdds),
       stakePercentageApplied: stakePercentage,
@@ -104,17 +109,54 @@ export class BetsService {
           outcome: event.outcome,
           odds: event.odds,
           sortOrder: event.sortOrder,
+          resultStatus: event.resultStatus,
         }),
       ),
     });
 
     const saved = await this.betRepository.save(bet);
-    const withEvents = await this.findBetWithEvents(saved.id);
+    const withEvents = await this.findBetWithEvents(userId, saved.id);
     return this.mapBet(withEvents!);
   }
 
-  async findAll(query: ListBetsQueryDto) {
-    const where: FindOptionsWhere<Bet> = {};
+  async updateEventResult(
+    userId: number,
+    betId: number,
+    eventId: number,
+    dto: UpdateEventResultDto,
+  ) {
+    const bet = await this.findBetWithEvents(userId, betId);
+    if (!bet) {
+      throw new NotFoundException(`Scommessa ${betId} non trovata`);
+    }
+
+    const event = bet.events.find((item) => item.id === eventId);
+    if (!event) {
+      throw new NotFoundException(`Evento ${eventId} non trovato`);
+    }
+
+    event.resultStatus = dto.result ?? null;
+    await this.betEventRepository.save(event);
+
+    const previousStatus = bet.status;
+    const nextStatus = deriveBetStatusFromEvents(bet.events);
+    bet.status = nextStatus;
+
+    if (nextStatus === BetStatus.PENDING) {
+      bet.settledAt = null;
+    } else if (previousStatus === BetStatus.PENDING || nextStatus !== previousStatus) {
+      bet.settledAt = new Date();
+    }
+
+    await this.betRepository.save(bet);
+    await this.recalculateCapitalChain(userId);
+
+    const withEvents = await this.findBetWithEvents(userId, betId);
+    return this.mapBet(withEvents!);
+  }
+
+  async findAll(userId: number, query: ListBetsQueryDto) {
+    const where: FindOptionsWhere<Bet> = { userId };
 
     if (query.status) {
       where.status = query.status;
@@ -137,16 +179,16 @@ export class BetsService {
     return bets.map((bet) => this.mapBet(bet));
   }
 
-  async findOne(id: number) {
-    const bet = await this.findBetWithEvents(id);
+  async findOne(userId: number, id: number) {
+    const bet = await this.findBetWithEvents(userId, id);
     if (!bet) {
       throw new NotFoundException(`Scommessa ${id} non trovata`);
     }
     return this.mapBet(bet);
   }
 
-  async settle(id: number, dto: SettleBetDto) {
-    const bet = await this.findBetWithEvents(id);
+  async settle(userId: number, id: number, dto: SettleBetDto) {
+    const bet = await this.findBetWithEvents(userId, id);
     if (!bet) {
       throw new NotFoundException(`Scommessa ${id} non trovata`);
     }
@@ -159,20 +201,20 @@ export class BetsService {
     bet.settledAt = new Date();
 
     await this.betRepository.save(bet);
-    await this.recalculateCapitalChain();
+    await this.recalculateCapitalChain(userId);
 
-    const withEvents = await this.findBetWithEvents(id);
+    const withEvents = await this.findBetWithEvents(userId, id);
     return this.mapBet(withEvents!);
   }
 
-  async update(id: number, dto: UpdateBetDto) {
-    const bet = await this.findBetWithEvents(id);
+  async update(userId: number, id: number, dto: UpdateBetDto) {
+    const bet = await this.findBetWithEvents(userId, id);
     if (!bet) {
       throw new NotFoundException(`Scommessa ${id} non trovata`);
     }
 
     const normalized = normalizeEvents(dto.events);
-    const initialCapital = await this.capitalService.getInitialCapitalValue();
+    const initialCapital = await this.capitalService.getInitialCapitalValue(userId);
     const previousStatus = bet.status;
 
     let stakePercentage = formatMoney(
@@ -214,45 +256,52 @@ export class BetsService {
     }
 
     await this.betEventRepository.delete({ betId: id });
+    const previousResults = new Map(
+      bet.events.map((event) => [event.sortOrder, event.resultStatus]),
+    );
+
     bet.events = normalized.formattedEvents.map((event) =>
       this.betEventRepository.create({
         eventName: event.eventName,
         outcome: event.outcome,
         odds: event.odds,
         sortOrder: event.sortOrder,
+        resultStatus:
+          event.resultStatus ?? previousResults.get(event.sortOrder) ?? null,
       }),
     );
 
     await this.betRepository.save(bet);
-    await this.recalculateCapitalChain();
+    await this.recalculateCapitalChain(userId);
 
-    const withEvents = await this.findBetWithEvents(id);
+    const withEvents = await this.findBetWithEvents(userId, id);
     return this.mapBet(withEvents!);
   }
 
-  async remove(id: number) {
-    const bet = await this.betRepository.findOne({ where: { id } });
+  async remove(userId: number, id: number) {
+    const bet = await this.betRepository.findOne({ where: { id, userId } });
     if (!bet) {
       throw new NotFoundException(`Scommessa ${id} non trovata`);
     }
 
     await this.betRepository.remove(bet);
-    await this.recalculateCapitalChain();
+    await this.recalculateCapitalChain(userId);
     return { deleted: true };
   }
 
-  async getStats() {
+  async getStats(userId: number) {
     const [won, lost, pending] = await Promise.all([
-      this.betRepository.count({ where: { status: BetStatus.WON } }),
-      this.betRepository.count({ where: { status: BetStatus.LOST } }),
-      this.betRepository.count({ where: { status: BetStatus.PENDING } }),
+      this.betRepository.count({ where: { userId, status: BetStatus.WON } }),
+      this.betRepository.count({ where: { userId, status: BetStatus.LOST } }),
+      this.betRepository.count({ where: { userId, status: BetStatus.PENDING } }),
     ]);
 
     return { won, lost, pending, total: won + lost + pending };
   }
 
-  async getOddsRangeStats() {
+  async getOddsRangeStats(userId: number) {
     const bets = await this.betRepository.find({
+      where: { userId },
       relations: { events: true },
       order: { betDate: 'DESC', id: 'DESC' },
     });
@@ -265,8 +314,9 @@ export class BetsService {
     return formatOddsRangeStats(accumulators);
   }
 
-  async getAvailableMonths() {
+  async getAvailableMonths(userId: number) {
     const bets = await this.betRepository.find({
+      where: { userId },
       select: { betDate: true },
       order: { betDate: 'DESC' },
     });
@@ -274,8 +324,9 @@ export class BetsService {
     return listBetMonths(bets);
   }
 
-  async getMonthlyReport(year: number, month: number) {
+  async getMonthlyReport(userId: number, year: number, month: number) {
     const bets = await this.betRepository.find({
+      where: { userId },
       relations: { events: true },
       order: { betDate: 'DESC', id: 'DESC' },
     });
@@ -283,10 +334,11 @@ export class BetsService {
     return buildMonthlyReport(bets, year, month);
   }
 
-  private async recalculateCapitalChain(): Promise<void> {
-    let running = await this.capitalService.getStartingCapitalValue();
+  private async recalculateCapitalChain(userId: number): Promise<void> {
+    let running = await this.capitalService.getStartingCapitalValue(userId);
 
     const bets = await this.betRepository.find({
+      where: { userId },
       order: { betDate: 'ASC', id: 'ASC' },
     });
 
@@ -313,12 +365,12 @@ export class BetsService {
       await this.betRepository.save(bets);
     }
 
-    await this.capitalService.updateCurrentCapital(running.toFixed(2));
+    await this.capitalService.updateCurrentCapital(userId, running.toFixed(2));
   }
 
-  private async findBetWithEvents(id: number) {
+  private async findBetWithEvents(userId: number, id: number) {
     return this.betRepository.findOne({
-      where: { id },
+      where: { id, userId },
       relations: { events: true },
       order: { events: { sortOrder: 'ASC' } },
     });
@@ -337,6 +389,7 @@ export class BetsService {
         outcome: event.outcome,
         odds: formatMoney(event.odds),
         sortOrder: event.sortOrder,
+        resultStatus: event.resultStatus,
       })) ?? [];
 
     return {

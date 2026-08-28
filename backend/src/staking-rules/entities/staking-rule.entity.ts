@@ -5,6 +5,9 @@ export class StakingRule {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ name: 'user_id', type: 'int', nullable: true })
+  userId: number | null;
+
   @Column({ type: 'decimal', precision: 8, scale: 2, name: 'min_odds' })
   minOdds: string;
 

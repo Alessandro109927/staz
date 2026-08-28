@@ -10,6 +10,9 @@ export class Capital {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ name: 'user_id', type: 'int', unique: true, nullable: true })
+  userId: number | null;
+
   @Column({ type: 'decimal', precision: 14, scale: 2 })
   initialCapital: string;
 

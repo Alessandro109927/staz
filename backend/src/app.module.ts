@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
 import { BetsModule } from './bets/bets.module';
 import { CapitalModule } from './capital/capital.module';
 import { DatabaseModule } from './database/database.module';
@@ -23,6 +24,7 @@ import { StakingRulesModule } from './staking-rules/staking-rules.module';
         synchronize: true,
       }),
     }),
+    AuthModule,
     CapitalModule,
     StakingRulesModule,
     BetsModule,

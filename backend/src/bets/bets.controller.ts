@@ -7,7 +7,11 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import type { AuthUser } from '../auth/types/auth-user';
 import { BetsService } from './bets.service';
 import {
   CalculateStakeDto,
@@ -16,64 +20,92 @@ import {
   SettleBetDto,
   UpdateBetDto,
 } from './dto/bet.dto';
+import { UpdateEventResultDto } from './dto/update-event-result.dto';
 import { MonthlyReportQueryDto } from './dto/monthly-report.dto';
 
 @Controller('bets')
+@UseGuards(JwtAuthGuard)
 export class BetsController {
   constructor(private readonly betsService: BetsService) {}
 
   @Post('calculate-stake')
-  calculateStake(@Body() dto: CalculateStakeDto) {
-    return this.betsService.calculateStake(dto);
+  calculateStake(@CurrentUser() user: AuthUser, @Body() dto: CalculateStakeDto) {
+    return this.betsService.calculateStake(user.userId, dto);
   }
 
   @Post()
-  create(@Body() dto: CreateBetDto) {
-    return this.betsService.create(dto);
+  create(@CurrentUser() user: AuthUser, @Body() dto: CreateBetDto) {
+    return this.betsService.create(user.userId, dto);
   }
 
   @Get('stats/months')
-  getAvailableMonths() {
-    return this.betsService.getAvailableMonths();
+  getAvailableMonths(@CurrentUser() user: AuthUser) {
+    return this.betsService.getAvailableMonths(user.userId);
   }
 
   @Get('stats/monthly')
-  getMonthlyReport(@Query() query: MonthlyReportQueryDto) {
-    return this.betsService.getMonthlyReport(query.year, query.month);
+  getMonthlyReport(
+    @CurrentUser() user: AuthUser,
+    @Query() query: MonthlyReportQueryDto,
+  ) {
+    return this.betsService.getMonthlyReport(user.userId, query.year, query.month);
   }
 
   @Get('stats/odds-ranges')
-  getOddsRangeStats() {
-    return this.betsService.getOddsRangeStats();
+  getOddsRangeStats(@CurrentUser() user: AuthUser) {
+    return this.betsService.getOddsRangeStats(user.userId);
   }
 
   @Get('stats')
-  getStats() {
-    return this.betsService.getStats();
+  getStats(@CurrentUser() user: AuthUser) {
+    return this.betsService.getStats(user.userId);
   }
 
   @Get()
-  findAll(@Query() query: ListBetsQueryDto) {
-    return this.betsService.findAll(query);
+  findAll(@CurrentUser() user: AuthUser, @Query() query: ListBetsQueryDto) {
+    return this.betsService.findAll(user.userId, query);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.betsService.findOne(Number(id));
+  findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.betsService.findOne(user.userId, Number(id));
+  }
+
+  @Patch(':betId/events/:eventId/result')
+  updateEventResult(
+    @CurrentUser() user: AuthUser,
+    @Param('betId') betId: string,
+    @Param('eventId') eventId: string,
+    @Body() dto: UpdateEventResultDto,
+  ) {
+    return this.betsService.updateEventResult(
+      user.userId,
+      Number(betId),
+      Number(eventId),
+      dto,
+    );
   }
 
   @Patch(':id/settle')
-  settle(@Param('id') id: string, @Body() dto: SettleBetDto) {
-    return this.betsService.settle(Number(id), dto);
+  settle(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: SettleBetDto,
+  ) {
+    return this.betsService.settle(user.userId, Number(id), dto);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateBetDto) {
-    return this.betsService.update(Number(id), dto);
+  update(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateBetDto,
+  ) {
+    return this.betsService.update(user.userId, Number(id), dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.betsService.remove(Number(id));
+  remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.betsService.remove(user.userId, Number(id));
   }
 }

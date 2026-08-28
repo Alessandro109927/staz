@@ -20,8 +20,8 @@ export class CapitalService {
     private readonly betRepository: Repository<Bet>,
   ) {}
 
-  async getCapital() {
-    const record = await this.getCapitalEntity();
+  async getCapital(userId: number) {
+    const record = await this.getCapitalEntity(userId);
     if (!record) {
       return null;
     }
@@ -30,9 +30,9 @@ export class CapitalService {
     return this.mapCapital(record);
   }
 
-  async setCapital(dto: SetCapitalDto) {
-    const pendingCount = await this.betRepository.count();
-    const existing = await this.getCapitalEntity();
+  async setCapital(userId: number, dto: SetCapitalDto) {
+    const pendingCount = await this.betRepository.count({ where: { userId } });
+    const existing = await this.getCapitalEntity(userId);
 
     if (existing && pendingCount > 0 && !dto.reset) {
       throw new BadRequestException(
@@ -59,6 +59,7 @@ export class CapitalService {
     }
 
     const created = this.capitalRepository.create({
+      userId,
       initialCapital: formatted,
       startingCapital: formatted,
       currentCapital: formatted,
@@ -67,8 +68,8 @@ export class CapitalService {
     return this.mapCapital(saved);
   }
 
-  async getCurrentCapitalValue() {
-    const capital = await this.getCapitalEntity();
+  async getCurrentCapitalValue(userId: number) {
+    const capital = await this.getCapitalEntity(userId);
     if (!capital) {
       throw new BadRequestException(
         'Capitale non configurato. Imposta prima il capitale iniziale.',
@@ -77,8 +78,8 @@ export class CapitalService {
     return parseMoney(capital.currentCapital);
   }
 
-  async getInitialCapitalValue() {
-    const capital = await this.getCapitalEntity();
+  async getInitialCapitalValue(userId: number) {
+    const capital = await this.getCapitalEntity(userId);
     if (!capital) {
       throw new BadRequestException(
         'Capitale non configurato. Imposta prima il capitale iniziale.',
@@ -87,8 +88,8 @@ export class CapitalService {
     return parseMoney(capital.initialCapital);
   }
 
-  async getStartingCapitalValue() {
-    const capital = await this.getCapitalEntity();
+  async getStartingCapitalValue(userId: number) {
+    const capital = await this.getCapitalEntity(userId);
     if (!capital) {
       throw new BadRequestException(
         'Capitale non configurato. Imposta prima il capitale iniziale.',
@@ -98,8 +99,8 @@ export class CapitalService {
     return parseMoney(capital.startingCapital ?? capital.initialCapital);
   }
 
-  async updateCurrentCapital(value: string) {
-    const capital = await this.getCapitalEntity();
+  async updateCurrentCapital(userId: number, value: string) {
+    const capital = await this.getCapitalEntity(userId);
     if (!capital) {
       throw new NotFoundException('Capitale non trovato');
     }
@@ -107,8 +108,8 @@ export class CapitalService {
     await this.capitalRepository.save(capital);
   }
 
-  async updateInitialCapital(value: number) {
-    const capital = await this.getCapitalEntity();
+  async updateInitialCapital(userId: number, value: number) {
+    const capital = await this.getCapitalEntity(userId);
     if (!capital) {
       throw new NotFoundException('Capitale non trovato');
     }
@@ -118,12 +119,8 @@ export class CapitalService {
     return this.mapCapital(saved);
   }
 
-  private async getCapitalEntity() {
-    const records = await this.capitalRepository.find({
-      order: { createdAt: 'DESC' },
-      take: 1,
-    });
-    return records[0] ?? null;
+  private async getCapitalEntity(userId: number) {
+    return this.capitalRepository.findOne({ where: { userId } });
   }
 
   private async ensureStartingCapital(record: Capital) {
@@ -132,7 +129,10 @@ export class CapitalService {
     }
 
     const settledBets = await this.betRepository.find({
-      where: [{ status: BetStatus.WON }, { status: BetStatus.LOST }],
+      where: [
+        { userId: record.userId ?? undefined, status: BetStatus.WON },
+        { userId: record.userId ?? undefined, status: BetStatus.LOST },
+      ],
     });
 
     if (settledBets.length) {

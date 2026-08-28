@@ -26,6 +26,10 @@ export class BetEventItemDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(1.01)
   odds: number;
+
+  @IsOptional()
+  @IsIn([BetStatus.WON, BetStatus.LOST])
+  resultStatus?: BetStatus.WON | BetStatus.LOST | null;
 }
 
 export class CalculateStakeDto {

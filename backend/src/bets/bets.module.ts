@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from '../auth/auth.module';
 import { CapitalModule } from '../capital/capital.module';
 import { StakingRulesModule } from '../staking-rules/staking-rules.module';
 import { BetsController } from './bets.controller';
@@ -10,6 +11,7 @@ import { Bet } from './entities/bet.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Bet, BetEvent]),
+    AuthModule,
     CapitalModule,
     StakingRulesModule,
   ],

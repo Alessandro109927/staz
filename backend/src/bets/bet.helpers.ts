@@ -24,6 +24,7 @@ export function normalizeEvents(events: BetEventItemDto[]) {
       outcome: event.outcome,
       odds: formatMoney(event.odds),
       sortOrder: index,
+      resultStatus: event.resultStatus ?? null,
     })),
   };
 }

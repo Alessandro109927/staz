@@ -13,6 +13,18 @@ import {
 import { StakingRule } from './entities/staking-rule.entity';
 import { formatMoney, parseMoney, toDecimal } from '../common/decimal.util';
 
+const DEFAULT_RULES: Array<{
+  minOdds: string;
+  maxOdds: string | null;
+  stakePercentage: string;
+}> = [
+  { minOdds: '1.00', maxOdds: '2.00', stakePercentage: '10.00' },
+  { minOdds: '2.01', maxOdds: '3.00', stakePercentage: '7.00' },
+  { minOdds: '3.01', maxOdds: '5.00', stakePercentage: '5.00' },
+  { minOdds: '5.01', maxOdds: '10.00', stakePercentage: '3.00' },
+  { minOdds: '10.01', maxOdds: null, stakePercentage: '1.00' },
+];
+
 @Injectable()
 export class StakingRulesService {
   constructor(
@@ -20,14 +32,29 @@ export class StakingRulesService {
     private readonly stakingRuleRepository: Repository<StakingRule>,
   ) {}
 
-  findAll() {
+  findAll(userId: number) {
     return this.stakingRuleRepository.find({
+      where: { userId },
       order: { minOdds: 'ASC' },
     });
   }
 
-  async create(dto: CreateStakingRuleDto) {
+  async seedDefaults(userId: number) {
+    const count = await this.stakingRuleRepository.count({ where: { userId } });
+    if (count > 0) {
+      return;
+    }
+
+    await this.stakingRuleRepository.save(
+      DEFAULT_RULES.map((rule) =>
+        this.stakingRuleRepository.create({ userId, ...rule }),
+      ),
+    );
+  }
+
+  async create(userId: number, dto: CreateStakingRuleDto) {
     const rule = this.stakingRuleRepository.create({
+      userId,
       minOdds: formatMoney(dto.minOdds),
       maxOdds: dto.maxOdds != null ? formatMoney(dto.maxOdds) : null,
       stakePercentage: formatMoney(dto.stakePercentage),
@@ -35,8 +62,8 @@ export class StakingRulesService {
     return this.stakingRuleRepository.save(rule);
   }
 
-  async update(id: number, dto: UpdateStakingRuleDto) {
-    const rule = await this.findOne(id);
+  async update(userId: number, id: number, dto: UpdateStakingRuleDto) {
+    const rule = await this.findOne(userId, id);
 
     if (dto.minOdds !== undefined) {
       rule.minOdds = formatMoney(dto.minOdds);
@@ -51,23 +78,25 @@ export class StakingRulesService {
     return this.stakingRuleRepository.save(rule);
   }
 
-  async findOne(id: number) {
-    const rule = await this.stakingRuleRepository.findOne({ where: { id } });
+  async findOne(userId: number, id: number) {
+    const rule = await this.stakingRuleRepository.findOne({
+      where: { id, userId },
+    });
     if (!rule) {
       throw new NotFoundException(`Regola ${id} non trovata`);
     }
     return rule;
   }
 
-  async remove(id: number) {
-    const rule = await this.findOne(id);
+  async remove(userId: number, id: number) {
+    const rule = await this.findOne(userId, id);
     await this.stakingRuleRepository.remove(rule);
     return { deleted: true };
   }
 
-  async resolveStakePercentage(odds: number | string | Decimal) {
+  async resolveStakePercentage(userId: number, odds: number | string | Decimal) {
     const oddsValue = toDecimal(odds);
-    const rules = await this.findAll();
+    const rules = await this.findAll(userId);
 
     if (!rules.length) {
       throw new BadRequestException('Nessuna regola di stake configurata');
@@ -90,8 +119,8 @@ export class StakingRulesService {
     );
   }
 
-  async calculateStake(odds: number, capitalBase: Decimal) {
-    const stakePercentage = await this.resolveStakePercentage(odds);
+  async calculateStake(userId: number, odds: number, capitalBase: Decimal) {
+    const stakePercentage = await this.resolveStakePercentage(userId, odds);
     const amount = capitalBase.mul(stakePercentage).div(100);
 
     return {

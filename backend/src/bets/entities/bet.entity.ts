@@ -12,6 +12,9 @@ export class Bet {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ name: 'user_id', type: 'int', nullable: true })
+  userId: number | null;
+
   @Column({ name: 'event_name', type: 'varchar', length: 1000 })
   eventName: string;
 

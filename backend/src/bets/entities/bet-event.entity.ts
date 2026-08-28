@@ -5,6 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { BetStatus } from '../../common/enums/bet-status.enum';
 import { Bet } from './bet.entity';
 
 @Entity('bet_events')
@@ -30,4 +31,12 @@ export class BetEvent {
 
   @Column({ name: 'sort_order', type: 'int', default: 0 })
   sortOrder: number;
+
+  @Column({
+    type: 'enum',
+    enum: BetStatus,
+    name: 'result_status',
+    nullable: true,
+  })
+  resultStatus: BetStatus.WON | BetStatus.LOST | null;
 }
