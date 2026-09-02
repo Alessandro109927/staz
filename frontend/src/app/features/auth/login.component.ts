@@ -42,11 +42,14 @@ export class LoginComponent {
 
     this.auth.login(username, password).pipe(
       switchMap(() => this.api.getCapital()),
-      map((capital) => (capital ? '/' : '/setup')),
+      map((capital) => (capital ? '/dashboard' : '/setup')),
       catchError((error) => {
-        this.errorMessage =
-          error.error?.message ?? 'Credenziali non valide. Riprova.';
-        return of(null);
+        if (error.status === 401 || error.status === 403) {
+          this.errorMessage =
+            error.error?.message ?? 'Credenziali non valide. Riprova.';
+          return of(null);
+        }
+        return of('/dashboard');
       }),
     ).subscribe((target) => {
       this.loading = false;

@@ -1,28 +1,90 @@
 @use '../../../styles/variables' as *;
 @use '../../../styles/mixins' as *;
 
-.setup-card {
-  max-width: 480px;
-  margin: 2rem auto;
-  padding: 0 $space-4;
+.setup-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-6 $space-4;
+  background: $color-neutral-50;
+}
 
-  @include down($bp-sm) {
-    margin: $space-4 auto;
-    padding: 0 $space-3;
+.setup-card {
+  width: 100%;
+  max-width: 28rem;
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+}
+
+.setup-card__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: $space-2;
+
+  h1 {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+  }
+
+  p {
+    margin: 0;
+    color: $color-neutral-600;
+    font-size: $font-size-sm;
+    line-height: 1.5;
   }
 }
 
-.full-width {
-  width: 100%;
-  margin-bottom: 1rem;
+.setup-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: $radius-full;
+  background: rgba($color-primary, 0.12);
+  color: $color-primary;
+
+  mat-icon {
+    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
 }
 
-.hint {
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 0.9rem;
+.setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
 }
 
-.reset-toggle {
-  display: block;
-  margin-bottom: 1rem;
+.setup-loading {
+  margin: 0;
+  text-align: center;
+  color: $color-neutral-600;
+}
+
+.setup-hint {
+  margin: 0;
+  color: $color-neutral-600;
+  font-size: $font-size-sm;
+  line-height: 1.5;
+}
+
+.setup-reset {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $font-size-sm;
+  color: $color-neutral-800;
+}
+
+.vs-btn-primary mat-icon {
+  font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
 }

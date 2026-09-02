@@ -49,6 +49,25 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'scalata/active',
+        loadComponent: () =>
+          import('./features/scalata/scalata-active.component').then(
+            (m) => m.ScalataActiveComponent,
+          ),
+      },
+      {
+        path: 'scalata/:id',
+        loadComponent: () =>
+          import('./features/scalata/scalata-run.component').then(
+            (m) => m.ScalataRunComponent,
+          ),
+      },
+      {
+        path: 'scalata',
+        loadComponent: () =>
+          import('./features/scalata/scalata.component').then((m) => m.ScalataComponent),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings.component').then((m) => m.SettingsComponent),

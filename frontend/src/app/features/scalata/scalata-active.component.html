@@ -1,0 +1,135 @@
+<div class="vs-page scalata-active-page">
+  <header class="scalata-active-header">
+    <div>
+      <a routerLink="/scalata" class="scalata-back-link">
+        <mat-icon>arrow_back</mat-icon>
+        Pianificatore
+      </a>
+      <h1 class="vs-heading-page">Le tue scalate</h1>
+      <p class="vs-text-muted">
+        Scalate in corso e storico delle scalate concluse.
+      </p>
+    </div>
+    <a routerLink="/scalata" class="vs-btn-primary scalata-new-link">
+      <mat-icon>add</mat-icon>
+      Nuova scalata
+    </a>
+  </header>
+
+  @if (loading) {
+    <p class="vs-text-muted">Caricamento...</p>
+  } @else if (!activeRuns.length && !finishedRuns.length) {
+    <article class="vs-card scalata-empty">
+      <mat-icon>timeline</mat-icon>
+      <div>
+        <h2 class="vs-heading-section">Nessuna scalata</h2>
+        <p class="vs-text-muted">
+          Configura un piano nel pianificatore e clicca "Inizia scalata" per avviarne una.
+        </p>
+        <a routerLink="/scalata" class="vs-btn-primary">Vai al pianificatore</a>
+      </div>
+    </article>
+  } @else {
+    @if (activeRuns.length) {
+      <section class="scalata-section">
+        <h2 class="vs-heading-section scalata-section__title">In corso</h2>
+        <div class="scalata-active-list">
+          @for (run of activeRuns; track run.id) {
+            <a [routerLink]="['/scalata', run.id]" class="vs-card scalata-active-card">
+              <div class="scalata-active-card__head">
+                <div>
+                  <span class="scalata-active-card__badge">{{ formatBetLabel(run.currentDay) }} / {{ run.totalDays }}</span>
+                  <h3 class="vs-heading-section">
+                    +€ {{ run.targetProfit | number: '1.2-2' }}
+                  </h3>
+                  <p class="vs-text-muted">
+                    Da € {{ run.startBankroll | number: '1.2-2' }}
+                    → € {{ run.targetCapital | number: '1.2-2' }}
+                  </p>
+                </div>
+                <mat-icon>chevron_right</mat-icon>
+              </div>
+
+              @if (currentStep(run); as step) {
+                <div class="scalata-active-card__step">
+                  <span class="vs-label">Prossima giocata</span>
+                  <strong>Puntata all-in € {{ step.stake | number: '1.2-2' }}</strong>
+                  <span>Quota target {{ step.plannedOdds | number: '1.2-2' }}</span>
+                  <span class="scalata-active-card__risk">{{ formatRiskLabel(step.riskLevel) }}</span>
+                </div>
+              }
+
+              <div class="scalata-progress">
+                <div class="scalata-progress__track">
+                  <div class="scalata-progress__fill" [style.width.%]="run.progressPercent"></div>
+                </div>
+                <span class="scalata-progress__label">
+                  {{ run.completedSteps }} step completati su {{ run.totalDays }}
+                </span>
+              </div>
+            </a>
+          }
+        </div>
+      </section>
+    }
+
+    @if (finishedRuns.length) {
+      <section class="scalata-section">
+        <h2 class="vs-heading-section scalata-section__title">Concluse</h2>
+        <div class="scalata-active-list">
+          @for (run of finishedRuns; track run.id) {
+            <a
+              [routerLink]="['/scalata', run.id]"
+              class="vs-card scalata-active-card scalata-active-card--finished"
+              [ngClass]="cardClass(run)"
+            >
+              <div class="scalata-active-card__head">
+                <div>
+                  <span class="scalata-active-card__badge" [ngClass]="statusClass(run)">
+                    {{ statusLabel(run) }}
+                  </span>
+                  <h3 class="vs-heading-section">
+                    @if (runProfit(run) > 0) {
+                      +€ {{ runProfit(run) | number: '1.2-2' }}
+                    } @else {
+                      +€ {{ run.targetProfit | number: '1.2-2' }}
+                    }
+                  </h3>
+                  <p class="vs-text-muted">
+                    Da € {{ run.startBankroll | number: '1.2-2' }}
+                    → € {{ run.targetCapital | number: '1.2-2' }}
+                  </p>
+                </div>
+                <mat-icon>chevron_right</mat-icon>
+              </div>
+
+              <div class="scalata-active-card__summary">
+                <span>{{ finishedSummary(run) }}</span>
+                @if (run.completedAt) {
+                  <span class="scalata-active-card__date">
+                    {{ run.completedAt | date: 'dd/MM/yyyy' }}
+                  </span>
+                }
+              </div>
+
+              <div class="scalata-progress">
+                <div class="scalata-progress__track">
+                  <div
+                    class="scalata-progress__fill"
+                    [class.scalata-progress__fill--completed]="run.status === 'COMPLETED'"
+                    [class.scalata-progress__fill--failed]="run.status === 'FAILED'"
+                    [class.scalata-progress__fill--abandoned]="run.status === 'ABANDONED'"
+                    [style.width.%]="run.progressPercent"
+                  ></div>
+                </div>
+                <span class="scalata-progress__label">
+                  {{ run.completedSteps }} step completati su {{ run.totalDays }}
+                </span>
+              </div>
+            </a>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>

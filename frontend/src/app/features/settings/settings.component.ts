@@ -46,6 +46,7 @@ export class SettingsComponent implements OnInit {
   ngOnInit(): void {
     this.loadRules();
     this.loadCapital();
+    this.betChange.changed.subscribe(() => this.loadCapital());
     this.route.fragment.subscribe((fragment) => {
       if (fragment === 'capitale') {
         setTimeout(() => {

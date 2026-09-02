@@ -1,0 +1,315 @@
+<div class="vs-page scalata-page">
+  <header class="scalata-header">
+    <div>
+      <h1 class="vs-heading-page">Scalata</h1>
+      <p class="vs-text-muted">
+        Pianifica una scalata all-in: imposta l'obiettivo e ottieni le quote ideali bet per bet,
+        con un percorso pensato per ridurre il rischio.
+      </p>
+    </div>
+  </header>
+
+  <section class="vs-card scalata-active-banner">
+    <div>
+      <h2 class="vs-heading-section">Le mie scalate attive</h2>
+      <p class="vs-text-muted">
+        @if (activeRunsCount > 0) {
+          Hai {{ activeRunsCount }} scalat{{ activeRunsCount === 1 ? 'a' : 'e' }} in corso. Entra per registrare la bet corrente.
+        } @else {
+          Nessuna scalata attiva. Configura un piano qui sotto e clicca "Inizia scalata".
+        }
+      </p>
+    </div>
+    <a routerLink="/scalata/active" class="vs-btn-primary scalata-active-link">
+      <mat-icon>play_arrow</mat-icon>
+      {{ activeRunsCount > 0 ? 'Vai alle tue scalate' : 'Le tue scalate' }}
+    </a>
+  </section>
+
+  <div class="scalata-layout">
+    <section class="vs-card scalata-form-card">
+      <h2 class="vs-heading-section">Configura il piano</h2>
+
+      <form [formGroup]="form" class="scalata-form">
+        <div class="scalata-field-block">
+          <span class="vs-field__label">Puntata iniziale (bankroll)</span>
+          <div class="scalata-source-toggle">
+            <button
+              type="button"
+              class="scalata-source-btn"
+              [class.scalata-source-btn--active]="stakeSource === 'manual'"
+              (click)="setStakeSource('manual')"
+            >
+              Manuale
+            </button>
+            <button
+              type="button"
+              class="scalata-source-btn"
+              [class.scalata-source-btn--active]="stakeSource === 'capital'"
+              [disabled]="currentCapital == null"
+              (click)="setStakeSource('capital')"
+            >
+              Capitale attuale
+            </button>
+            <button
+              type="button"
+              class="scalata-source-btn"
+              [class.scalata-source-btn--active]="stakeSource === 'system'"
+              [disabled]="systemSuggestedStake == null"
+              (click)="setStakeSource('system')"
+            >
+              Suggerita
+            </button>
+          </div>
+          <label class="vs-field">
+            <div class="vs-input-affix">
+              <span class="vs-input-affix__prefix">€</span>
+              <input
+                class="vs-input"
+                type="number"
+                step="0.01"
+                min="0.01"
+                formControlName="startBankroll"
+              />
+            </div>
+          </label>
+          @if (currentCapital != null) {
+            <p class="scalata-hint">Capitale attuale: € {{ currentCapital | number: '1.2-2' }}</p>
+          }
+          @if (systemSuggestedStake != null) {
+            <p class="scalata-hint">
+              Puntata suggerita (regole stake, quota minima):
+              € {{ systemSuggestedStake | number: '1.2-2' }}
+            </p>
+          }
+        </div>
+
+        <label class="vs-field">
+          <span class="vs-field__label">Obiettivo profitto</span>
+          <div class="vs-input-affix">
+            <span class="vs-input-affix__prefix">€</span>
+            <input
+              class="vs-input"
+              type="number"
+              step="0.01"
+              min="0.01"
+              formControlName="targetProfit"
+            />
+          </div>
+        </label>
+
+        <div class="scalata-field-block">
+          <span class="vs-field__label">Numero di bet nel piano</span>
+          <div class="scalata-source-toggle">
+            <button
+              type="button"
+              class="scalata-source-btn"
+              [class.scalata-source-btn--active]="form.controls.daysMode.value === 'auto'"
+              (click)="form.patchValue({ daysMode: 'auto' }); onDaysModeChange()"
+            >
+              Auto (più sicura)
+            </button>
+            <button
+              type="button"
+              class="scalata-source-btn"
+              [class.scalata-source-btn--active]="form.controls.daysMode.value === 'manual'"
+              (click)="form.patchValue({ daysMode: 'manual' }); onDaysModeChange()"
+            >
+              Bet fisse
+            </button>
+          </div>
+          @if (form.controls.daysMode.value === 'manual') {
+            <label class="vs-field">
+              <span class="vs-field__label">Quante bet</span>
+              <input
+                class="vs-input"
+                type="number"
+                min="1"
+                max="90"
+                formControlName="days"
+              />
+            </label>
+          } @else {
+            <p class="scalata-hint">
+              Il sistema usa il massimo numero di bet possibile con quote basse (fino a {{ 90 }}).
+            </p>
+          }
+        </div>
+
+        <div class="scalata-form__row">
+          <label class="vs-field">
+            <span class="vs-label">Quota max per bet</span>
+            <input
+              class="vs-input"
+              type="number"
+              step="0.01"
+              min="1.01"
+              formControlName="maxDailyOdds"
+            />
+          </label>
+          <label class="vs-field">
+            <span class="vs-field__label">Quota min per bet</span>
+            <input
+              class="vs-input"
+              type="number"
+              step="0.01"
+              min="1.01"
+              formControlName="minDailyOdds"
+            />
+          </label>
+        </div>
+
+        <div class="scalata-field-block">
+          <span class="vs-field__label">Distribuzione quote</span>
+          <div class="scalata-source-toggle">
+            <button
+              type="button"
+              class="scalata-source-btn"
+              [class.scalata-source-btn--active]="form.controls.oddsStrategy.value === 'decreasing'"
+              (click)="form.patchValue({ oddsStrategy: 'decreasing' })"
+            >
+              Decrescente (consigliata)
+            </button>
+            <button
+              type="button"
+              class="scalata-source-btn"
+              [class.scalata-source-btn--active]="form.controls.oddsStrategy.value === 'uniform'"
+              (click)="form.patchValue({ oddsStrategy: 'uniform' })"
+            >
+              Uniforme
+            </button>
+          </div>
+          <p class="scalata-hint">
+            Decrescente: quote più alte all'inizio e più basse quando la banca cresce. Puoi usare quote fino a 1,01 e piani lunghi (es. 20+ giorni).
+          </p>
+        </div>
+      </form>
+    </section>
+
+    <section class="scalata-results">
+      @if (plan) {
+        @if (!plan.feasible) {
+          <article class="vs-card scalata-alert">
+            <mat-icon>info</mat-icon>
+            <div>
+              <h2 class="vs-heading-section">Piano non fattibile</h2>
+              <p class="vs-text-muted">{{ plan.message }}</p>
+            </div>
+          </article>
+        } @else {
+          <article class="vs-card scalata-summary">
+            <div class="scalata-summary__hero">
+              <div>
+                <span class="vs-label">Obiettivo</span>
+                <p class="scalata-summary__target">
+                  +€ {{ plan.targetProfit | number: '1.2-2' }}
+                </p>
+                <p class="scalata-summary__meta">
+                  Da € {{ plan.startBankroll | number: '1.2-2' }}
+                  → € {{ plan.targetCapital | number: '1.2-2' }}
+                </p>
+              </div>
+              <div class="scalata-summary__badge">
+                <mat-icon>trending_up</mat-icon>
+                <span>{{ plan.totalDays }} bet</span>
+              </div>
+            </div>
+
+            <div class="scalata-summary__kpis">
+              <div>
+                <span class="vs-label">Moltiplicatore</span>
+                <strong>x {{ plan.requiredMultiplier | number: '1.2-2' }}</strong>
+              </div>
+              <div>
+                <span class="vs-label">Quota media</span>
+                <strong>{{ plan.averageOdds | number: '1.2-2' }}</strong>
+              </div>
+              @if (plan.estimatedSuccessRate != null) {
+                <div>
+                  <span class="vs-label">Successo stimato*</span>
+                  <strong>{{ plan.estimatedSuccessRate | number: '1.1-1' }}%</strong>
+                </div>
+              }
+            </div>
+
+            <div class="scalata-progress">
+              <div class="scalata-progress__track">
+                <div class="scalata-progress__fill" [style.width.%]="overallProgress()"></div>
+              </div>
+              <span class="scalata-progress__label">Avanzamento verso l'obiettivo (se tutte vincono)</span>
+            </div>
+
+            <p class="scalata-footnote">
+              *Stima indicativa assumendo probabilità ≈ 1/quota per ogni step. Non è una garanzia di vincita.
+            </p>
+
+            <button
+              type="button"
+              class="vs-btn-primary scalata-start-btn"
+              [disabled]="startingScalata"
+              (click)="startScalata()"
+            >
+              <mat-icon>rocket_launch</mat-icon>
+              {{ startingScalata ? 'Avvio in corso...' : 'Inizia scalata' }}
+            </button>
+          </article>
+
+          <section class="scalata-timeline">
+            <h2 class="vs-heading-section">Piano bet per bet</h2>
+            <p class="scalata-timeline__intro">
+              Ogni bet punti l'intero bankroll sulla quota indicata. Puoi chiuderne più di una nello stesso giorno.
+            </p>
+
+            @for (step of plan.steps; track step.day) {
+              <article class="scalata-step" [class]="'scalata-step--' + step.riskLevel">
+                <div class="scalata-step__marker">
+                  <span>{{ step.day }}</span>
+                </div>
+
+                <div class="scalata-step__content vs-card--compact">
+                  <div class="scalata-step__head">
+                    <h3>{{ formatBetLabel(step.day) }}</h3>
+                    <span class="scalata-step__risk">{{ formatRiskLabel(step.riskLevel) }}</span>
+                  </div>
+
+                  <div class="scalata-step__grid">
+                    <div>
+                      <span class="vs-label">Bankroll</span>
+                      <strong>€ {{ step.bankrollBefore | number: '1.2-2' }}</strong>
+                    </div>
+                    <div>
+                      <span class="vs-label">Puntata (all-in)</span>
+                      <strong>€ {{ step.stake | number: '1.2-2' }}</strong>
+                    </div>
+                    <div class="scalata-step__odds">
+                      <span class="vs-label">Quota target</span>
+                      <strong>{{ step.odds | number: '1.2-2' }}</strong>
+                    </div>
+                    <div>
+                      <span class="vs-label">Se vinci</span>
+                      <strong class="scalata-step__win">€ {{ step.bankrollAfter | number: '1.2-2' }}</strong>
+                    </div>
+                  </div>
+
+                  <div class="scalata-step__footer">
+                    <span>Profitto step: +€ {{ step.stepProfit | number: '1.2-2' }}</span>
+                    <span>Totale: +€ {{ step.cumulativeProfit | number: '1.2-2' }}</span>
+                    @if (step.remainingProfit > 0.009) {
+                      <span>Mancano € {{ step.remainingProfit | number: '1.2-2' }}</span>
+                    } @else {
+                      <span class="scalata-step__done">Obiettivo raggiunto</span>
+                    }
+                  </div>
+
+                  <div class="scalata-step__mini-progress">
+                    <div [style.width.%]="progressPercent($index)"></div>
+                  </div>
+                </div>
+              </article>
+            }
+          </section>
+        }
+      }
+    </section>
+  </div>
+</div>

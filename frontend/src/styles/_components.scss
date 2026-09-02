@@ -196,6 +196,11 @@
   &:hover {
     background: $color-primary-hover;
   }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
 }
 
 .vs-btn-primary--block {

@@ -1,0 +1,364 @@
+<div class="vs-page scalata-run-page">
+  @if (loading) {
+    <p class="vs-text-muted">Caricamento...</p>
+  } @else if (run) {
+    <header class="scalata-run-header">
+      <div>
+        <a routerLink="/scalata/active" class="scalata-back-link">
+          <mat-icon>arrow_back</mat-icon>
+          Le tue scalate
+        </a>
+        <div class="scalata-run-header__title">
+          <h1 class="vs-heading-page">Scalata #{{ run.id }}</h1>
+          <span class="scalata-run-status" [class]="'scalata-run-status--' + run.status.toLowerCase()">
+            {{ statusLabel(run.status) }}
+          </span>
+        </div>
+        <p class="vs-text-muted">
+          Obiettivo +€ {{ run.targetProfit | number: '1.2-2' }}
+          · {{ formatBetLabel(run.currentDay) }} di {{ run.totalDays }}
+        </p>
+      </div>
+
+      <div class="scalata-run-header__actions">
+        @if (lastWonStep) {
+          <div class="scalata-run-profit">
+            <strong class="scalata-run-profit__amount">+ € {{ displayProfit | number: '1.2-2' }}</strong>
+            <span class="scalata-run-profit__roi">+{{ displayRoi | number: '1.1-1' }}% ROI</span>
+          </div>
+        }
+
+        @if (isActive && wonStepsCount >= 1) {
+          <button
+            type="button"
+            class="vs-btn-primary scalata-cashout-btn"
+            [disabled]="cashingOut"
+            (click)="cashOutRun()"
+          >
+            <mat-icon>savings</mat-icon>
+            Stacca scalata
+          </button>
+        }
+
+        @if (isActive) {
+          <button type="button" class="vs-btn-ghost scalata-abandon-btn" (click)="abandonRun()">
+            Abbandona
+          </button>
+        }
+      </div>
+    </header>
+
+    <div class="scalata-run-layout">
+      <section class="scalata-run-main">
+        @if (showMainPanel && displayStep; as step) {
+          @if (canEditStep) {
+            @for (formStep of [step]; track formStep.id) {
+              <article class="vs-card scalata-day-form-card">
+                <div class="scalata-day-form-card__head">
+                  <div>
+                    <span class="scalata-day-badge">{{ formatBetLabel(step.day) }}</span>
+                    <h2 class="vs-heading-section">Inserisci la giocata</h2>
+                    <p class="vs-text-muted">
+                      Ogni step è una bet del piano: puoi giocarne più di una nello stesso giorno.
+                      Quando vince, spunta e passi alla bet successiva.
+                    </p>
+                  </div>
+                  <span class="scalata-step__risk">{{ formatRiskLabel(step.riskLevel) }}</span>
+                </div>
+
+                <div class="scalata-day-stake-info">
+                  <div>
+                    <span class="vs-label">Puntata (all-in)</span>
+                    <strong>€ {{ step.stake | number: '1.2-2' }}</strong>
+                  </div>
+                  <div>
+                    <span class="vs-label">Quota target</span>
+                    <strong>{{ step.plannedOdds | number: '1.2-2' }}</strong>
+                  </div>
+                  <div>
+                    <span class="vs-label">Se vinci</span>
+                    <strong class="scalata-step__win">€ {{ step.bankrollAfter | number: '1.2-2' }}</strong>
+                  </div>
+                </div>
+
+                <form [formGroup]="form" class="scalata-day-form">
+                  <div formArrayName="events" class="events-list">
+                    @for (event of events.controls; track $index; let i = $index) {
+                      <div class="event-row" [formGroupName]="i">
+                        <div class="event-header">
+                          <strong>Evento {{ i + 1 }}</strong>
+                          @if (events.length > 1) {
+                            <button
+                              type="button"
+                              class="event-remove-btn"
+                              aria-label="Rimuovi evento"
+                              (click)="removeEvent(i)"
+                            >
+                              <mat-icon>close</mat-icon>
+                            </button>
+                          }
+                        </div>
+
+                        <div class="event-row__fields">
+                          <label class="vs-field event-row__event">
+                            <span class="vs-field__label">Evento / Partita</span>
+                            <input
+                              class="vs-input"
+                              type="text"
+                              formControlName="eventName"
+                              placeholder="es., Milan - Inter"
+                            />
+                          </label>
+
+                          <label class="vs-field event-row__outcome">
+                            <span class="vs-field__label">Esito</span>
+                            <input
+                              class="vs-input"
+                              type="text"
+                              formControlName="outcome"
+                              placeholder="es., 1"
+                            />
+                          </label>
+
+                          <label class="vs-field event-row__odds">
+                            <span class="vs-field__label">Quota</span>
+                            <input
+                              class="vs-input"
+                              type="text"
+                              inputmode="decimal"
+                              formControlName="odds"
+                              placeholder="1,38"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <button type="button" class="vs-btn-ghost add-event-btn" (click)="addEvent()">
+                    <mat-icon>add</mat-icon>
+                    Aggiungi evento
+                  </button>
+
+                  <label class="vs-field bet-date">
+                    <span class="vs-field__label">Data giocata</span>
+                    <input class="vs-input" type="date" formControlName="betDate" />
+                  </label>
+
+                  @if (combinedOdds) {
+                    <div class="scalata-odds-preview">
+                      <span>{{ events.length > 1 ? 'Quota combinata' : 'Quota' }}</span>
+                      <strong>{{ combinedOdds | number: '1.2-2' }}</strong>
+                    </div>
+                  }
+
+                  <div class="scalata-step-actions">
+                    <button
+                      type="button"
+                      class="vs-btn-ghost"
+                      [disabled]="form.invalid || submitting"
+                      (click)="submitStep('PENDING')"
+                    >
+                      Salva (in attesa)
+                    </button>
+                    <button
+                      type="button"
+                      class="vs-btn-primary scalata-step-actions__won"
+                      [disabled]="form.invalid || submitting"
+                      (click)="submitStep('WON')"
+                    >
+                      <mat-icon>check_circle</mat-icon>
+                      {{ formatBetLabel(step.day) }} vinta — avanti
+                    </button>
+                    <button
+                      type="button"
+                      class="vs-btn-ghost scalata-step-actions__lost"
+                      [disabled]="form.invalid || submitting"
+                      (click)="submitStep('LOST')"
+                    >
+                      Bet persa
+                    </button>
+                  </div>
+                </form>
+              </article>
+            }
+          } @else {
+            <article class="vs-card scalata-day-view-card">
+              @if (isViewingPastStep && isActive) {
+                <button type="button" class="scalata-back-to-current" (click)="goToCurrentStep()">
+                  <mat-icon>arrow_back</mat-icon>
+                  Torna alla bet corrente
+                </button>
+              }
+
+              <div class="scalata-day-form-card__head">
+                <div>
+                  <span class="scalata-day-badge">{{ formatBetLabel(step.day) }}</span>
+                  <h2 class="vs-heading-section">Dettaglio giocata</h2>
+                </div>
+                <span
+                  class="scalata-run-step__status"
+                  [class.scalata-run-step__status--won]="step.status === 'WON'"
+                  [class.scalata-run-step__status--lost]="step.status === 'LOST'"
+                  [class.scalata-run-step__status--current]="step.isCurrent"
+                >
+                  {{ stepStatusLabel(step) }}
+                </span>
+              </div>
+
+              <div class="scalata-day-stake-info">
+                <div>
+                  <span class="vs-label">Puntata</span>
+                  <strong>€ {{ step.stake | number: '1.2-2' }}</strong>
+                </div>
+                <div>
+                  <span class="vs-label">Quota</span>
+                  <strong>{{ (step.bet?.odds ?? step.plannedOdds) | number: '1.2-2' }}</strong>
+                </div>
+                @if (step.status === 'WON') {
+                  <div>
+                    <span class="vs-label">Profitto step</span>
+                    <strong class="scalata-step__win">+ € {{ step.stepProfit | number: '1.2-2' }}</strong>
+                  </div>
+                  <div>
+                    <span class="vs-label">Profitto cumulato</span>
+                    <strong class="scalata-step__win">+ € {{ step.cumulativeProfit | number: '1.2-2' }}</strong>
+                  </div>
+                }
+              </div>
+
+              @if (step.bet?.events?.length) {
+                <div class="scalata-bet-events">
+                  @for (event of step.bet!.events; track event.id ?? $index; let i = $index) {
+                    <div class="scalata-bet-event">
+                      <strong>Evento {{ i + 1 }}</strong>
+                      <div class="scalata-bet-event__fields">
+                        <div>
+                          <span class="vs-label">Partita</span>
+                          <span>{{ event.eventName }}</span>
+                        </div>
+                        <div>
+                          <span class="vs-label">Esito</span>
+                          <span>{{ event.outcome }}</span>
+                        </div>
+                        <div>
+                          <span class="vs-label">Quota</span>
+                          <span>{{ event.odds | number: '1.2-2' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                @if (step.bet!.betDate) {
+                  <p class="vs-text-muted scalata-bet-date">
+                    Giocata del {{ step.bet!.betDate | date: 'dd/MM/yyyy' }}
+                  </p>
+                }
+              } @else if (step.bet?.eventName) {
+                <div class="scalata-bet-events">
+                  <div class="scalata-bet-event">
+                    <strong>Giocata</strong>
+                    <div class="scalata-bet-event__fields scalata-bet-event__fields--single">
+                      <div>
+                        <span class="vs-label">Partita / eventi</span>
+                        <span>{{ step.bet!.eventName }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                @if (step.bet!.betDate) {
+                  <p class="vs-text-muted scalata-bet-date">
+                    Giocata del {{ step.bet!.betDate | date: 'dd/MM/yyyy' }}
+                  </p>
+                }
+              } @else if (step.status === 'WON' || step.status === 'LOST') {
+                <p class="vs-text-muted scalata-bet-missing">
+                  Dettagli evento non registrati per questa bet.
+                </p>
+              } @else if (step.isLocked) {
+                <p class="vs-text-muted scalata-bet-missing">
+                  Bet pianificata — non ancora giocata.
+                </p>
+              }
+            </article>
+          }
+        } @else if (run.status === 'COMPLETED') {
+          <article class="vs-card scalata-result-banner scalata-result-banner--success">
+            <mat-icon>{{ isEarlyCompletion ? 'savings' : 'emoji_events' }}</mat-icon>
+            <div>
+              @if (isEarlyCompletion) {
+                <h2 class="vs-heading-section">Scalata staccata</h2>
+                <p class="vs-text-muted">
+                  Hai chiuso in anticipo con un profitto di +€ {{ displayProfit | number: '1.2-2' }}
+                  ({{ wonStepsCount }} bet vinte).
+                </p>
+              } @else {
+                <h2 class="vs-heading-section">Obiettivo raggiunto!</h2>
+                <p class="vs-text-muted">Hai completato la scalata con successo.</p>
+              }
+            </div>
+          </article>
+        } @else if (run.status === 'FAILED') {
+          <article class="vs-card scalata-result-banner scalata-result-banner--failed">
+            <mat-icon>cancel</mat-icon>
+            <div>
+              <h2 class="vs-heading-section">Scalata fallita</h2>
+              <p class="vs-text-muted">Una bet persa ha interrotto il percorso.</p>
+            </div>
+          </article>
+        } @else {
+          <article class="vs-card scalata-result-banner">
+            <mat-icon>block</mat-icon>
+            <div>
+              <h2 class="vs-heading-section">Scalata abbandonata</h2>
+            </div>
+          </article>
+        }
+      </section>
+
+      <aside class="scalata-run-timeline">
+        <h2 class="vs-heading-section">Percorso</h2>
+        <p class="vs-text-muted scalata-run-timeline__hint">Clicca su una bet per vedere i dettagli</p>
+        <div class="scalata-run-steps">
+          @for (step of run.steps; track step.id) {
+            <article
+              class="scalata-run-step vs-card--compact"
+              [ngClass]="stepClass(step)"
+              role="button"
+              tabindex="0"
+              (click)="selectTimelineStep(step)"
+              (keydown.enter)="selectTimelineStep(step)"
+            >
+              <div class="scalata-run-step__marker">{{ step.day }}</div>
+              <div class="scalata-run-step__body">
+                <div class="scalata-run-step__head">
+                  <strong>{{ formatBetLabel(step.day) }}</strong>
+                  @if (step.status === 'WON') {
+                    <span class="scalata-run-step__status scalata-run-step__status--won">Vinta</span>
+                  } @else if (step.status === 'LOST') {
+                    <span class="scalata-run-step__status scalata-run-step__status--lost">Persa</span>
+                  } @else if (step.isCurrent) {
+                    <span class="scalata-run-step__status scalata-run-step__status--current">Corrente</span>
+                  } @else if (step.isLocked) {
+                    <span class="scalata-run-step__status">In attesa</span>
+                  } @else {
+                    <span class="scalata-run-step__status">Da chiudere</span>
+                  }
+                </div>
+
+                <div class="scalata-run-step__meta">
+                  <span>€ {{ step.stake | number: '1.2-2' }} · {{ step.plannedOdds | number: '1.2-2' }}</span>
+                  @if (step.bet) {
+                    <span class="scalata-run-step__events">{{ step.bet.eventName }}</span>
+                  }
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      </aside>
+    </div>
+  }
+</div>

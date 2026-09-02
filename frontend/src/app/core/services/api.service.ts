@@ -8,9 +8,12 @@ import {
   BetStats,
   BetStatus,
   Capital,
+  CreateScalataPayload,
   MonthOption,
   MonthlyReport,
   OddsRangeKpi,
+  ScalataRun,
+  ScalataRunStatus,
   StakePreview,
   StakingRule,
 } from '../models';
@@ -77,6 +80,7 @@ export class ApiService {
     stakePercentageApplied?: number;
     amountStaked?: number;
     potentialWin?: number;
+    status?: BetStatus;
   }): Observable<Bet> {
     return this.http.post<Bet>(`${this.baseUrl}/bets`, bet);
   }
@@ -147,5 +151,44 @@ export class ApiService {
   getMonthlyReport(year: number, month: number): Observable<MonthlyReport> {
     const params = new HttpParams().set('year', year).set('month', month);
     return this.http.get<MonthlyReport>(`${this.baseUrl}/bets/stats/monthly`, { params });
+  }
+
+  getScalataRuns(status?: ScalataRunStatus): Observable<ScalataRun[]> {
+    let params = new HttpParams();
+    if (status) {
+      params = params.set('status', status);
+    }
+    return this.http.get<ScalataRun[]>(`${this.baseUrl}/scalata`, { params });
+  }
+
+  getScalataRun(id: number): Observable<ScalataRun> {
+    return this.http.get<ScalataRun>(`${this.baseUrl}/scalata/${id}`);
+  }
+
+  createScalataRun(payload: CreateScalataPayload): Observable<ScalataRun> {
+    return this.http.post<ScalataRun>(`${this.baseUrl}/scalata`, payload);
+  }
+
+  submitScalataStep(
+    runId: number,
+    stepId: number,
+    payload: {
+      events: BetEventItem[];
+      betDate: string;
+      status: BetStatus;
+    },
+  ): Observable<ScalataRun> {
+    return this.http.post<ScalataRun>(
+      `${this.baseUrl}/scalata/${runId}/steps/${stepId}`,
+      payload,
+    );
+  }
+
+  abandonScalataRun(id: number): Observable<ScalataRun> {
+    return this.http.patch<ScalataRun>(`${this.baseUrl}/scalata/${id}/abandon`, {});
+  }
+
+  cashOutScalataRun(id: number): Observable<ScalataRun> {
+    return this.http.patch<ScalataRun>(`${this.baseUrl}/scalata/${id}/cash-out`, {});
   }
 }

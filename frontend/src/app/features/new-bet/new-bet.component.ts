@@ -20,7 +20,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/services/api.service';
 import { BetChangeService } from '../../core/services/bet-change.service';
-import { BetEventItem, StakePreview, combineOdds } from '../../core/models';
+import { BetEventItem, StakePreview, BetStatus, combineOdds } from '../../core/models';
 
 function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
@@ -54,6 +54,7 @@ export class NewBetComponent implements OnDestroy {
 
   form = this.fb.group({
     betDate: [new Date().toISOString().slice(0, 10), Validators.required],
+    status: ['PENDING' as BetStatus, Validators.required],
     events: this.fb.array([this.createEventGroup()]),
     stakePercentage: [
       { value: null as number | null, disabled: true },
@@ -106,13 +107,14 @@ export class NewBetComponent implements OnDestroy {
       return;
     }
 
-    const { betDate, stakePercentage, amountStaked, potentialWin } = this.form.getRawValue();
+    const { betDate, status, stakePercentage, amountStaked, potentialWin } = this.form.getRawValue();
     const events = this.events.getRawValue() as BetEventItem[];
 
     this.api
       .createBet({
         events,
         betDate: new Date(betDate!).toISOString(),
+        status: status!,
         stakePercentageApplied: Number(stakePercentage),
         amountStaked: Number(amountStaked),
         potentialWin: Number(potentialWin),

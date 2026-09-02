@@ -1,5 +1,6 @@
 import { ChartConfiguration } from 'chart.js';
 import { Bet, Capital, OddsRangeKpi, profitFromCapital, startingCapitalValue } from '../../core/models';
+import { moneyDifference } from '../../core/utils/money.util';
 
 const PRIMARY = '#1978e5';
 const PRIMARY_SOFT = 'rgba(25, 120, 229, 0.22)';
@@ -257,7 +258,12 @@ export function buildProfitChart(capital: Capital, bets: Bet[]): ChartConfigurat
 
   for (const bet of sortedSettledBets(bets)) {
     labels.push(formatShortDate(bet.settledAt!));
-    data.push(Number(bet.capitalAfter) - starting);
+    data.push(
+      moneyDifference(
+        bet.capitalAfter!,
+        capital.startingCapital ?? capital.initialCapital,
+      ),
+    );
   }
 
   const profit = profitFromCapital(capital);
@@ -326,8 +332,10 @@ export function buildMonthlyRoiChart(
       (bucket) => bucket.key === monthKey(new Date(bet.settledAt!)),
     );
     if (index >= 0) {
-      monthlyProfit[index] +=
-        Number(bet.capitalAfter) - Number(bet.capitalBefore);
+      monthlyProfit[index] += moneyDifference(
+        bet.capitalAfter!,
+        bet.capitalBefore,
+      );
     }
   }
 

@@ -2,10 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/services/api.service';
@@ -16,10 +12,6 @@ import { ApiService } from '../../core/services/api.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
     MatIconModule,
     MatSnackBarModule,
   ],
@@ -43,10 +35,12 @@ export class SetupComponent implements OnInit {
   ngOnInit(): void {
     this.api.getCapital().subscribe({
       next: (capital) => {
-        this.hasExistingCapital = !!capital;
         if (capital) {
-          this.form.patchValue({ initialCapital: Number(capital.initialCapital) });
+          void this.router.navigate(['/dashboard']);
+          return;
         }
+
+        this.hasExistingCapital = false;
         this.loading = false;
       },
       error: () => {

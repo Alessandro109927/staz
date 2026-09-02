@@ -1,3 +1,5 @@
+import { moneyDifference } from '../utils/money.util';
+
 export type BetStatus = 'PENDING' | 'WON' | 'LOST';
 
 export interface User {
@@ -18,15 +20,23 @@ export interface Capital {
   initialCapital: string;
   startingCapital: string;
   currentCapital: string;
+  profit?: string;
   createdAt: string;
 }
 
 export function startingCapitalValue(capital: Capital): number {
-  return Number(capital.startingCapital ?? capital.initialCapital);
+  return moneyDifference(capital.startingCapital ?? capital.initialCapital, 0);
 }
 
 export function profitFromCapital(capital: Capital): number {
-  return Number(capital.currentCapital) - startingCapitalValue(capital);
+  if (capital.profit != null) {
+    return moneyDifference(capital.profit, 0);
+  }
+
+  return moneyDifference(
+    capital.currentCapital,
+    capital.startingCapital ?? capital.initialCapital,
+  );
 }
 
 export interface StakingRule {
@@ -137,4 +147,64 @@ export function betPotentialWin(bet: Bet): number {
   }
 
   return Number(bet.amountStaked) * Number(bet.odds);
+}
+
+export type ScalataRunStatus = 'ACTIVE' | 'COMPLETED' | 'FAILED' | 'ABANDONED';
+export type ScalataStepStatus = 'PENDING' | 'WON' | 'LOST';
+
+export interface ScalataStepBet {
+  id: number;
+  eventName: string;
+  odds: string;
+  amountStaked: string;
+  potentialWin: string | null;
+  status: BetStatus;
+  betDate: string;
+  events: BetEvent[];
+}
+
+export interface ScalataRunStep {
+  id: number;
+  day: number;
+  bankrollBefore: string;
+  stake: string;
+  plannedOdds: string;
+  bankrollAfter: string;
+  stepProfit: string;
+  cumulativeProfit: string;
+  riskLevel: 'low' | 'medium' | 'high';
+  status: ScalataStepStatus;
+  betId: number | null;
+  isCurrent: boolean;
+  isLocked: boolean;
+  bet: ScalataStepBet | null;
+}
+
+export interface ScalataRun {
+  id: number;
+  status: ScalataRunStatus;
+  startBankroll: string;
+  targetProfit: string;
+  targetCapital: string;
+  daysMode: string;
+  oddsStrategy: string;
+  maxDailyOdds: string;
+  minDailyOdds: string;
+  totalDays: number;
+  currentDay: number;
+  completedSteps: number;
+  progressPercent: number;
+  createdAt: string;
+  completedAt: string | null;
+  steps: ScalataRunStep[];
+}
+
+export interface CreateScalataPayload {
+  startBankroll: number;
+  targetProfit: number;
+  daysMode: 'auto' | 'manual';
+  days: number;
+  maxDailyOdds: number;
+  minDailyOdds: number;
+  oddsStrategy: 'uniform' | 'decreasing';
 }

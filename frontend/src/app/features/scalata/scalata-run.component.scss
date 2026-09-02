@@ -1,0 +1,505 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.scalata-run-page {
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+}
+
+.scalata-run-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+}
+
+.scalata-run-header__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: $space-3;
+  flex-shrink: 0;
+}
+
+.scalata-run-profit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: $space-1;
+}
+
+.scalata-run-profit__amount {
+  font-size: $font-size-xl;
+  color: $color-success;
+}
+
+.scalata-run-profit__roi {
+  font-size: $font-size-sm;
+  color: $color-success;
+  font-weight: $font-weight-semibold;
+}
+
+.scalata-cashout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.scalata-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  margin-bottom: $space-2;
+  color: $color-neutral-600;
+  text-decoration: none;
+  font-size: $font-size-sm;
+
+  &:hover {
+    color: $color-primary;
+  }
+}
+
+.scalata-run-header__title {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  flex-wrap: wrap;
+}
+
+.scalata-run-status {
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+
+  &--active {
+    background: rgba($color-primary, 0.12);
+    color: $color-primary;
+  }
+
+  &--completed {
+    background: rgba($color-success, 0.12);
+    color: $color-success;
+  }
+
+  &--failed {
+    background: rgba($color-danger, 0.12);
+    color: $color-danger;
+  }
+
+  &--abandoned {
+    background: $color-neutral-200;
+    color: $color-neutral-600;
+  }
+}
+
+.scalata-abandon-btn {
+  flex-shrink: 0;
+}
+
+.scalata-run-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: $space-6;
+  align-items: start;
+
+  @include down($bp-lg) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.scalata-day-form-card {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+}
+
+.scalata-day-form-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+}
+
+.scalata-day-badge {
+  display: inline-block;
+  margin-bottom: $space-2;
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  background: rgba($color-primary, 0.1);
+  color: $color-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.scalata-day-stake-info {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: $space-3;
+  padding: $space-4;
+  border-radius: $radius-md;
+  background: $color-neutral-100;
+
+  @include down($bp-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.scalata-step__win {
+  color: $color-success;
+}
+
+.scalata-step__risk {
+  font-size: $font-size-sm;
+  color: $color-neutral-600;
+  white-space: nowrap;
+}
+
+.scalata-day-form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+.event-row {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  padding: $space-4;
+  border: 1px solid $color-neutral-200;
+  border-radius: $radius-md;
+  background: $color-surface;
+}
+
+.event-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.event-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: $color-neutral-600;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    color: $color-danger;
+  }
+}
+
+.event-row__fields {
+  display: flex;
+  align-items: flex-end;
+  gap: $space-3;
+  min-width: 0;
+
+  @include down($bp-sm) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.event-row__event {
+  flex: 1 1 40%;
+  min-width: 0;
+}
+
+.event-row__outcome {
+  flex: 1 1 30%;
+  min-width: 0;
+}
+
+.event-row__odds {
+  flex: 0 0 6.5rem;
+  width: 6.5rem;
+
+  @include down($bp-sm) {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
+
+.add-event-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.bet-date {
+  max-width: 14rem;
+}
+
+.scalata-odds-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+  padding: $space-3 $space-4;
+  border-radius: $radius-md;
+  background: rgba($color-success, 0.08);
+  border: 1px solid rgba($color-success, 0.25);
+
+  strong {
+    font-size: $font-size-xl;
+    color: darken($color-success, 8%);
+  }
+}
+
+.scalata-submit-btn {
+  align-self: flex-start;
+}
+
+.scalata-step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3;
+  align-items: center;
+}
+
+.scalata-step-actions__won {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.scalata-step-actions__lost {
+  color: $color-danger;
+
+  &:hover:not(:disabled) {
+    border-color: rgba($color-danger, 0.35);
+    color: $color-danger;
+    background: rgba($color-danger, 0.06);
+  }
+}
+
+.scalata-result-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-4;
+
+  mat-icon {
+    font-size: 2rem;
+    width: 2rem;
+    height: 2rem;
+  }
+
+  &--success mat-icon {
+    color: $color-success;
+  }
+
+  &--failed mat-icon {
+    color: $color-danger;
+  }
+}
+
+.scalata-run-timeline {
+  position: sticky;
+  top: $space-4;
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+
+  @include down($bp-lg) {
+    position: static;
+  }
+}
+
+.scalata-run-steps {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.scalata-run-step {
+  display: flex;
+  gap: $space-3;
+  align-items: flex-start;
+  border: 1px solid $color-neutral-200;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: $color-neutral-400;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+
+  &--selected {
+    border-color: rgba($color-primary, 0.65);
+    box-shadow: 0 0 0 1px rgba($color-primary, 0.2);
+  }
+
+  &--current {
+    border-color: rgba($color-primary, 0.45);
+    background: rgba($color-primary, 0.04);
+  }
+
+  &--won {
+    border-color: rgba($color-success, 0.35);
+  }
+
+  &--lost {
+    border-color: rgba($color-danger, 0.35);
+    opacity: 0.85;
+  }
+
+  &--locked {
+    opacity: 0.55;
+  }
+}
+
+.scalata-run-step__marker {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-full;
+  background: $color-neutral-200;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-sm;
+}
+
+.scalata-run-step--current .scalata-run-step__marker {
+  background: $color-primary;
+  color: white;
+}
+
+.scalata-run-step--won .scalata-run-step__marker {
+  background: $color-success;
+  color: white;
+}
+
+.scalata-run-step__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.scalata-run-step__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2;
+}
+
+.scalata-run-step__status {
+  font-size: $font-size-sm;
+  color: $color-neutral-600;
+
+  &--won {
+    color: $color-success;
+    font-weight: $font-weight-semibold;
+  }
+
+  &--lost {
+    color: $color-danger;
+    font-weight: $font-weight-semibold;
+  }
+
+  &--current {
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.scalata-run-step__meta {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  font-size: $font-size-sm;
+  color: $color-neutral-600;
+}
+
+.scalata-run-step__events {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scalata-run-timeline__hint {
+  margin-top: calc(-1 * #{$space-2});
+  font-size: $font-size-sm;
+}
+
+.scalata-day-view-card {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+}
+
+.scalata-back-to-current {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: $color-primary;
+  font-size: $font-size-sm;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.scalata-bet-events {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+.scalata-bet-event {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  padding: $space-4;
+  border: 1px solid $color-neutral-200;
+  border-radius: $radius-md;
+}
+
+.scalata-bet-event__fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: $space-4;
+
+  @include down($bp-md) {
+    grid-template-columns: 1fr;
+  }
+
+  &--single {
+    grid-template-columns: 1fr;
+  }
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+  }
+}
+
+.scalata-bet-date,
+.scalata-bet-missing {
+  margin: 0;
+}

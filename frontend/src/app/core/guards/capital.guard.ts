@@ -9,6 +9,6 @@ export const capitalGuard: CanActivateFn = () => {
 
   return api.getCapital().pipe(
     map((capital) => (capital ? true : router.createUrlTree(['/setup']))),
-    catchError(() => of(router.createUrlTree(['/setup']))),
+    catchError(() => of(true)),
   );
 };

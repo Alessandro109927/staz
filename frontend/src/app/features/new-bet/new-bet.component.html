@@ -66,6 +66,15 @@
       <input class="vs-input" type="date" formControlName="betDate" />
     </label>
 
+    <label class="vs-field">
+      <span class="vs-field__label">Stato</span>
+      <select class="vs-input" formControlName="status">
+        <option value="PENDING">In attesa</option>
+        <option value="WON">Vinta</option>
+        <option value="LOST">Persa</option>
+      </select>
+    </label>
+
     <div class="preview">
       @if (preview) {
         <div class="preview-odds">
