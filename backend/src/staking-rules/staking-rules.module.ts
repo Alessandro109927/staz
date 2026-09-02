@@ -6,7 +6,10 @@ import { StakingRulesController } from './staking-rules.controller';
 import { StakingRulesService } from './staking-rules.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([StakingRule]), forwardRef(() => AuthModule)],
+  imports: [
+    TypeOrmModule.forFeature([StakingRule]),
+    forwardRef(() => AuthModule),
+  ],
   controllers: [StakingRulesController],
   providers: [StakingRulesService],
   exports: [StakingRulesService],

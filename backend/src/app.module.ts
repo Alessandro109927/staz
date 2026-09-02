@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { BetsModule } from './bets/bets.module';
 import { CapitalModule } from './capital/capital.module';
 import { DatabaseModule } from './database/database.module';
+import { ScalataModule } from './scalata/scalata.module';
 import { StakingRulesModule } from './staking-rules/staking-rules.module';
 
 @Module({
@@ -28,6 +29,7 @@ import { StakingRulesModule } from './staking-rules/staking-rules.module';
     CapitalModule,
     StakingRulesModule,
     BetsModule,
+    ScalataModule,
     DatabaseModule,
   ],
 })

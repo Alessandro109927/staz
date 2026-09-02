@@ -13,3 +13,10 @@ export function formatMoney(value: Decimal | string | number): string {
 export function parseMoney(value: string | number): Decimal {
   return toDecimal(value);
 }
+
+export function moneyDifference(
+  minuend: string | number,
+  subtrahend: string | number,
+): string {
+  return parseMoney(minuend).minus(parseMoney(subtrahend)).toFixed(2);
+}

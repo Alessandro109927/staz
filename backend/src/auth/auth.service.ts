@@ -26,12 +26,18 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const email = dto.email.trim().toLowerCase();
-    const existingEmail = await this.userRepository.findOne({ where: { email } });
+    const existingEmail = await this.userRepository.findOne({
+      where: { email },
+    });
     if (existingEmail) {
       throw new ConflictException('Email già registrata');
     }
 
-    const username = await this.generateUsername(dto.firstName, dto.lastName, email);
+    const username = await this.generateUsername(
+      dto.firstName,
+      dto.lastName,
+      email,
+    );
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
     const user = this.userRepository.create({
@@ -115,7 +121,9 @@ export class AuthService {
     let candidate = base;
     let suffix = 1;
 
-    while (await this.userRepository.findOne({ where: { username: candidate } })) {
+    while (
+      await this.userRepository.findOne({ where: { username: candidate } })
+    ) {
       candidate = `${base}${suffix}`;
       suffix += 1;
     }

@@ -94,7 +94,10 @@ export class StakingRulesService {
     return { deleted: true };
   }
 
-  async resolveStakePercentage(userId: number, odds: number | string | Decimal) {
+  async resolveStakePercentage(
+    userId: number,
+    odds: number | string | Decimal,
+  ) {
     const oddsValue = toDecimal(odds);
     const rules = await this.findAll(userId);
 

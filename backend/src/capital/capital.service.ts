@@ -1,15 +1,22 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { BetsService } from '../bets/bets.service';
 import { Bet } from '../bets/entities/bet.entity';
 import { BetStatus } from '../common/enums/bet-status.enum';
 import { Capital } from './entities/capital.entity';
 import { SetCapitalDto } from './dto/set-capital.dto';
-import { formatMoney, parseMoney } from '../common/decimal.util';
+import {
+  formatMoney,
+  moneyDifference,
+  parseMoney,
+} from '../common/decimal.util';
 
 @Injectable()
 export class CapitalService {
@@ -18,6 +25,8 @@ export class CapitalService {
     private readonly capitalRepository: Repository<Capital>,
     @InjectRepository(Bet)
     private readonly betRepository: Repository<Bet>,
+    @Inject(forwardRef(() => BetsService))
+    private readonly betsService: BetsService,
   ) {}
 
   async getCapital(userId: number) {
@@ -27,11 +36,26 @@ export class CapitalService {
     }
 
     await this.ensureStartingCapital(record);
-    return this.mapCapital(record);
+    await this.betsService.recalculateCapitalChain(userId);
+
+    const refreshed = await this.getCapitalEntity(userId);
+    if (!refreshed) {
+      return null;
+    }
+
+    return this.mapCapital(refreshed);
   }
 
   async setCapital(userId: number, dto: SetCapitalDto) {
-    const pendingCount = await this.betRepository.count({ where: { userId } });
+    const pendingCount = await this.betRepository.count({
+      where: { userId, status: BetStatus.PENDING },
+    });
+    const settledCount = await this.betRepository.count({
+      where: [
+        { userId, status: BetStatus.WON },
+        { userId, status: BetStatus.LOST },
+      ],
+    });
     const existing = await this.getCapitalEntity(userId);
 
     if (existing && pendingCount > 0 && !dto.reset) {
@@ -46,8 +70,16 @@ export class CapitalService {
       existing.initialCapital = formatted;
       existing.startingCapital = formatted;
       existing.currentCapital = formatted;
-      const saved = await this.capitalRepository.save(existing);
-      return this.mapCapital(saved);
+      await this.capitalRepository.save(existing);
+      await this.betsService.recalculateCapitalChain(userId);
+      return this.getCapital(userId);
+    }
+
+    if (existing && settledCount > 0) {
+      existing.initialCapital = formatted;
+      await this.capitalRepository.save(existing);
+      await this.betsService.recalculateCapitalChain(userId);
+      return this.getCapital(userId);
     }
 
     if (existing && pendingCount === 0) {
@@ -145,9 +177,9 @@ export class CapitalService {
         );
       }, parseMoney('0'));
 
-      record.startingCapital = parseMoney(record.currentCapital)
-        .minus(netDelta)
-        .toFixed(2);
+      record.startingCapital = formatMoney(
+        parseMoney(record.currentCapital).minus(netDelta),
+      );
     } else {
       record.startingCapital = record.currentCapital;
     }
@@ -163,6 +195,7 @@ export class CapitalService {
       initialCapital: formatMoney(record.initialCapital),
       startingCapital: formatMoney(startingCapital),
       currentCapital: formatMoney(record.currentCapital),
+      profit: moneyDifference(record.currentCapital, startingCapital),
       createdAt: record.createdAt,
     };
   }

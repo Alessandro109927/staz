@@ -17,7 +17,9 @@ export class JwtAuthGuard implements CanActivate {
   ) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<Request & { user?: AuthUser }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { user?: AuthUser }>();
     const token = this.extractToken(request);
 
     if (!token) {
@@ -26,7 +28,10 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = this.jwtService.verify<JwtPayload>(token, {
-        secret: this.configService.get<string>('JWT_SECRET', 'staz-dev-secret-change-me'),
+        secret: this.configService.get<string>(
+          'JWT_SECRET',
+          'staz-dev-secret-change-me',
+        ),
       });
 
       request.user = {

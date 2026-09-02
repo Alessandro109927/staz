@@ -29,7 +29,10 @@ export class BetsController {
   constructor(private readonly betsService: BetsService) {}
 
   @Post('calculate-stake')
-  calculateStake(@CurrentUser() user: AuthUser, @Body() dto: CalculateStakeDto) {
+  calculateStake(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CalculateStakeDto,
+  ) {
     return this.betsService.calculateStake(user.userId, dto);
   }
 
@@ -48,7 +51,11 @@ export class BetsController {
     @CurrentUser() user: AuthUser,
     @Query() query: MonthlyReportQueryDto,
   ) {
-    return this.betsService.getMonthlyReport(user.userId, query.year, query.month);
+    return this.betsService.getMonthlyReport(
+      user.userId,
+      query.year,
+      query.month,
+    );
   }
 
   @Get('stats/odds-ranges')

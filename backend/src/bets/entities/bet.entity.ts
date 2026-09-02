@@ -1,9 +1,4 @@
-import {
-  Column,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BetStatus } from '../../common/enums/bet-status.enum';
 import { BetEvent } from './bet-event.entity';
 

@@ -64,6 +64,10 @@ export class CreateBetDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
   potentialWin?: number;
+
+  @IsOptional()
+  @IsEnum(BetStatus)
+  status?: BetStatus;
 }
 
 export class SettleBetDto {

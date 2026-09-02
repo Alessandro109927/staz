@@ -1,7 +1,9 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, FindOptionsWhere, Repository } from 'typeorm';
@@ -36,13 +38,15 @@ export class BetsService {
     private readonly betRepository: Repository<Bet>,
     @InjectRepository(BetEvent)
     private readonly betEventRepository: Repository<BetEvent>,
+    @Inject(forwardRef(() => CapitalService))
     private readonly capitalService: CapitalService,
     private readonly stakingRulesService: StakingRulesService,
   ) {}
 
   async calculateStake(userId: number, dto: CalculateStakeDto) {
     const { combinedOdds } = normalizeEvents(dto.events);
-    const initialCapital = await this.capitalService.getInitialCapitalValue(userId);
+    const initialCapital =
+      await this.capitalService.getInitialCapitalValue(userId);
     const calculation = await this.stakingRulesService.calculateStake(
       userId,
       combinedOdds,
@@ -62,8 +66,10 @@ export class BetsService {
 
   async create(userId: number, dto: CreateBetDto) {
     const normalized = normalizeEvents(dto.events);
-    const initialCapital = await this.capitalService.getInitialCapitalValue(userId);
-    const currentCapital = await this.capitalService.getCurrentCapitalValue(userId);
+    const initialCapital =
+      await this.capitalService.getInitialCapitalValue(userId);
+    const currentCapital =
+      await this.capitalService.getCurrentCapitalValue(userId);
     const calculation = await this.stakingRulesService.calculateStake(
       userId,
       normalized.combinedOdds,
@@ -87,6 +93,8 @@ export class BetsService {
         .toFixed(2);
     }
 
+    const betStatus = dto.status ?? BetStatus.PENDING;
+
     const bet = this.betRepository.create({
       userId,
       eventName: normalized.eventSummary,
@@ -100,9 +108,9 @@ export class BetsService {
       ),
       capitalBefore: formatMoney(currentCapital),
       capitalAfter: null,
-      status: BetStatus.PENDING,
+      status: betStatus,
       betDate: new Date(dto.betDate),
-      settledAt: null,
+      settledAt: betStatus === BetStatus.PENDING ? null : new Date(),
       events: normalized.formattedEvents.map((event) =>
         this.betEventRepository.create({
           eventName: event.eventName,
@@ -115,6 +123,7 @@ export class BetsService {
     });
 
     const saved = await this.betRepository.save(bet);
+    await this.recalculateCapitalChain(userId);
     const withEvents = await this.findBetWithEvents(userId, saved.id);
     return this.mapBet(withEvents!);
   }
@@ -144,7 +153,10 @@ export class BetsService {
 
     if (nextStatus === BetStatus.PENDING) {
       bet.settledAt = null;
-    } else if (previousStatus === BetStatus.PENDING || nextStatus !== previousStatus) {
+    } else if (
+      previousStatus === BetStatus.PENDING ||
+      nextStatus !== previousStatus
+    ) {
       bet.settledAt = new Date();
     }
 
@@ -214,7 +226,8 @@ export class BetsService {
     }
 
     const normalized = normalizeEvents(dto.events);
-    const initialCapital = await this.capitalService.getInitialCapitalValue(userId);
+    const initialCapital =
+      await this.capitalService.getInitialCapitalValue(userId);
     const previousStatus = bet.status;
 
     let stakePercentage = formatMoney(
@@ -251,7 +264,10 @@ export class BetsService {
 
     if (dto.status === BetStatus.PENDING) {
       bet.settledAt = null;
-    } else if (previousStatus === BetStatus.PENDING || dto.status !== previousStatus) {
+    } else if (
+      previousStatus === BetStatus.PENDING ||
+      dto.status !== previousStatus
+    ) {
       bet.settledAt = new Date();
     }
 
@@ -293,7 +309,9 @@ export class BetsService {
     const [won, lost, pending] = await Promise.all([
       this.betRepository.count({ where: { userId, status: BetStatus.WON } }),
       this.betRepository.count({ where: { userId, status: BetStatus.LOST } }),
-      this.betRepository.count({ where: { userId, status: BetStatus.PENDING } }),
+      this.betRepository.count({
+        where: { userId, status: BetStatus.PENDING },
+      }),
     ]);
 
     return { won, lost, pending, total: won + lost + pending };
@@ -334,7 +352,7 @@ export class BetsService {
     return buildMonthlyReport(bets, year, month);
   }
 
-  private async recalculateCapitalChain(userId: number): Promise<void> {
+  async recalculateCapitalChain(userId: number): Promise<void> {
     let running = await this.capitalService.getStartingCapitalValue(userId);
 
     const bets = await this.betRepository.find({
@@ -343,9 +361,8 @@ export class BetsService {
     });
 
     for (const bet of bets) {
-      bet.capitalBefore = running.toFixed(2);
+      bet.capitalBefore = formatMoney(running);
       const stake = parseMoney(bet.amountStaked);
-      const odds = parseMoney(bet.odds);
 
       if (bet.status === BetStatus.PENDING) {
         bet.capitalAfter = null;
@@ -353,19 +370,23 @@ export class BetsService {
       }
 
       if (bet.status === BetStatus.WON) {
-        running = running.add(stake.mul(odds.minus(1)));
+        running = running.add(this.resolveWonNetProfit(bet));
       } else if (bet.status === BetStatus.LOST) {
         running = running.minus(stake);
       }
 
-      bet.capitalAfter = running.toFixed(2);
+      running = parseMoney(formatMoney(running));
+      bet.capitalAfter = formatMoney(running);
     }
 
     if (bets.length) {
       await this.betRepository.save(bets);
     }
 
-    await this.capitalService.updateCurrentCapital(userId, running.toFixed(2));
+    await this.capitalService.updateCurrentCapital(
+      userId,
+      formatMoney(running),
+    );
   }
 
   private async findBetWithEvents(userId: number, id: number) {
@@ -379,7 +400,9 @@ export class BetsService {
   private mapBet(bet: Bet) {
     const capitalDelta =
       bet.capitalAfter != null
-        ? parseMoney(bet.capitalAfter).minus(parseMoney(bet.capitalBefore)).toFixed(2)
+        ? parseMoney(bet.capitalAfter)
+            .minus(parseMoney(bet.capitalBefore))
+            .toFixed(2)
         : null;
 
     const events =
@@ -407,6 +430,16 @@ export class BetsService {
       betDate: bet.betDate,
       settledAt: bet.settledAt,
     };
+  }
+
+  private resolveWonNetProfit(bet: Bet) {
+    const stake = parseMoney(bet.amountStaked);
+    const payout =
+      bet.potentialWin != null
+        ? parseMoney(bet.potentialWin)
+        : stake.mul(parseMoney(bet.odds));
+
+    return payout.minus(stake);
   }
 
   private resolvePotentialWin(

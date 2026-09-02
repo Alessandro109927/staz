@@ -26,6 +26,9 @@ export class CapitalController {
     @CurrentUser() user: AuthUser,
     @Body() dto: UpdateInitialCapitalDto,
   ) {
-    return this.capitalService.updateInitialCapital(user.userId, dto.initialCapital);
+    return this.capitalService.updateInitialCapital(
+      user.userId,
+      dto.initialCapital,
+    );
   }
 }

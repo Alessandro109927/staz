@@ -31,7 +31,9 @@ export interface OddsRangeAccumulator {
   netProfit: Decimal;
 }
 
-export function resolveOddsBucket(odds: number | string): OddsRangeBucket | null {
+export function resolveOddsBucket(
+  odds: number | string,
+): OddsRangeBucket | null {
   const value = parseMoney(odds);
 
   for (const bucket of ODDS_RANGE_BUCKETS) {
@@ -90,7 +92,9 @@ export function accumulateBetStats(
   accumulator.totalStaked = accumulator.totalStaked.add(staked);
 
   if (bet.capitalAfter != null) {
-    const delta = parseMoney(bet.capitalAfter).minus(parseMoney(bet.capitalBefore));
+    const delta = parseMoney(bet.capitalAfter).minus(
+      parseMoney(bet.capitalBefore),
+    );
     accumulator.netProfit = accumulator.netProfit.add(delta);
   }
 }
@@ -99,10 +103,9 @@ export function formatOddsRangeStats(accumulators: OddsRangeAccumulator[]) {
   return accumulators.map((item) => {
     const settled = item.won + item.lost;
     const winRate = settled > 0 ? (item.won / settled) * 100 : null;
-    const profitMargin =
-      item.totalStaked.gt(0)
-        ? item.netProfit.div(item.totalStaked).mul(100)
-        : null;
+    const profitMargin = item.totalStaked.gt(0)
+      ? item.netProfit.div(item.totalStaked).mul(100)
+      : null;
 
     return {
       key: item.key,
@@ -137,14 +140,20 @@ export interface MonthlyReportSummary {
   oddsRanges: ReturnType<typeof formatOddsRangeStats>;
 }
 
-export function filterBetsByMonth(bets: Bet[], year: number, month: number): Bet[] {
+export function filterBetsByMonth(
+  bets: Bet[],
+  year: number,
+  month: number,
+): Bet[] {
   return bets.filter((bet) => {
     const date = new Date(bet.betDate);
     return date.getFullYear() === year && date.getMonth() + 1 === month;
   });
 }
 
-export function listBetMonths(bets: Bet[]): Array<{ year: number; month: number }> {
+export function listBetMonths(
+  bets: Bet[],
+): Array<{ year: number; month: number }> {
   const seen = new Set<string>();
 
   for (const bet of bets) {
@@ -203,8 +212,7 @@ export function buildMonthlyReport(
   const roi = totalStakedSettled.gt(0)
     ? profit.div(totalStakedSettled).mul(100).toFixed(1)
     : null;
-  const averageOdds =
-    oddsCount > 0 ? oddsSum.div(oddsCount).toFixed(2) : null;
+  const averageOdds = oddsCount > 0 ? oddsSum.div(oddsCount).toFixed(2) : null;
 
   return {
     year,

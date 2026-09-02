@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { CapitalModule } from '../capital/capital.module';
@@ -12,7 +12,7 @@ import { Bet } from './entities/bet.entity';
   imports: [
     TypeOrmModule.forFeature([Bet, BetEvent]),
     AuthModule,
-    CapitalModule,
+    forwardRef(() => CapitalModule),
     StakingRulesModule,
   ],
   controllers: [BetsController],

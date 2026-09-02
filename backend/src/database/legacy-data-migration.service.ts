@@ -62,7 +62,9 @@ export class LegacyDataMigrationService implements OnModuleInit {
         passwordHash: await bcrypt.hash(password, 10),
       });
       owner = await this.userRepository.save(owner);
-      this.logger.log(`Utente legacy creato: ${owner.username} (${owner.email})`);
+      this.logger.log(
+        `Utente legacy creato: ${owner.username} (${owner.email})`,
+      );
     }
 
     const [capitalUpdated, betsUpdated, rulesUpdated] = await Promise.all([
