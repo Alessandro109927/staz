@@ -59,4 +59,7 @@ export class Bet {
 
   @Column({ name: 'settled_at', type: 'timestamp', nullable: true })
   settledAt: Date | null;
+
+  @Column({ name: 'is_scalata', type: 'boolean', default: false })
+  isScalata: boolean;
 }

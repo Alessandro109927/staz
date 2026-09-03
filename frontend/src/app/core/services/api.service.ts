@@ -191,4 +191,10 @@ export class ApiService {
   cashOutScalataRun(id: number): Observable<ScalataRun> {
     return this.http.patch<ScalataRun>(`${this.baseUrl}/scalata/${id}/cash-out`, {});
   }
+
+  deleteScalataRun(id: number): Observable<{ deleted: boolean; id: number }> {
+    return this.http.delete<{ deleted: boolean; id: number }>(
+      `${this.baseUrl}/scalata/${id}`,
+    );
+  }
 }

@@ -48,12 +48,12 @@ export class CapitalService {
 
   async setCapital(userId: number, dto: SetCapitalDto) {
     const pendingCount = await this.betRepository.count({
-      where: { userId, status: BetStatus.PENDING },
+      where: { userId, status: BetStatus.PENDING, isScalata: false },
     });
     const settledCount = await this.betRepository.count({
       where: [
-        { userId, status: BetStatus.WON },
-        { userId, status: BetStatus.LOST },
+        { userId, status: BetStatus.WON, isScalata: false },
+        { userId, status: BetStatus.LOST, isScalata: false },
       ],
     });
     const existing = await this.getCapitalEntity(userId);
@@ -162,8 +162,8 @@ export class CapitalService {
 
     const settledBets = await this.betRepository.find({
       where: [
-        { userId: record.userId ?? undefined, status: BetStatus.WON },
-        { userId: record.userId ?? undefined, status: BetStatus.LOST },
+        { userId: record.userId ?? undefined, status: BetStatus.WON, isScalata: false },
+        { userId: record.userId ?? undefined, status: BetStatus.LOST, isScalata: false },
       ],
     });
 

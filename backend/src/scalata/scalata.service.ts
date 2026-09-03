@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { FindOptionsWhere, In, Repository } from 'typeorm';
 import { Bet } from '../bets/entities/bet.entity';
 import { BetsService } from '../bets/bets.service';
 import { BetStatus } from '../common/enums/bet-status.enum';
@@ -147,6 +147,7 @@ export class ScalataService {
         amountStaked: Number(stake),
         stakePercentageApplied: Number(stakePercentage),
         potentialWin: Number(potentialWin),
+        isScalata: true,
       });
     } else {
       const bet = await this.betsService.create(userId, {
@@ -156,6 +157,7 @@ export class ScalataService {
         amountStaked: Number(stake),
         stakePercentageApplied: Number(stakePercentage),
         potentialWin: Number(potentialWin),
+        isScalata: true,
       });
       betId = bet.id;
     }
@@ -213,6 +215,31 @@ export class ScalataService {
     return this.findOne(userId, id);
   }
 
+  async remove(userId: number, id: number) {
+    const run = await this.findRunWithSteps(userId, id);
+    if (!run) {
+      throw new NotFoundException(`Scalata ${id} non trovata`);
+    }
+
+    const betIds = run.steps
+      .map((step) => step.betId)
+      .filter((betId): betId is number => betId != null);
+
+    await this.runRepository.remove(run);
+
+    if (betIds.length) {
+      await this.betRepository.delete({
+        userId,
+        id: In(betIds),
+        isScalata: true,
+      });
+    }
+
+    await this.betsService.recalculateCapitalChain(userId);
+
+    return { deleted: true, id };
+  }
+
   private async advanceRunAfterStep(
     run: ScalataRun,
     step: ScalataStep,
@@ -266,6 +293,16 @@ export class ScalataService {
     if (run?.steps) {
       run.steps.sort((a, b) => a.day - b.day);
       await this.repairStepBetLinks(userId, run);
+      const linkedBetIds = run.steps
+        .map((step) => step.betId)
+        .filter((id): id is number => id != null);
+      const markedCount = await this.betsService.markAsScalata(
+        userId,
+        linkedBetIds,
+      );
+      if (markedCount > 0) {
+        await this.betsService.recalculateCapitalChain(userId);
+      }
     }
 
     return run;

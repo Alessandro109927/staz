@@ -46,6 +46,17 @@
   gap: $space-2;
 }
 
+.scalata-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  color: $color-danger;
+
+  &:hover:not(:disabled) {
+    color: darken($color-danger, 8%);
+  }
+}
+
 .scalata-back-link {
   display: inline-flex;
   align-items: center;

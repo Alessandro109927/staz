@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -61,5 +62,10 @@ export class ScalataController {
   @Patch(':id/cash-out')
   cashOut(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.scalataService.cashOut(user.userId, Number(id));
+  }
+
+  @Delete(':id')
+  remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.scalataService.remove(user.userId, Number(id));
   }
 }

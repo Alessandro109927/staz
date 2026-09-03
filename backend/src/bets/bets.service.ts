@@ -6,7 +6,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, FindOptionsWhere, Repository } from 'typeorm';
+import { Between, FindOptionsWhere, In, Repository } from 'typeorm';
 import { CapitalService } from '../capital/capital.service';
 import { BetStatus } from '../common/enums/bet-status.enum';
 import { formatMoney, parseMoney } from '../common/decimal.util';
@@ -111,6 +111,7 @@ export class BetsService {
       status: betStatus,
       betDate: new Date(dto.betDate),
       settledAt: betStatus === BetStatus.PENDING ? null : new Date(),
+      isScalata: dto.isScalata ?? false,
       events: normalized.formattedEvents.map((event) =>
         this.betEventRepository.create({
           eventName: event.eventName,
@@ -123,7 +124,9 @@ export class BetsService {
     });
 
     const saved = await this.betRepository.save(bet);
-    await this.recalculateCapitalChain(userId);
+    if (!saved.isScalata) {
+      await this.recalculateCapitalChain(userId);
+    }
     const withEvents = await this.findBetWithEvents(userId, saved.id);
     return this.mapBet(withEvents!);
   }
@@ -161,14 +164,24 @@ export class BetsService {
     }
 
     await this.betRepository.save(bet);
-    await this.recalculateCapitalChain(userId);
+    if (!bet.isScalata) {
+      await this.recalculateCapitalChain(userId);
+    }
 
     const withEvents = await this.findBetWithEvents(userId, betId);
     return this.mapBet(withEvents!);
   }
 
   async findAll(userId: number, query: ListBetsQueryDto) {
+    if (!this.shouldIncludeScalata(query)) {
+      await this.syncScalataBetFlags(userId);
+    }
+
     const where: FindOptionsWhere<Bet> = { userId };
+
+    if (!this.shouldIncludeScalata(query)) {
+      where.isScalata = false;
+    }
 
     if (query.status) {
       where.status = query.status;
@@ -213,7 +226,9 @@ export class BetsService {
     bet.settledAt = new Date();
 
     await this.betRepository.save(bet);
-    await this.recalculateCapitalChain(userId);
+    if (!bet.isScalata) {
+      await this.recalculateCapitalChain(userId);
+    }
 
     const withEvents = await this.findBetWithEvents(userId, id);
     return this.mapBet(withEvents!);
@@ -261,6 +276,9 @@ export class BetsService {
     );
     bet.betDate = new Date(dto.betDate);
     bet.status = dto.status;
+    if (dto.isScalata != null) {
+      bet.isScalata = dto.isScalata;
+    }
 
     if (dto.status === BetStatus.PENDING) {
       bet.settledAt = null;
@@ -288,7 +306,9 @@ export class BetsService {
     );
 
     await this.betRepository.save(bet);
-    await this.recalculateCapitalChain(userId);
+    if (!bet.isScalata) {
+      await this.recalculateCapitalChain(userId);
+    }
 
     const withEvents = await this.findBetWithEvents(userId, id);
     return this.mapBet(withEvents!);
@@ -300,17 +320,35 @@ export class BetsService {
       throw new NotFoundException(`Scommessa ${id} non trovata`);
     }
 
+    const isScalata = bet.isScalata;
     await this.betRepository.remove(bet);
-    await this.recalculateCapitalChain(userId);
+    if (!isScalata) {
+      await this.recalculateCapitalChain(userId);
+    }
     return { deleted: true };
   }
 
+  async markAsScalata(userId: number, betIds: number[]) {
+    if (!betIds.length) {
+      return 0;
+    }
+
+    const result = await this.betRepository.update(
+      { userId, id: In(betIds), isScalata: false },
+      { isScalata: true },
+    );
+
+    return result.affected ?? 0;
+  }
+
   async getStats(userId: number) {
+    await this.syncScalataBetFlags(userId);
+    const baseWhere = { userId, isScalata: false };
     const [won, lost, pending] = await Promise.all([
-      this.betRepository.count({ where: { userId, status: BetStatus.WON } }),
-      this.betRepository.count({ where: { userId, status: BetStatus.LOST } }),
+      this.betRepository.count({ where: { ...baseWhere, status: BetStatus.WON } }),
+      this.betRepository.count({ where: { ...baseWhere, status: BetStatus.LOST } }),
       this.betRepository.count({
-        where: { userId, status: BetStatus.PENDING },
+        where: { ...baseWhere, status: BetStatus.PENDING },
       }),
     ]);
 
@@ -318,8 +356,9 @@ export class BetsService {
   }
 
   async getOddsRangeStats(userId: number) {
+    await this.syncScalataBetFlags(userId);
     const bets = await this.betRepository.find({
-      where: { userId },
+      where: { userId, isScalata: false },
       relations: { events: true },
       order: { betDate: 'DESC', id: 'DESC' },
     });
@@ -333,8 +372,9 @@ export class BetsService {
   }
 
   async getAvailableMonths(userId: number) {
+    await this.syncScalataBetFlags(userId);
     const bets = await this.betRepository.find({
-      where: { userId },
+      where: { userId, isScalata: false },
       select: { betDate: true },
       order: { betDate: 'DESC' },
     });
@@ -343,8 +383,9 @@ export class BetsService {
   }
 
   async getMonthlyReport(userId: number, year: number, month: number) {
+    await this.syncScalataBetFlags(userId);
     const bets = await this.betRepository.find({
-      where: { userId },
+      where: { userId, isScalata: false },
       relations: { events: true },
       order: { betDate: 'DESC', id: 'DESC' },
     });
@@ -353,6 +394,7 @@ export class BetsService {
   }
 
   async recalculateCapitalChain(userId: number): Promise<void> {
+    await this.syncScalataBetFlags(userId);
     let running = await this.capitalService.getStartingCapitalValue(userId);
 
     const bets = await this.betRepository.find({
@@ -361,6 +403,10 @@ export class BetsService {
     });
 
     for (const bet of bets) {
+      if (bet.isScalata) {
+        continue;
+      }
+
       bet.capitalBefore = formatMoney(running);
       const stake = parseMoney(bet.amountStaked);
 
@@ -380,12 +426,32 @@ export class BetsService {
     }
 
     if (bets.length) {
-      await this.betRepository.save(bets);
+      await this.betRepository.save(bets.filter((bet) => !bet.isScalata));
     }
 
     await this.capitalService.updateCurrentCapital(
       userId,
       formatMoney(running),
+    );
+  }
+
+  private shouldIncludeScalata(query: ListBetsQueryDto): boolean {
+    const value = query.includeScalata as boolean | string | undefined;
+    return value === true || value === 'true';
+  }
+
+  private async syncScalataBetFlags(userId: number): Promise<void> {
+    await this.betRepository.manager.query(
+      `
+        UPDATE bets b
+        SET is_scalata = true
+        FROM scalata_steps ss
+        INNER JOIN scalata_runs sr ON sr.id = ss.scalata_run_id
+        WHERE b.id = ss.bet_id
+          AND sr.user_id = $1
+          AND b.is_scalata = false
+      `,
+      [userId],
     );
   }
 

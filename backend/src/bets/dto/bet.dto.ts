@@ -68,6 +68,9 @@ export class CreateBetDto {
   @IsOptional()
   @IsEnum(BetStatus)
   status?: BetStatus;
+
+  @IsOptional()
+  isScalata?: boolean;
 }
 
 export class SettleBetDto {
@@ -102,6 +105,9 @@ export class UpdateBetDto {
 
   @IsEnum(BetStatus)
   status: BetStatus;
+
+  @IsOptional()
+  isScalata?: boolean;
 }
 
 export class ListBetsQueryDto {
@@ -116,4 +122,7 @@ export class ListBetsQueryDto {
   @IsOptional()
   @IsDateString()
   to?: string;
+
+  @IsOptional()
+  includeScalata?: boolean;
 }

@@ -58,6 +58,7 @@ export class ScalataRunComponent implements OnInit {
   loading = true;
   submitting = false;
   cashingOut = false;
+  deleting = false;
   formStepId: number | null = null;
   selectedStepId: number | null = null;
   readonly formatRiskLabel = formatRiskLabel;
@@ -311,6 +312,43 @@ export class ScalataRunComponent implements OnInit {
         this.snackBar.open(err.error?.message ?? 'Errore', 'Chiudi', { duration: 5000 });
       },
     });
+  }
+
+  deleteRun(): void {
+    if (!this.run || this.deleting) {
+      return;
+    }
+
+    const linkedBets = this.run.steps.filter((step) => step.betId != null).length;
+    const message =
+      'Eliminare definitivamente questa scalata?\n\n' +
+      (linkedBets > 0
+        ? `Verranno rimosse anche le ${linkedBets} giocate collegate. `
+        : '') +
+      'Il capitale principale non cambia (le scalate sono separate dalle statistiche).';
+
+    if (!confirm(message)) {
+      return;
+    }
+
+    this.deleting = true;
+    this.api
+      .deleteScalataRun(this.run.id)
+      .pipe(
+        finalize(() => {
+          this.deleting = false;
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.betChange.notifyCreated();
+          this.snackBar.open('Scalata eliminata', 'OK', { duration: 3000 });
+          this.router.navigate(['/scalata/active']);
+        },
+        error: (err) => {
+          this.snackBar.open(err.error?.message ?? 'Errore', 'Chiudi', { duration: 5000 });
+        },
+      });
   }
 
   stepClass(step: ScalataRunStep): Record<string, boolean> {

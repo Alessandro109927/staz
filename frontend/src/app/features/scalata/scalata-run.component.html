@@ -45,6 +45,16 @@
             Abbandona
           </button>
         }
+
+        <button
+          type="button"
+          class="vs-btn-ghost scalata-delete-btn"
+          [disabled]="deleting"
+          (click)="deleteRun()"
+        >
+          <mat-icon>delete</mat-icon>
+          Elimina scalata
+        </button>
       </div>
     </header>
 
