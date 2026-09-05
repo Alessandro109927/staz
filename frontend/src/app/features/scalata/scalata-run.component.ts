@@ -136,7 +136,33 @@ export class ScalataRunComponent implements OnInit {
   }
 
   get displayProfit(): number {
+    if (!this.run) {
+      return 0;
+    }
+
+    if (this.run.capitalAdjustment != null) {
+      return Number(this.run.capitalAdjustment);
+    }
+
+    if (this.run.status === 'FAILED') {
+      return -Number(this.run.startBankroll);
+    }
+
+    if (this.run.status === 'ACTIVE' && this.lastWonStep) {
+      return Number(this.lastWonStep.cumulativeProfit);
+    }
+
     return this.lastWonStep ? Number(this.lastWonStep.cumulativeProfit) : 0;
+  }
+
+  get displayProfitIsLoss(): boolean {
+    return this.displayProfit < 0;
+  }
+
+  get displayProfitLabel(): string {
+    const value = this.displayProfit;
+    const prefix = value > 0 ? '+ ' : value < 0 ? '- ' : '';
+    return `${prefix}€ ${Math.abs(value).toFixed(2)}`;
   }
 
   get displayRoi(): number {
@@ -144,7 +170,20 @@ export class ScalataRunComponent implements OnInit {
       return 0;
     }
     const start = Number(this.run.startBankroll);
-    return start > 0 ? (this.displayProfit / start) * 100 : 0;
+    if (start <= 0) {
+      return 0;
+    }
+    return (this.displayProfit / start) * 100;
+  }
+
+  get showProfitSummary(): boolean {
+    if (!this.run) {
+      return false;
+    }
+    if (this.run.status === 'ACTIVE') {
+      return !!this.lastWonStep;
+    }
+    return this.run.status === 'FAILED' || this.run.status === 'COMPLETED';
   }
 
   get isEarlyCompletion(): boolean {

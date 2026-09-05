@@ -196,6 +196,8 @@ export interface ScalataRun {
   progressPercent: number;
   createdAt: string;
   completedAt: string | null;
+  capitalSettled: boolean;
+  capitalAdjustment: string | null;
   steps: ScalataRunStep[];
 }
 

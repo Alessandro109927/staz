@@ -21,10 +21,20 @@
       </div>
 
       <div class="scalata-run-header__actions">
-        @if (lastWonStep) {
+        @if (showProfitSummary) {
           <div class="scalata-run-profit">
-            <strong class="scalata-run-profit__amount">+ € {{ displayProfit | number: '1.2-2' }}</strong>
-            <span class="scalata-run-profit__roi">+{{ displayRoi | number: '1.1-1' }}% ROI</span>
+            <strong
+              class="scalata-run-profit__amount"
+              [class.scalata-run-profit__amount--loss]="displayProfitIsLoss"
+            >
+              {{ displayProfitLabel }}
+            </strong>
+            <span
+              class="scalata-run-profit__roi"
+              [class.scalata-run-profit__roi--loss]="displayProfitIsLoss"
+            >
+              {{ displayRoi >= 0 ? '+' : '' }}{{ displayRoi | number: '1.1-1' }}% ROI
+            </span>
           </div>
         }
 
@@ -315,7 +325,12 @@
             <mat-icon>cancel</mat-icon>
             <div>
               <h2 class="vs-heading-section">Scalata fallita</h2>
-              <p class="vs-text-muted">Una bet persa ha interrotto il percorso.</p>
+              <p class="vs-text-muted">
+                Una bet persa ha interrotto il percorso.
+                @if (displayProfitIsLoss) {
+                  Perdita netta: {{ displayProfitLabel }} sul bankroll iniziale.
+                }
+              </p>
             </div>
           </article>
         } @else {

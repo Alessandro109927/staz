@@ -91,8 +91,20 @@ export class ScalataActiveComponent implements OnInit {
   }
 
   runProfit(run: ScalataRun): number {
+    if (run.capitalAdjustment != null) {
+      return Number(run.capitalAdjustment);
+    }
+
+    if (run.status === 'FAILED') {
+      return -Number(run.startBankroll);
+    }
+
     const step = this.lastWonStep(run);
     return step ? Number(step.cumulativeProfit) : 0;
+  }
+
+  runProfitIsLoss(run: ScalataRun): boolean {
+    return this.runProfit(run) < 0;
   }
 
   isEarlyCompletion(run: ScalataRun): boolean {

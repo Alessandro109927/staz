@@ -56,6 +56,18 @@ export class ScalataRun {
   @Column({ name: 'completed_at', type: 'timestamp', nullable: true })
   completedAt: Date | null;
 
+  @Column({ name: 'capital_settled', type: 'boolean', default: false })
+  capitalSettled: boolean;
+
+  @Column({
+    name: 'capital_adjustment',
+    type: 'decimal',
+    precision: 14,
+    scale: 2,
+    nullable: true,
+  })
+  capitalAdjustment: string | null;
+
   @OneToMany(() => ScalataStep, (step) => step.scalataRun, { cascade: true })
   steps: ScalataStep[];
 }

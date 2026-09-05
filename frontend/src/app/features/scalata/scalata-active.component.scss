@@ -175,6 +175,10 @@
   color: $color-neutral-400;
 }
 
+.scalata-active-card__loss {
+  color: $color-danger;
+}
+
 .scalata-active-card__step {
   display: flex;
   flex-wrap: wrap;

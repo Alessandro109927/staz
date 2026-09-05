@@ -56,6 +56,8 @@ export class ScalataService {
       totalDays: plan.totalDays,
       currentDay: 1,
       completedAt: null,
+      capitalSettled: false,
+      capitalAdjustment: null,
       steps: plan.steps.map((step) =>
         this.stepRepository.create({
           day: step.day,
@@ -167,7 +169,7 @@ export class ScalataService {
     step.status = nextStatus;
     await this.stepRepository.save(step);
 
-    await this.advanceRunAfterStep(run, step, dto.status);
+    await this.advanceRunAfterStep(run, step, dto.status, userId);
 
     return this.findOne(userId, runId);
   }
@@ -211,6 +213,7 @@ export class ScalataService {
     run.status = ScalataRunStatus.COMPLETED;
     run.completedAt = new Date();
     await this.runRepository.save(run);
+    await this.settleCapital(userId, run);
 
     return this.findOne(userId, id);
   }
@@ -244,11 +247,13 @@ export class ScalataService {
     run: ScalataRun,
     step: ScalataStep,
     betStatus: BetStatus,
+    userId: number,
   ) {
     if (betStatus === BetStatus.LOST) {
       run.status = ScalataRunStatus.FAILED;
       run.completedAt = new Date();
       await this.runRepository.save(run);
+      await this.settleCapital(userId, run);
       return;
     }
 
@@ -270,7 +275,36 @@ export class ScalataService {
       }
 
       await this.runRepository.save(run);
+
+      if (run.status === ScalataRunStatus.COMPLETED) {
+        await this.settleCapital(userId, run);
+      }
     }
+  }
+
+  private async settleCapital(userId: number, run: ScalataRun) {
+    if (run.capitalSettled) {
+      return;
+    }
+
+    let adjustment = parseMoney('0');
+
+    if (run.status === ScalataRunStatus.FAILED) {
+      adjustment = parseMoney(run.startBankroll).neg();
+    } else if (run.status === ScalataRunStatus.COMPLETED) {
+      const wonSteps = [...(run.steps ?? [])]
+        .filter((step) => step.status === ScalataStepStatus.WON)
+        .sort((a, b) => a.day - b.day);
+      const lastWon = wonSteps[wonSteps.length - 1];
+      adjustment = lastWon ? parseMoney(lastWon.cumulativeProfit) : parseMoney('0');
+    } else {
+      return;
+    }
+
+    run.capitalSettled = true;
+    run.capitalAdjustment = formatMoney(adjustment);
+    await this.runRepository.save(run);
+    await this.betsService.recalculateCapitalChain(userId);
   }
 
   private mapBetStatusToStepStatus(status: BetStatus): ScalataStepStatus {
@@ -302,6 +336,14 @@ export class ScalataService {
       );
       if (markedCount > 0) {
         await this.betsService.recalculateCapitalChain(userId);
+      }
+
+      if (
+        (run.status === ScalataRunStatus.FAILED ||
+          run.status === ScalataRunStatus.COMPLETED) &&
+        !run.capitalSettled
+      ) {
+        await this.settleCapital(userId, run);
       }
     }
 
@@ -463,6 +505,8 @@ export class ScalataService {
           : 0,
       createdAt: run.createdAt.toISOString(),
       completedAt: run.completedAt?.toISOString() ?? null,
+      capitalSettled: run.capitalSettled,
+      capitalAdjustment: run.capitalAdjustment,
       steps: steps.map((step) => this.mapStep(step, run.currentDay)),
     };
   }

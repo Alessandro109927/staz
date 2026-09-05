@@ -99,9 +99,9 @@
                     <span class="scalata-active-card__badge" [ngClass]="statusClass(run)">
                       {{ statusLabel(run) }}
                     </span>
-                    <h3 class="vs-heading-section">
-                      @if (runProfit(run) > 0) {
-                        +€ {{ runProfit(run) | number: '1.2-2' }}
+                    <h3 class="vs-heading-section" [class.scalata-active-card__loss]="runProfitIsLoss(run)">
+                      @if (runProfit(run) !== 0) {
+                        {{ runProfit(run) > 0 ? '+' : '-' }}€ {{ (runProfit(run) < 0 ? -runProfit(run) : runProfit(run)) | number: '1.2-2' }}
                       } @else {
                         +€ {{ run.targetProfit | number: '1.2-2' }}
                       }

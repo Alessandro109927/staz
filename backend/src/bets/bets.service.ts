@@ -429,10 +429,28 @@ export class BetsService {
       await this.betRepository.save(bets.filter((bet) => !bet.isScalata));
     }
 
+    const scalataAdjustment = await this.getScalataCapitalAdjustmentTotal(userId);
+    running = running.add(scalataAdjustment);
+
     await this.capitalService.updateCurrentCapital(
       userId,
       formatMoney(running),
     );
+  }
+
+  private async getScalataCapitalAdjustmentTotal(userId: number) {
+    const rows = await this.betRepository.manager.query<
+      Array<{ total: string | null }>
+    >(
+      `
+        SELECT COALESCE(SUM(capital_adjustment), 0) AS total
+        FROM scalata_runs
+        WHERE user_id = $1 AND capital_settled = true
+      `,
+      [userId],
+    );
+
+    return parseMoney(rows[0]?.total ?? '0');
   }
 
   private shouldIncludeScalata(query: ListBetsQueryDto): boolean {

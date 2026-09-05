@@ -32,12 +32,20 @@
 .scalata-run-profit__amount {
   font-size: $font-size-xl;
   color: $color-success;
+
+  &--loss {
+    color: $color-danger;
+  }
 }
 
 .scalata-run-profit__roi {
   font-size: $font-size-sm;
   color: $color-success;
   font-weight: $font-weight-semibold;
+
+  &--loss {
+    color: $color-danger;
+  }
 }
 
 .scalata-cashout-btn {
