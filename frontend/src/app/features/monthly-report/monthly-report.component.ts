@@ -3,13 +3,24 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../core/services/api.service';
+import {
+  VsSelectFieldComponent,
+  VsSelectOption,
+} from '../../shared/vs-select-field/vs-select-field.component';
 import { BetChangeService } from '../../core/services/bet-change.service';
 import { MonthOption, MonthlyReport, OddsRangeKpi } from '../../core/models';
+import { OddsRangeKpiDonutComponent } from '../../shared/components/odds-range-kpi-donut/odds-range-kpi-donut.component';
 
 @Component({
   selector: 'app-monthly-report',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatIconModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatIconModule,
+    VsSelectFieldComponent,
+    OddsRangeKpiDonutComponent,
+  ],
   templateUrl: './monthly-report.component.html',
   styleUrl: './monthly-report.component.scss',
 })
@@ -38,8 +49,11 @@ export class MonthlyReportComponent implements OnInit {
     return date.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
   }
 
-  hasSettledBets(kpi: OddsRangeKpi): boolean {
-    return kpi.settled > 0;
+  get monthSelectOptions(): VsSelectOption[] {
+    return this.months.map((option) => ({
+      value: this.monthKey(option),
+      label: this.monthLabel(option),
+    }));
   }
 
   hasOddsRangeActivity(kpi: OddsRangeKpi): boolean {

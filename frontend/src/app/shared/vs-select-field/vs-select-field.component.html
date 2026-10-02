@@ -1,0 +1,42 @@
+<label class="vs-field vs-select-field">
+  @if (label) {
+    <span class="vs-field__label">{{ label }}</span>
+  }
+
+  <div class="vs-select" #anchor>
+    <button
+      type="button"
+      class="vs-select__trigger"
+      [attr.aria-expanded]="panelOpen"
+      aria-haspopup="listbox"
+      (click)="togglePanel($event)"
+    >
+      {{ displayLabel }}
+    </button>
+    <span class="vs-select__chevron" aria-hidden="true">
+      <mat-icon>{{ panelOpen ? 'expand_less' : 'expand_more' }}</mat-icon>
+    </span>
+  </div>
+
+  @if (panelOpen) {
+    <ul class="vs-dropdown-panel vs-dropdown-panel--fixed" role="listbox" [ngStyle]="panelStyle">
+      @for (option of options; track option.value) {
+        <li>
+          <button
+            type="button"
+            class="vs-dropdown-option"
+            role="option"
+            [class.vs-dropdown-option--selected]="control.value === option.value"
+            (mousedown)="$event.preventDefault()"
+            (click)="selectOption(option)"
+          >
+            <span class="vs-dropdown-option__label">{{ option.label }}</span>
+            @if (option.description) {
+              <span class="vs-dropdown-option__desc">{{ option.description }}</span>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</label>

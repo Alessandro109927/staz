@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -13,8 +13,19 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Subject, takeUntil } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 import { BetChangeService } from '../../core/services/bet-change.service';
-import { Bet, BetEventItem, BetStatus, combineOdds } from '../../core/models';
+import { Bet, BetEventItem, OutcomeOption, combineOdds } from '../../core/models';
+import { OutcomeOptionsService } from '../../core/services/outcome-options.service';
+import { createEventGroupForm, createEventPickGroup } from '../../core/utils/event-form.factory';
+import {
+  EventGroupFormValue,
+  flattenEventGroups,
+  groupBetEventsForForm,
+  syncEventGroupsScorerValidators,
+} from '../../core/utils/event-form.helpers';
+import { isScorerOutcomeLabel } from '../../core/utils/outcome-option.util';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
+import { MatchTeamsFieldComponent } from '../../shared/match-teams-field/match-teams-field.component';
+import { OutcomeFieldComponent } from '../../shared/outcome-field/outcome-field.component';
 
 function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
@@ -30,12 +41,15 @@ function roundMoney(value: number): number {
     MatButtonModule,
     MatSnackBarModule,
     MatIconModule,
+    MatchTeamsFieldComponent,
+    OutcomeFieldComponent,
   ],
   templateUrl: './edit-bet.component.html',
   styleUrls: ['./edit-bet.component.scss', '../new-bet/new-bet.component.scss'],
 })
-export class EditBetComponent implements OnDestroy {
+export class EditBetComponent implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);
+  private readonly outcomeOptionsService = inject(OutcomeOptionsService);
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<EditBetComponent>);
   private readonly dialog = inject(MatDialog);
@@ -45,20 +59,26 @@ export class EditBetComponent implements OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   readonly bet = this.data.bet;
-  initialCapital: number | null = null;
+  outcomeOptions: OutcomeOption[] = [];
+  readonly isScorerOutcomeLabel = isScorerOutcomeLabel;
 
   form = this.fb.group({
-    betDate: ['', Validators.required],
-    status: ['PENDING' as BetStatus, Validators.required],
     events: this.fb.array([]),
     stakePercentage: [null as number | null, [Validators.required, Validators.min(0.01)]],
     amountStaked: [null as number | null, [Validators.required, Validators.min(0.01)]],
     potentialWin: [null as number | null, [Validators.required, Validators.min(0.01)]],
   });
 
-  constructor() {
-    this.loadBet(this.bet);
-    this.loadInitialCapital();
+  ngOnInit(): void {
+    this.outcomeOptionsService.load().subscribe((options) => {
+      this.outcomeOptions = options;
+      this.loadBet(this.bet);
+      syncEventGroupsScorerValidators(this.events, this.outcomeOptions);
+    });
+
+    this.events.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      syncEventGroupsScorerValidators(this.events, this.outcomeOptions);
+    });
   }
 
   get events(): FormArray {
@@ -66,7 +86,11 @@ export class EditBetComponent implements OnDestroy {
   }
 
   get combinedOdds(): number | null {
-    return combineOdds(this.events.getRawValue() as BetEventItem[]);
+    return combineOdds(this.flattenEvents());
+  }
+
+  get flattenedPickCount(): number {
+    return this.flattenEvents().length;
   }
 
   ngOnDestroy(): void {
@@ -74,8 +98,24 @@ export class EditBetComponent implements OnDestroy {
     this.destroy$.complete();
   }
 
+  picksAt(eventIndex: number): FormArray {
+    return this.events.at(eventIndex).get('picks') as FormArray;
+  }
+
   addEvent(): void {
-    this.events.push(this.createEventGroup());
+    this.events.push(createEventGroupForm(this.fb));
+  }
+
+  addPick(eventIndex: number): void {
+    this.picksAt(eventIndex).push(createEventPickGroup(this.fb));
+  }
+
+  removePick(eventIndex: number, pickIndex: number): void {
+    const picks = this.picksAt(eventIndex);
+    if (picks.length === 1) {
+      return;
+    }
+    picks.removeAt(pickIndex);
   }
 
   removeEvent(index: number): void {
@@ -94,15 +134,14 @@ export class EditBetComponent implements OnDestroy {
       return;
     }
 
-    const { betDate, status, stakePercentage, amountStaked, potentialWin } =
-      this.form.getRawValue();
-    const events = this.events.getRawValue() as BetEventItem[];
+    const { stakePercentage, amountStaked, potentialWin } = this.form.getRawValue();
+    const events = this.flattenEvents();
 
     this.api
       .updateBet(this.bet.id, {
         events,
-        betDate: new Date(betDate!).toISOString(),
-        status: status!,
+        betDate: this.bet.betDate,
+        status: this.bet.status,
         stakePercentageApplied: Number(stakePercentage),
         amountStaked: Number(amountStaked),
         potentialWin: Number(potentialWin),
@@ -148,41 +187,38 @@ export class EditBetComponent implements OnDestroy {
   private loadBet(bet: Bet): void {
     const sourceEvents =
       bet.events?.length > 0
-        ? [...bet.events].sort((a, b) => a.sortOrder - b.sortOrder)
-        : [{ eventName: bet.eventName, outcome: '', odds: bet.odds, sortOrder: 0, id: 0 }];
+        ? [...bet.events]
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map((event) => ({
+              eventName: event.eventName,
+              outcome: event.outcome ?? '',
+              odds: Number(event.odds),
+            }))
+        : [{ eventName: bet.eventName, outcome: '', odds: Number(bet.odds) }];
 
-    for (const event of sourceEvents) {
-      this.events.push(
-        this.fb.group({
-          eventName: [event.eventName, Validators.required],
-          outcome: [event.outcome ?? '', Validators.required],
-          odds: [Number(event.odds), [Validators.required, Validators.min(1.01)]],
-        }),
-      );
+    while (this.events.length) {
+      this.events.removeAt(0);
+    }
+
+    const grouped = groupBetEventsForForm(sourceEvents, this.outcomeOptions);
+
+    for (const group of grouped) {
+      this.events.push(createEventGroupForm(this.fb, group.eventName, group.picks));
     }
 
     const amount = Number(bet.amountStaked);
 
     this.form.patchValue({
-      betDate: bet.betDate.slice(0, 10),
-      status: bet.status,
       stakePercentage: Number(bet.stakePercentageApplied),
       amountStaked: amount,
       potentialWin: Number(bet.potentialWin),
     });
   }
 
-  private loadInitialCapital(): void {
-    this.api.getCapital().subscribe((capital) => {
-      this.initialCapital = capital ? Number(capital.initialCapital) : null;
-    });
-  }
-
-  private createEventGroup() {
-    return this.fb.group({
-      eventName: ['', Validators.required],
-      outcome: ['', Validators.required],
-      odds: [1.75, [Validators.required, Validators.min(1.01)]],
-    });
+  private flattenEvents(): BetEventItem[] {
+    return flattenEventGroups(
+      this.events.getRawValue() as EventGroupFormValue[],
+      this.outcomeOptions,
+    );
   }
 }

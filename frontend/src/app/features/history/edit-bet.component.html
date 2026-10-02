@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Modifica scommessa</h2>
+<div mat-dialog-title class="table-header bet-form-dialog__title">Modifica scommessa</div>
 
 <mat-dialog-content>
   <form [formGroup]="form" (ngSubmit)="submit()" class="new-bet-form">
@@ -20,121 +20,143 @@
           </div>
 
           <div class="event-row__fields">
-            <label class="vs-field event-row__event">
-              <span class="vs-field__label">Evento / Partita</span>
-              <input
-                class="vs-input"
-                type="text"
-                formControlName="eventName"
-                placeholder="es., Milan - Inter"
-              />
-            </label>
+            <div class="event-row__teams">
+              <app-match-teams-field [group]="$any(event)" />
+            </div>
 
-            <label class="vs-field event-row__outcome">
-              <span class="vs-field__label">Esito</span>
-              <input
-                class="vs-input"
-                type="text"
-                formControlName="outcome"
-                placeholder="es., 1"
-              />
-            </label>
+            <div formArrayName="picks" class="event-picks">
+              @for (pick of picksAt(i).controls; track $index; let pi = $index) {
+                <div
+                  class="event-row__meta"
+                  [class.event-row__meta--scorer]="isScorerOutcomeLabel($any(pick).controls.outcome.value, outcomeOptions)"
+                  [formGroupName]="pi"
+                >
+                  <app-outcome-field
+                    [control]="$any(pick).controls.outcome"
+                    [options]="outcomeOptions"
+                    [listId]="'edit-bet-outcome-' + i + '-' + pi"
+                  />
 
-            <label class="vs-field event-row__odds">
-              <span class="vs-field__label">Quota</span>
-              <input
-                class="vs-input"
-                type="number"
-                step="0.01"
-                min="1.01"
-                formControlName="odds"
-                placeholder="1.75"
-              />
-            </label>
+                  @if (isScorerOutcomeLabel($any(pick).controls.outcome.value, outcomeOptions)) {
+                    <label class="vs-field event-row__scorer">
+                      <span class="vs-field__label">Marcatore</span>
+                      <input
+                        class="vs-input"
+                        type="text"
+                        formControlName="scorerName"
+                        placeholder="Nome giocatore"
+                        maxlength="120"
+                      />
+                    </label>
+                  }
+
+                  <label class="vs-field event-row__odds">
+                    <span class="vs-field__label">Quota</span>
+                    <input
+                      class="vs-input"
+                      type="number"
+                      step="0.01"
+                      min="1.01"
+                      formControlName="odds"
+                      placeholder="1.75"
+                    />
+                  </label>
+
+                  @if (picksAt(i).length > 1) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="event-pick-remove"
+                      aria-label="Rimuovi esito"
+                      (click)="removePick(i, pi)"
+                    >
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+
+            <button
+              mat-stroked-button
+              type="button"
+              class="add-pick"
+              aria-label="Aggiungi esito"
+              (click)="addPick(i)"
+            >
+              <mat-icon>add</mat-icon>
+            </button>
           </div>
         </div>
       }
     </div>
 
-    <button mat-stroked-button type="button" class="add-event" (click)="addEvent()">
+    <button mat-flat-button color="primary" type="button" class="add-event" (click)="addEvent()">
       <mat-icon>add</mat-icon>
       Aggiungi evento
     </button>
 
-    <div class="edit-bet-meta">
-      <label class="vs-field bet-date">
-        <span class="vs-field__label">Data</span>
-        <input class="vs-input" type="date" formControlName="betDate" />
+    <div class="bet-summary">
+      <label class="vs-field">
+        <span class="vs-field__label">
+          {{ flattenedPickCount > 1 ? 'Quota comb.' : 'Quota' }}
+        </span>
+        <input
+          class="vs-input bet-summary__odds"
+          type="text"
+          readonly
+          tabindex="-1"
+          [value]="combinedOdds != null ? (combinedOdds | number: '1.2-2') : ''"
+          placeholder="—"
+        />
       </label>
 
       <label class="vs-field">
-        <span class="vs-field__label">Stato</span>
-        <select class="vs-input" formControlName="status">
-          <option value="PENDING">In attesa</option>
-          <option value="WON">Vinta</option>
-          <option value="LOST">Persa</option>
-        </select>
+        <span class="vs-field__label">Stake</span>
+        <div class="vs-input-affix">
+          <input
+            class="vs-input"
+            type="number"
+            step="0.01"
+            min="0.01"
+            formControlName="stakePercentage"
+            placeholder="0"
+          />
+          <span class="vs-input-affix__suffix">%</span>
+        </div>
+      </label>
+
+      <label class="vs-field">
+        <span class="vs-field__label">Puntata</span>
+        <div class="vs-input-affix">
+          <span class="vs-input-affix__prefix">€</span>
+          <input
+            class="vs-input"
+            type="number"
+            step="0.01"
+            min="0.01"
+            formControlName="amountStaked"
+            placeholder="0,00"
+          />
+        </div>
+      </label>
+
+      <label class="vs-field">
+        <span class="vs-field__label">Vincita</span>
+        <div class="vs-input-affix">
+          <span class="vs-input-affix__prefix">€</span>
+          <input
+            class="vs-input"
+            type="number"
+            step="0.01"
+            min="0.01"
+            formControlName="potentialWin"
+            placeholder="0,00"
+          />
+        </div>
       </label>
     </div>
 
-    <div class="preview">
-      @if (combinedOdds) {
-        <div class="preview-odds">
-          <span class="preview-odds__label">
-            {{ events.length > 1 ? 'Quota combinata' : 'Quota' }}
-          </span>
-          <strong class="preview-odds__value">{{ combinedOdds | number: '1.2-2' }}</strong>
-        </div>
-      }
-
-      <div class="preview-stake">
-        <label class="vs-field">
-          <span class="vs-field__label">Stake</span>
-          <div class="vs-input-affix">
-            <input
-              class="vs-input"
-              type="number"
-              step="0.01"
-              min="0.01"
-              formControlName="stakePercentage"
-            />
-            <span class="vs-input-affix__suffix">%</span>
-          </div>
-        </label>
-
-        <label class="vs-field">
-          <span class="vs-field__label">Puntata</span>
-          <div class="vs-input-affix">
-            <span class="vs-input-affix__prefix">€</span>
-            <input
-              class="vs-input"
-              type="number"
-              step="0.01"
-              min="0.01"
-              formControlName="amountStaked"
-            />
-          </div>
-        </label>
-
-        <label class="vs-field">
-          <span class="vs-field__label">Vincita</span>
-          <div class="vs-input-affix">
-            <span class="vs-input-affix__prefix">€</span>
-            <input
-              class="vs-input"
-              type="number"
-              step="0.01"
-              min="0.01"
-              formControlName="potentialWin"
-            />
-          </div>
-        </label>
-      </div>
-
-      @if (initialCapital != null) {
-        <p class="muted">Capitale iniziale: € {{ initialCapital | number: '1.2-2' }}</p>
-      }
-    </div>
   </form>
 </mat-dialog-content>
 

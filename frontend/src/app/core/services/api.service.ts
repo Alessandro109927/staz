@@ -16,6 +16,8 @@ import {
   ScalataRunStatus,
   StakePreview,
   StakingRule,
+  TeamOption,
+  OutcomeOption,
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -196,5 +198,39 @@ export class ApiService {
     return this.http.delete<{ deleted: boolean; id: number }>(
       `${this.baseUrl}/scalata/${id}`,
     );
+  }
+
+  searchTeams(query: string, limit = 12): Observable<TeamOption[]> {
+    const params = new HttpParams().set('q', query).set('limit', String(limit));
+    return this.http.get<TeamOption[]>(`${this.baseUrl}/teams/search`, { params });
+  }
+
+  getOutcomeOptions(): Observable<OutcomeOption[]> {
+    return this.http.get<OutcomeOption[]>(`${this.baseUrl}/outcome-options`);
+  }
+
+  createOutcomeOption(payload: {
+    label: string;
+    description?: string | null;
+    sortOrder?: number;
+    kind?: OutcomeOption['kind'];
+  }): Observable<OutcomeOption> {
+    return this.http.post<OutcomeOption>(`${this.baseUrl}/outcome-options`, payload);
+  }
+
+  updateOutcomeOption(
+    id: number,
+    payload: Partial<{
+      label: string;
+      description: string | null;
+      sortOrder: number;
+      kind: OutcomeOption['kind'];
+    }>,
+  ): Observable<OutcomeOption> {
+    return this.http.put<OutcomeOption>(`${this.baseUrl}/outcome-options/${id}`, payload);
+  }
+
+  deleteOutcomeOption(id: number): Observable<{ deleted: boolean }> {
+    return this.http.delete<{ deleted: boolean }>(`${this.baseUrl}/outcome-options/${id}`);
   }
 }

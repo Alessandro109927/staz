@@ -1,0 +1,175 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+:host(.vs-table-toolbar-outside) {
+  margin: 0;
+  padding: 0;
+}
+
+.vs-table-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0;
+  background: transparent;
+}
+
+.vs-table-pagination__group {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-3;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.vs-table-pagination__page-size {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  margin: 0;
+}
+
+.vs-table-pagination__page-size-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-neutral-600;
+  white-space: nowrap;
+}
+
+.vs-table-pagination__page-size-select {
+  min-width: 4.25rem;
+  padding: $space-1 $space-2;
+  border: 1px solid $color-neutral-200;
+  border-radius: $radius-sm;
+  background: $color-surface;
+  color: $color-neutral-900;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: $color-neutral-400;
+    box-shadow: 0 0 0 2px rgba($color-neutral-900, 0.08);
+  }
+}
+
+.vs-table-pagination__range {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-neutral-600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.vs-table-pagination__controls {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.vs-table-pagination__page {
+  min-width: 4.5rem;
+  text-align: center;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-neutral-800;
+  font-variant-numeric: tabular-nums;
+}
+
+.vs-table-pagination__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid $color-neutral-200;
+  border-radius: $radius-sm;
+  background: $color-surface;
+  color: $color-neutral-800;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  mat-icon {
+    font-size: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  &:hover:not(:disabled) {
+    background: $color-neutral-50;
+    border-color: $color-neutral-400;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+@include down($bp-md) {
+  .vs-table-pagination {
+    justify-content: flex-end;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .vs-table-pagination__group {
+    flex-wrap: nowrap;
+    gap: $space-2;
+    width: max-content;
+    max-width: 100%;
+    margin-left: auto;
+  }
+
+  .vs-table-pagination__page-size {
+    gap: $space-1;
+    flex-shrink: 0;
+  }
+
+  .vs-table-pagination__page-size-label {
+    font-size: $font-size-xs;
+  }
+
+  .vs-table-pagination__page-size-select {
+    min-width: 3rem;
+    padding: 0.125rem $space-1;
+    font-size: $font-size-xs;
+  }
+
+  .vs-table-pagination__range {
+    font-size: $font-size-xs;
+    flex-shrink: 0;
+  }
+
+  .vs-table-pagination__controls {
+    flex-shrink: 0;
+    gap: $space-1;
+  }
+
+  .vs-table-pagination__page {
+    min-width: 3rem;
+    font-size: $font-size-xs;
+  }
+
+  .vs-table-pagination__btn {
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 1.125rem;
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+  }
+}

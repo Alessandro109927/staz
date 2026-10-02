@@ -1,0 +1,71 @@
+// ─── Palette (solo bianco e nero) ───────────────────────────
+$vs-black: #000000;
+$vs-white: #ffffff;
+
+// ─── Testo ──────────────────────────────────────────────────
+$vs-text: $vs-black;
+$vs-text-muted: rgba($vs-black, 0.55);
+$vs-text-subtle: rgba($vs-black, 0.38);
+$vs-text-inverse: $vs-white;
+
+// ─── Superfici ──────────────────────────────────────────────
+$vs-bg: $vs-white;
+$vs-bg-muted: $vs-white;
+$vs-surface: $vs-white;
+$vs-surface-inverse: $vs-black;
+
+// ─── Bordi e ombre (derivati dal nero) ──────────────────────
+$vs-border: rgba($vs-black, 0.12);
+$vs-border-strong: $vs-black;
+$vs-border-muted: rgba($vs-black, 0.08);
+
+$vs-shadow: rgba($vs-black, 0.08);
+$vs-shadow-strong: rgba($vs-black, 0.14);
+$vs-focus-ring: rgba($vs-black, 0.16);
+$vs-overlay: rgba($vs-black, 0.45);
+
+// ─── Stati / accenti (sempre B/N) ───────────────────────────
+$vs-primary: $vs-black;
+$vs-primary-hover: $vs-black;
+$vs-on-primary: $vs-white;
+
+$vs-button-disabled-bg: rgba($vs-black, 0.18);
+$vs-button-disabled-label: rgba($vs-white, 0.92);
+$vs-button-disabled-outline: rgba($vs-black, 0.22);
+$vs-button-disabled-text: rgba($vs-black, 0.38);
+
+$vs-accent-soft: rgba($vs-black, 0.06);
+$vs-accent-medium: rgba($vs-black, 0.1);
+$vs-accent-strong: rgba($vs-black, 0.14);
+
+$vs-inverse-accent-soft: rgba($vs-white, 0.12);
+$vs-inverse-accent-medium: rgba($vs-white, 0.18);
+$vs-inverse-accent-strong: rgba($vs-white, 0.35);
+
+// ─── Profitto / vincite ─────────────────────────────────────
+$vs-profit: #42c48e;
+$vs-profit-soft: rgba($vs-profit, 0.12);
+$vs-profit-medium: rgba($vs-profit, 0.25);
+$vs-profit-chart-fill: rgba($vs-profit, 0.14);
+$vs-profit-chart-fill-soft: rgba($vs-profit, 0.06);
+
+// ─── Perdite / esiti negativi ───────────────────────────────
+$vs-loss: #e25858;
+$vs-loss-soft: rgba($vs-loss, 0.12);
+$vs-loss-medium: rgba($vs-loss, 0.25);
+$vs-loss-chart-fill: rgba($vs-loss, 0.14);
+$vs-loss-chart-fill-soft: rgba($vs-loss, 0.06);
+
+// ─── Grafici (tonalità di nero; allineare dashboard-charts.util.ts) ─
+$vs-chart-grid: rgba($vs-black, 0.08);
+$vs-chart-axis: rgba($vs-black, 0.42);
+$vs-chart-fill: rgba($vs-black, 0.14);
+$vs-chart-fill-soft: rgba($vs-black, 0.06);
+$vs-chart-tooltip-bg: $vs-black;
+$vs-chart-point-fill: $vs-white;
+
+$vs-chart-series-1: $vs-black;
+$vs-chart-series-2: rgba($vs-black, 0.72);
+$vs-chart-series-3: rgba($vs-black, 0.52);
+$vs-chart-series-4: rgba($vs-black, 0.36);
+$vs-chart-series-5: rgba($vs-black, 0.22);

@@ -15,20 +15,31 @@
     <header class="vs-page-header">
       <div>
         <h1 class="vs-heading-page">Panoramica Dashboard</h1>
-        <p class="vs-text-muted">Monitora capitale, performance e posizioni attive.</p>
+        <p class="vs-text-muted">Monitora capitale, performance e scommesse attive.</p>
       </div>
     </header>
 
     <!-- KPI row -->
     <section class="vs-grid-kpi">
-      <div class="vs-card kpi-main">
-        <div class="kpi-main__header">
-          <span class="vs-label">Capitale Totale</span>
+      <div class="vs-card--flush kpi-main">
+        <div class="table-header">
+          <h2 class="vs-heading-section">Capitale Totale</h2>
         </div>
+        <div class="dashboard-card-body kpi-main__body">
         <div class="kpi-main__value-row">
-          <p class="kpi-main__value">€ {{ capital.currentCapital | number: '1.2-2' }}</p>
-          <span class="vs-badge vs-badge--success">
-            <mat-icon>trending_up</mat-icon>
+          <p
+            class="kpi-main__value"
+            [class.kpi-main__value--positive]="profit >= 0"
+            [class.kpi-main__value--negative]="profit < 0"
+          >
+            € {{ capital.currentCapital | number: '1.2-2' }}
+          </p>
+          <span
+            class="vs-badge"
+            [class.vs-badge--success]="profit >= 0"
+            [class.vs-badge--danger]="profit < 0"
+          >
+            <mat-icon>{{ profit >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
             {{ roi >= 0 ? '+' : '' }}{{ roi | number: '1.1-1' }}%
           </span>
         </div>
@@ -37,405 +48,99 @@
             <app-vs-chart [config]="capitalChart" [height]="148" />
           </div>
         }
+        </div>
       </div>
 
       <div class="kpi-grid">
-        <div class="vs-card--compact kpi-mini">
-          <div class="kpi-mini__top">
-            <span class="vs-label">Capitale Iniziale</span>
-            <p class="vs-value-md">€ {{ capital.initialCapital | number: '1.2-2' }}</p>
+        <div class="vs-card--flush kpi-mini">
+          <div class="table-header">
+            <h2 class="vs-heading-section">Capitale Iniziale</h2>
           </div>
+          <div class="dashboard-card-body kpi-mini__body">
+            <p class="vs-value-md">€ {{ capital.initialCapital | number: '1.2-2' }}</p>
           @if (initialCapitalChart) {
             <div class="kpi-mini__chart-well">
               <app-vs-chart [config]="initialCapitalChart" [height]="96" />
             </div>
           }
+          </div>
         </div>
 
-        <div class="vs-card--compact kpi-mini">
-          <div class="kpi-mini__top">
-            <span class="vs-label">Profitto Totale</span>
-            <p class="vs-value-md vs-value-success">
+        <div class="vs-card--flush kpi-mini">
+          <div class="table-header">
+            <h2 class="vs-heading-section">Profitto Totale</h2>
+          </div>
+          <div class="dashboard-card-body kpi-mini__body">
+            <p
+              class="vs-value-md"
+              [class.vs-value-success]="profit >= 0"
+              [class.vs-value-danger]="profit < 0"
+            >
               {{ profit >= 0 ? '+' : '' }}€ {{ profit | number: '1.2-2' }}
             </p>
-          </div>
           @if (profitChart) {
             <div class="kpi-mini__chart-well">
               <app-vs-chart [config]="profitChart" [height]="96" />
             </div>
           }
+          </div>
         </div>
 
-        <div class="vs-card--compact kpi-mini">
-          <div class="kpi-mini__top">
-            <span class="vs-label">ROI Mensile</span>
-            <p class="vs-value-md vs-value-success">
+        <div class="vs-card--flush kpi-mini">
+          <div class="table-header">
+            <h2 class="vs-heading-section">ROI totale</h2>
+          </div>
+          <div class="dashboard-card-body kpi-mini__body">
+            <p
+              class="vs-value-md"
+              [class.vs-value-success]="roi >= 0"
+              [class.vs-value-danger]="roi < 0"
+            >
               {{ roi >= 0 ? '+' : '' }}{{ roi | number: '1.1-1' }}%
             </p>
-          </div>
-          @if (monthlyRoiChart) {
+          @if (totalRoiChart) {
             <div class="kpi-mini__chart-well">
-              <app-vs-chart [config]="monthlyRoiChart" [height]="96" />
+              <app-vs-chart [config]="totalRoiChart" [height]="96" />
             </div>
           }
+          </div>
         </div>
 
-        <div class="vs-card--compact kpi-mini">
-          <div class="kpi-mini__top">
-            <span class="vs-label">Media Quota</span>
-            <p class="vs-value-md">
-              @if (avgOdds > 0) {
-                {{ avgOdds | number: '1.2-2' }}
-              } @else {
-                —
-              }
-            </p>
-          </div>
-          @if (averageOddsChart) {
-            <div class="kpi-mini__chart-well">
-              <app-vs-chart [config]="averageOddsChart" [height]="96" />
+        @if (stats) {
+          <div class="vs-card--flush kpi-mini kpi-mini--donut">
+            <div class="table-header">
+              <h2 class="vs-heading-section">Win Rate</h2>
             </div>
-          }
-        </div>
+            <div class="dashboard-card-body kpi-mini__body kpi-mini__body--donut">
+              <app-win-rate-donut
+                [won]="stats.won"
+                [lost]="stats.lost"
+                [pending]="stats.pending"
+                [total]="stats.total"
+              />
+            </div>
+          </div>
+        }
       </div>
-    </section>
-
-    <!-- Stats row -->
-    @if (stats) {
-      <section class="stats-row">
-        <div class="vs-card--compact stat-card stat-card--win-rate">
-          <div class="stat-card__head">
-            <div>
-              <span class="vs-label">Win Rate</span>
-              <p class="stat-card__value">
-                @if (settledCount > 0) {
-                  {{ winRate | number: '1.0-0' }}%
-                } @else {
-                  —
-                }
-              </p>
-            </div>
-          </div>
-
-          <div class="win-rate-bar">
-            <div
-              class="win-rate-meter__track"
-              role="progressbar"
-              [attr.aria-valuenow]="settledCount > 0 ? winRate : 0"
-              aria-valuemin="0"
-              aria-valuemax="100"
-            >
-              @if (settledCount > 0) {
-                <span
-                  class="win-rate-meter__segment win-rate-meter__segment--won"
-                  [style.flex-grow]="stats.won"
-                ></span>
-                <span
-                  class="win-rate-meter__segment win-rate-meter__segment--lost"
-                  [style.flex-grow]="stats.lost"
-                ></span>
-              } @else {
-                <span class="win-rate-meter__segment win-rate-meter__segment--empty"></span>
-              }
-            </div>
-          </div>
-
-          <ul class="win-rate-stats">
-            <li class="win-rate-stat win-rate-stat--won">
-              <span class="win-rate-stat__accent"></span>
-              <span class="win-rate-stat__label">Vinte</span>
-              <div class="win-rate-stat__badges">
-                <span class="win-rate-stat__count">{{ stats.won }}</span>
-                @if (settledCount > 0) {
-                  <span class="win-rate-stat__pct">{{ wonSharePercent }}%</span>
-                }
-              </div>
-            </li>
-
-            <li class="win-rate-stat win-rate-stat--lost">
-              <span class="win-rate-stat__accent"></span>
-              <span class="win-rate-stat__label">Perse</span>
-              <div class="win-rate-stat__badges">
-                <span class="win-rate-stat__count">{{ stats.lost }}</span>
-                @if (settledCount > 0) {
-                  <span class="win-rate-stat__pct">{{ lostSharePercent }}%</span>
-                }
-              </div>
-            </li>
-          </ul>
-        </div>
-
-        <div class="vs-card--compact stat-card">
-          <div class="stat-card__head">
-            <div>
-              <span class="vs-label">Scommesse Totali</span>
-              <p class="stat-card__value">{{ stats.total }}</p>
-            </div>
-            <span class="stat-card__meta">
-              <strong>{{ stats.pending }}</strong> in corso
-            </span>
-          </div>
-
-          @if (betsTimelineChart) {
-            <div class="stat-card__chart-well">
-              <app-vs-chart [config]="betsTimelineChart" [height]="72" />
-            </div>
-          }
-        </div>
-
-        <div class="vs-featured-card vs-featured-card--list stat-card stat-card--featured">
-          <div class="stat-card__head featured-card__header">
-            <div>
-              <span class="vs-label">Scommesse in corso</span>
-              <p class="stat-card__value">{{ pendingBets.length }}</p>
-            </div>
-          </div>
-
-          @if (pendingBets.length) {
-            <div class="featured-bets-list featured-card__body">
-              @for (bet of pendingBets; track bet.id) {
-                <article class="featured-bet-item">
-                  <h3 class="featured-bet-item__title">{{ betTypeLabel(bet) }}</h3>
-                  <div class="featured-bet-item__meta">
-                    <div class="featured-bet-item__stats vs-flex-row">
-                      <div class="vs-odds-btn">
-                        <span>Quota</span>
-                        <strong>{{ bet.odds }}</strong>
-                      </div>
-                      <div class="vs-odds-btn">
-                        <span>Puntata</span>
-                        <strong>€{{ bet.amountStaked }}</strong>
-                      </div>
-                      <div class="vs-odds-btn">
-                        <span>Vincita</span>
-                        <strong>€{{ potentialWin(bet) | number: '1.2-2' }}</strong>
-                      </div>
-                    </div>
-                    <a routerLink="/history" class="featured-bet-item__detail-link">
-                      Dettagli
-                      <mat-icon>chevron_right</mat-icon>
-                    </a>
-                  </div>
-                </article>
-              }
-            </div>
-          } @else {
-            <div class="featured-card__body featured-card__empty">
-              <p class="featured-card__empty-text">Nessuna scommessa in corso</p>
-              <button type="button" class="vs-btn-primary featured-card__cta" (click)="openNewBet()">
-                <mat-icon>add</mat-icon>
-                Nuova scommessa
-              </button>
-            </div>
-          }
-        </div>
-      </section>
-    }
-
-    <!-- Active positions -->
-    <section class="vs-card--flush positions-section">
-      <div class="table-header vs-flex-between">
-        <h2 class="vs-heading-section">Posizioni Attive</h2>
-        <a routerLink="/history" class="vs-text-muted link-with-icon">
-          Vedi Tutto
-          <mat-icon>chevron_right</mat-icon>
-        </a>
-      </div>
-
-      @if (pendingBets.length) {
-        <div class="table-scroll vs-hide-mobile">
-        <table class="vs-table">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Quota</th>
-              <th>Puntata</th>
-              <th>Vincita</th>
-              <th>Stato</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (bet of pendingBets; track bet.id) {
-              <tr>
-                <td><strong>{{ betTypeLabel(bet) }}</strong></td>
-                <td><span class="vs-value-primary">{{ bet.odds }}</span></td>
-                <td>€ {{ bet.amountStaked }}</td>
-                <td><span class="vs-value-success">€ {{ potentialWin(bet) | number: '1.2-2' }}</span></td>
-                <td>
-                  <span class="vs-badge vs-badge--neutral">
-                    <mat-icon class="vs-icon-sm">hourglass_empty</mat-icon>
-                    IN CORSO
-                  </span>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-        </div>
-
-        <div class="position-cards vs-show-mobile-flex">
-          @for (bet of pendingBets; track bet.id) {
-            <article class="position-card">
-              <header class="position-card__head">
-                <strong>{{ betTypeLabel(bet) }}</strong>
-                <span class="vs-badge vs-badge--neutral">
-                  <mat-icon class="vs-icon-sm">hourglass_empty</mat-icon>
-                  IN CORSO
-                </span>
-              </header>
-              <dl class="position-card__metrics">
-                <div class="position-card__metric">
-                  <dt>Quota</dt>
-                  <dd><span class="vs-value-primary">{{ bet.odds }}</span></dd>
-                </div>
-                <div class="position-card__metric">
-                  <dt>Puntata</dt>
-                  <dd>€ {{ bet.amountStaked }}</dd>
-                </div>
-                <div class="position-card__metric">
-                  <dt>Vincita</dt>
-                  <dd><span class="vs-value-success">€ {{ potentialWin(bet) | number: '1.2-2' }}</span></dd>
-                </div>
-              </dl>
-            </article>
-          }
-        </div>
-      } @else {
-        <p class="vs-text-muted empty-table">Nessuna posizione attiva al momento.</p>
-      }
     </section>
 
     <!-- KPI per fascia quota -->
     @if (oddsRangeKpis.length) {
-      <section class="vs-card vs-mt-4 odds-range-section">
-        <span class="vs-label odds-range-section__label">Analisi avanzata</span>
-        <h2 class="vs-heading-section odds-range-section__title">KPI per fascia di quota</h2>
+      <section class="vs-card--flush vs-mt-4 odds-range-section">
+        <div class="table-header">
+          <h2 class="vs-heading-section">KPI per fascia di quota</h2>
+        </div>
 
-        @if (hasOddsRangeCharts) {
-          <p class="odds-range-charts__intro">
-            Ogni colore corrisponde a una fascia di quota. A sinistra quante scommesse hai giocato;
-            a destra quanto hai guadagnato o perso sulle già concluse.
-          </p>
-          <div class="odds-range-charts">
-            @if (oddsRangeVolumeChart) {
-              <div class="odds-range-chart">
-                <h3 class="odds-range-chart__title">Dove giochi</h3>
-                <p class="odds-range-chart__desc">Numero di scommesse per fascia (incluse in corso)</p>
-                <div class="odds-range-chart__body">
-                  <div class="odds-range-chart__well">
-                    <app-vs-chart [config]="oddsRangeVolumeChart" [height]="220" />
-                  </div>
-                  <ul class="odds-range-chart__stats">
-                    @for (item of oddsRangeVolumeItems; track item.key) {
-                      <li class="odds-range-chart__stat">
-                        <span class="odds-range-chart__stat-accent" [style.background-color]="item.color"></span>
-                        <div class="odds-range-chart__stat-content">
-                          <span class="odds-range-chart__stat-label">{{ item.label }}</span>
-                          <div class="odds-range-chart__stat-badges">
-                            <span
-                              class="odds-range-chart__stat-box"
-                              [class.odds-range-chart__stat-box--primary]="item.valueTone === 'primary'"
-                              [class.odds-range-chart__stat-box--success]="item.valueTone === 'success'"
-                              [class.odds-range-chart__stat-box--danger]="item.valueTone === 'danger'"
-                            >
-                              {{ item.value }}
-                            </span>
-                            <span class="odds-range-chart__stat-box odds-range-chart__stat-box--percent">
-                              {{ item.percent }}%
-                            </span>
-                          </div>
-                        </div>
-                      </li>
-                    }
-                  </ul>
-                </div>
-              </div>
-            }
-            @if (oddsRangeProfitChart) {
-              <div class="odds-range-chart">
-                <h3 class="odds-range-chart__title">Dove guadagni o perdi</h3>
-                <p class="odds-range-chart__desc">Profitto netto sulle scommesse vinte o perse</p>
-                <div class="odds-range-chart__body">
-                  <div class="odds-range-chart__well">
-                    <app-vs-chart [config]="oddsRangeProfitChart" [height]="220" />
-                  </div>
-                  <ul class="odds-range-chart__stats">
-                    @for (item of oddsRangeProfitItems; track item.key) {
-                      <li class="odds-range-chart__stat">
-                        <span class="odds-range-chart__stat-accent" [style.background-color]="item.color"></span>
-                        <div class="odds-range-chart__stat-content">
-                          <span class="odds-range-chart__stat-label">{{ item.label }}</span>
-                          <div class="odds-range-chart__stat-badges">
-                            <span
-                              class="odds-range-chart__stat-box"
-                              [class.odds-range-chart__stat-box--primary]="item.valueTone === 'primary'"
-                              [class.odds-range-chart__stat-box--success]="item.valueTone === 'success'"
-                              [class.odds-range-chart__stat-box--danger]="item.valueTone === 'danger'"
-                            >
-                              {{ item.value }}
-                            </span>
-                            <span class="odds-range-chart__stat-box odds-range-chart__stat-box--percent">
-                              {{ item.percent }}%
-                            </span>
-                          </div>
-                        </div>
-                      </li>
-                    }
-                  </ul>
-                </div>
-              </div>
-            }
-          </div>
-        }
-
-        <div class="odds-range-section__table table-scroll">
-        <table class="vs-table">
-          <thead>
-            <tr>
-              <th>Fascia</th>
-              <th>Totale</th>
-              <th>Vinte</th>
-              <th>Perse</th>
-              <th>Win rate</th>
-              <th>Profitto netto</th>
-              <th>Margine</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (kpi of oddsRangeKpis; track kpi.key) {
-              <tr>
-                <td><strong>{{ kpi.label }}</strong></td>
-                <td>{{ kpi.total }}</td>
-                <td><span class="vs-value-success">{{ kpi.won }}</span></td>
-                <td><span class="vs-value-danger">{{ kpi.lost }}</span></td>
-                <td>{{ kpi.winRate != null ? kpi.winRate + '%' : '—' }}</td>
-                <td>
-                  @if (hasSettledBets(kpi)) {
-                    <span [class.vs-value-success]="+kpi.netProfit >= 0" [class.vs-value-danger]="+kpi.netProfit < 0">
-                      {{ +kpi.netProfit >= 0 ? '+' : '' }}€ {{ kpi.netProfit }}
-                    </span>
-                  } @else {
-                    —
-                  }
-                </td>
-                <td>
-                  @if (kpi.profitMargin != null) {
-                    <span [class.vs-value-success]="+kpi.profitMargin >= 0" [class.vs-value-danger]="+kpi.profitMargin < 0">
-                      {{ +kpi.profitMargin >= 0 ? '+' : '' }}{{ kpi.profitMargin }}%
-                    </span>
-                  } @else {
-                    —
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+        <div class="odds-range-section__donuts dashboard-card-body">
+          @for (kpi of oddsRangeKpis; track kpi.key) {
+            <app-odds-range-kpi-donut [kpi]="kpi" />
+          }
         </div>
         <p class="odds-range-section__footnote">
           Margine = profitto netto ÷ totale giocato sulle scommesse regolate.
         </p>
       </section>
     }
+
   }
 </div>

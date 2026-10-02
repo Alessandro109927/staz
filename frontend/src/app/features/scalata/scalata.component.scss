@@ -1,3 +1,4 @@
+@use '../../../styles/colors' as c;
 @use '../../../styles/variables' as *;
 @use '../../../styles/mixins' as *;
 
@@ -8,7 +9,11 @@
 }
 
 .scalata-header {
-  max-width: 44rem;
+  min-width: 0;
+}
+
+.scalata-header__subtitle {
+  white-space: nowrap;
 }
 
 .scalata-active-banner {
@@ -50,17 +55,22 @@
   top: $space-4;
   display: flex;
   flex-direction: column;
-  gap: $space-5;
+  min-height: 0;
 
   @include down($bp-lg) {
     position: static;
   }
 }
 
+.scalata-form-card__body {
+  gap: $space-4;
+}
+
 .scalata-form {
   display: flex;
   flex-direction: column;
   gap: $space-4;
+  width: 100%;
 }
 
 .scalata-form__row {
@@ -142,22 +152,22 @@
 .scalata-summary {
   display: flex;
   flex-direction: column;
-  gap: $space-5;
-  background:
-    linear-gradient(135deg, rgba($color-primary, 0.06), transparent 55%),
-    $color-surface;
+  background: $color-surface;
 }
 
-.scalata-summary__hero {
+.scalata-summary__body {
+  gap: $space-5;
+}
+
+.scalata-summary__headline {
   display: flex;
-  justify-content: space-between;
-  gap: $space-4;
-  align-items: flex-start;
+  align-items: center;
   flex-wrap: wrap;
+  gap: $space-3;
 }
 
 .scalata-summary__target {
-  margin: $space-1 0;
+  margin: 0;
   font-size: $font-size-3xl;
   font-weight: $font-weight-bold;
   color: $color-success;
@@ -204,33 +214,6 @@
   }
 }
 
-.scalata-progress__track {
-  height: 0.5rem;
-  border-radius: $radius-full;
-  background: $color-neutral-100;
-  overflow: hidden;
-}
-
-.scalata-progress__fill {
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, $color-primary, $color-success);
-  transition: width 0.25s ease;
-}
-
-.scalata-progress__label {
-  display: block;
-  margin-top: $space-2;
-  font-size: $font-size-sm;
-  color: $color-neutral-600;
-}
-
-.scalata-footnote {
-  margin: 0;
-  font-size: $font-size-xs;
-  color: $color-neutral-400;
-}
-
 .scalata-timeline {
   display: flex;
   flex-direction: column;
@@ -239,6 +222,12 @@
 
 .scalata-timeline__intro {
   margin: 0;
+}
+
+.scalata-timeline__steps {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
 }
 
 .scalata-step {
@@ -253,10 +242,31 @@
 }
 
 .scalata-step__marker {
+  align-self: stretch;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: calc(50% - 1px);
+    width: 2px;
+    background: $color-neutral-200;
+    z-index: 0;
+  }
+
+  &::before {
+    top: 0;
+    height: 50%;
+  }
+
+  &::after {
+    top: 50%;
+    bottom: calc(-1 * #{$space-4});
+  }
 
   span {
     display: flex;
@@ -266,24 +276,19 @@
     height: 2.5rem;
     border-radius: $radius-full;
     background: $color-primary;
-    color: #fff;
+    color: c.$vs-on-primary;
     font-weight: $font-weight-bold;
     box-shadow: $shadow-sm;
     z-index: 1;
   }
 
-  &::after {
-    content: '';
-    position: absolute;
-    top: 2.5rem;
-    bottom: -1rem;
-    width: 2px;
-    background: $color-neutral-200;
-  }
-
   @include down($bp-sm) {
     display: none;
   }
+}
+
+.scalata-step:first-child .scalata-step__marker::before {
+  display: none;
 }
 
 .scalata-step:last-child .scalata-step__marker::after {
@@ -341,31 +346,19 @@
   strong {
     display: block;
     margin-top: $space-1;
-    font-size: $font-size-base;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
     color: $color-neutral-900;
+    font-variant-numeric: tabular-nums;
   }
 }
 
 .scalata-step__odds strong {
   color: $color-primary;
-  font-size: $font-size-lg;
 }
 
 .scalata-step__win {
   color: $color-success !important;
-}
-
-.scalata-step__footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $space-3;
-  font-size: $font-size-sm;
-  color: $color-neutral-600;
-}
-
-.scalata-step__done {
-  color: $color-success;
-  font-weight: $font-weight-semibold;
 }
 
 .scalata-step__mini-progress {

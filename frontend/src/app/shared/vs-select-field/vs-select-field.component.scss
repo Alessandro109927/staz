@@ -1,0 +1,12 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.vs-select-field {
+  position: relative;
+}
+
+.vs-dropdown-panel--fixed {
+  z-index: 1300;
+}

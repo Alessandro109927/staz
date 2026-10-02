@@ -1,3 +1,4 @@
+@use '../../../styles/colors' as c;
 @use '../../../styles/variables' as *;
 @use '../../../styles/mixins' as *;
 
@@ -39,8 +40,9 @@
   width: $sidebar-width;
   flex-shrink: 0;
   height: 100vh;
-  background: $color-surface;
-  border-right: 1px solid $color-neutral-200;
+  background: c.$vs-black;
+  border-right: 1px solid c.$vs-inverse-accent-medium;
+  color: c.$vs-text-inverse;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -59,47 +61,82 @@
       transform: translateX(0);
     }
   }
+
+  .brand__name {
+    color: c.$vs-text-inverse;
+  }
+
+  .shell-sidenav__close {
+    border-color: c.$vs-inverse-accent-strong;
+    background: c.$vs-inverse-accent-soft;
+    color: c.$vs-text-inverse;
+  }
+
+  .sidebar-footer {
+    border-top-color: c.$vs-inverse-accent-medium;
+  }
+
+  .sidebar-user mat-icon {
+    color: c.$vs-text-inverse;
+  }
+
+  .sidebar-user__name {
+    color: c.$vs-text-inverse;
+  }
+
+  .sidebar-user__username {
+    color: rgba(c.$vs-white, 0.62);
+  }
+
+  .sidebar-cta .vs-btn-primary {
+    background: c.$vs-white;
+    color: c.$vs-black;
+
+    &:hover {
+      background: rgba(c.$vs-white, 0.92);
+    }
+
+    mat-icon {
+      color: c.$vs-black;
+    }
+  }
 }
 
 .brand {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: $space-3;
-  padding: $space-6 $space-5 $space-5;
-  flex-shrink: 0;
-}
-
-.brand__icon {
-  @include flex-center;
-  width: 40px;
-  height: 40px;
-  border-radius: $radius-md;
-  background: $color-primary;
-  color: #fff;
+  justify-content: center;
+  box-sizing: border-box;
+  height: $header-height;
+  min-height: $header-height;
+  padding: 0 $space-5;
   flex-shrink: 0;
 
-  mat-icon {
-    font-size: 22px;
-    width: 22px;
-    height: 22px;
+  @include down($bp-md) {
+    height: 60px;
+    min-height: 60px;
   }
 }
 
 .brand__name {
-  font-size: $font-size-lg;
+  font-size: $font-size-2xl;
   font-weight: $font-weight-bold;
+  letter-spacing: 0.06em;
   color: $color-neutral-900;
-  flex: 1;
-  min-width: 0;
+  text-align: center;
 }
 
 .shell-sidenav__close {
   display: none;
+  position: absolute;
+  top: 50%;
+  right: $space-4;
+  transform: translateY(-50%);
   align-items: center;
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
-  margin-left: auto;
   border: 1px solid $color-neutral-200;
   border-radius: $radius-sm;
   background: $color-neutral-50;
@@ -119,7 +156,7 @@
 
 .nav-list {
   flex: 1;
-  padding: 0 $space-4;
+  padding: $space-4 $space-4 0;
   overflow-y: auto;
   min-height: 0;
 
@@ -129,9 +166,9 @@
     gap: $space-3;
     padding: $space-3 $space-4;
     margin-bottom: $space-1;
-    border-radius: $radius-md;
+    border-radius: 0 $radius-md $radius-md 0;
     text-decoration: none;
-    color: $color-neutral-600;
+    color: rgba(c.$vs-white, 0.68);
     font-size: $font-size-base;
     font-weight: $font-weight-medium;
     border-left: 3px solid transparent;
@@ -146,26 +183,30 @@
     }
 
     mat-icon {
-      color: $color-neutral-400;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
+      color: rgba(c.$vs-white, 0.48);
+      font-size: $icon-size-lg;
+      width: $icon-size-lg;
+      height: $icon-size-lg;
       flex-shrink: 0;
     }
 
     &:hover {
-      background: $color-neutral-50;
-      color: $color-neutral-800;
+      background: c.$vs-inverse-accent-soft;
+      color: c.$vs-text-inverse;
+
+      mat-icon {
+        color: c.$vs-text-inverse;
+      }
     }
 
     &.active {
-      background: $color-primary-light;
-      color: $color-primary;
-      border-left-color: $color-primary;
+      background: c.$vs-inverse-accent-medium;
+      color: c.$vs-text-inverse;
+      border-left-color: c.$vs-white;
       font-weight: $font-weight-semibold;
 
       mat-icon {
-        color: $color-primary;
+        color: c.$vs-text-inverse;
       }
     }
   }
@@ -183,54 +224,37 @@
   border-top: 1px solid $color-neutral-200;
   flex-shrink: 0;
   min-width: 0;
+}
 
-  a {
-    display: flex;
-    align-items: center;
-    gap: $space-3;
-    padding: $space-2 0;
-    text-decoration: none;
-    color: $color-neutral-600;
-    font-size: $font-size-sm;
-    min-width: 0;
+@mixin sidebar-footer-row {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  width: 100%;
+  padding: $space-3 $space-4;
+  margin: 0 0 $space-1;
+  box-sizing: border-box;
+  min-width: 0;
+  text-align: left;
 
-    span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      min-width: 0;
-    }
-
-    mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      color: $color-neutral-400;
-      flex-shrink: 0;
-    }
+  mat-icon {
+    font-size: $icon-size-lg;
+    width: $icon-size-lg;
+    height: $icon-size-lg;
+    flex-shrink: 0;
   }
 }
 
 .sidebar-user {
-  display: flex;
-  align-items: center;
-  gap: $space-3;
-  padding: $space-2 0 $space-3;
-  min-width: 0;
-
-  mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-    color: $color-primary;
-    flex-shrink: 0;
-  }
+  @include sidebar-footer-row;
 }
 
 .sidebar-user__info {
   display: flex;
   flex-direction: column;
+  gap: $space-1;
   min-width: 0;
+  flex: 1;
 }
 
 .sidebar-user__name {
@@ -251,25 +275,30 @@
 }
 
 .sidebar-logout {
-  display: flex;
-  align-items: center;
-  gap: $space-3;
-  width: 100%;
-  padding: $space-2 0;
-  margin: 0;
+  @include sidebar-footer-row;
+  margin-bottom: 0;
   border: none;
   background: transparent;
   color: $color-danger;
   font-size: $font-size-sm;
   font-family: inherit;
   cursor: pointer;
-  text-align: left;
+  border-radius: $radius-md;
+  transition: background 0.15s;
 
   mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
+    color: $color-danger;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  &:hover {
+    background: c.$vs-inverse-accent-soft;
   }
 }
 
@@ -339,8 +368,11 @@
 .header-balance__value {
   font-size: clamp(1rem, 3vw, $font-size-lg);
   font-weight: $font-weight-bold;
-  color: $color-success;
   white-space: nowrap;
+
+  &--positive {
+    color: $color-success;
+  }
 
   &--negative {
     color: $color-danger;
@@ -350,7 +382,10 @@
 .header-balance__roi {
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
-  color: $color-success;
+
+  &--positive {
+    color: $color-success;
+  }
 
   &--negative {
     color: $color-danger;

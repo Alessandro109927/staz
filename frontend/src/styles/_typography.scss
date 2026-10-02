@@ -1,6 +1,26 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
+// ─── Font family (Plus Jakarta Sans ovunque, tranne icone) ───
+button,
+input,
+optgroup,
+select,
+textarea,
+.mat-mdc-button,
+.mat-mdc-form-field,
+.mat-mdc-select,
+.mat-mdc-option,
+.mat-mdc-menu-item,
+.mat-mdc-tab,
+.mat-mdc-dialog-container,
+.mat-mdc-snack-bar-container,
+.mat-mdc-table,
+.mdc-text-field,
+.mdc-button__label {
+  font-family: $font-family;
+}
+
 // ─── Labels (riutilizzabili ovunque) ─────────────────────────
 .vs-label {
   @include label-uppercase;
@@ -45,8 +65,9 @@
 }
 
 .vs-text-muted {
-  font-size: $font-size-sm;
+  font-size: $font-size-base;
   color: $color-neutral-600;
+  line-height: 1.5;
   margin: 0;
 }
 

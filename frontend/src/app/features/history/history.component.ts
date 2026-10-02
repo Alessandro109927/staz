@@ -6,15 +6,32 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/services/api.service';
 import { BetChangeService } from '../../core/services/bet-change.service';
-import { Bet, BetStatus, betPotentialWin } from '../../core/models';
-import { BetEventResultRowComponent } from '../../shared/components/bet-event-result-row/bet-event-result-row.component';
+import { Bet, BetEvent, BetStatus, betPotentialWin } from '../../core/models';
+import { groupBetEventsForDisplay } from '../../core/utils/event-form.helpers';
+import { BetEventGroupRowComponent } from '../../shared/components/bet-event-group-row/bet-event-group-row.component';
+import { VsSelectFieldComponent, VsSelectOption } from '../../shared/vs-select-field/vs-select-field.component';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { EditBetDialogService } from './edit-bet-dialog.service';
+import {
+  DEFAULT_TABLE_PAGE_SIZE,
+  clampPage,
+  paginateSlice,
+} from '../../core/utils/pagination.util';
+import { VsTablePaginationComponent } from '../../shared/table-pagination/table-pagination.component';
 
 @Component({
   selector: 'app-history',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatIconModule, MatDialogModule, MatSnackBarModule, BetEventResultRowComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatIconModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    BetEventGroupRowComponent,
+    VsSelectFieldComponent,
+    VsTablePaginationComponent,
+  ],
   templateUrl: './history.component.html',
   styleUrl: './history.component.scss',
 })
@@ -26,11 +43,23 @@ export class HistoryComponent implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
 
   bets: Bet[] = [];
-  statusFilter = new FormControl<BetStatus | 'ALL'>('ALL');
+  historyPage = 1;
+  historyPageSize = DEFAULT_TABLE_PAGE_SIZE;
+  statusFilter = new FormControl<BetStatus | 'ALL'>('ALL', { nonNullable: true });
+
+  readonly statusFilterOptions: VsSelectOption[] = [
+    { value: 'ALL', label: 'Tutte' },
+    { value: 'PENDING', label: 'In attesa' },
+    { value: 'WON', label: 'Vinte' },
+    { value: 'LOST', label: 'Perse' },
+  ];
 
   ngOnInit(): void {
     this.loadBets();
-    this.statusFilter.valueChanges.subscribe(() => this.loadBets());
+    this.statusFilter.valueChanges.subscribe(() => {
+      this.historyPage = 1;
+      this.loadBets();
+    });
     this.betChange.changed.subscribe(() => this.loadBets());
   }
 
@@ -38,7 +67,24 @@ export class HistoryComponent implements OnInit {
     const status = this.statusFilter.value;
     this.api
       .getBets(status && status !== 'ALL' ? { status } : undefined)
-      .subscribe((bets) => (this.bets = bets));
+      .subscribe((bets) => {
+        this.bets = bets;
+        this.historyPage = clampPage(this.historyPage, bets.length, this.historyPageSize);
+      });
+  }
+
+  get paginatedBets(): Bet[] {
+    return paginateSlice(this.bets, this.historyPage, this.historyPageSize);
+  }
+
+  onHistoryPageChange(page: number): void {
+    this.historyPage = page;
+  }
+
+  onHistoryPageSizeChange(pageSize: number): void {
+    this.historyPageSize = pageSize;
+    this.historyPage = 1;
+    this.historyPage = clampPage(this.historyPage, this.bets.length, this.historyPageSize);
   }
 
   onEventResultChanged(): void {
@@ -80,17 +126,6 @@ export class HistoryComponent implements OnInit {
     });
   }
 
-  betTypeLabel(bet: Bet): string {
-    const eventCount = bet.events?.length ?? 0;
-    if (eventCount > 1) {
-      return 'Multipla';
-    }
-    if (eventCount === 1) {
-      return 'Singola';
-    }
-    return bet.eventName.includes('+') ? 'Multipla' : 'Singola';
-  }
-
   statusLabel(status: BetStatus): string {
     switch (status) {
       case 'PENDING':
@@ -116,15 +151,42 @@ export class HistoryComponent implements OnInit {
   statusIcon(status: BetStatus): string {
     switch (status) {
       case 'PENDING':
-        return 'hourglass_empty';
+        return 'autorenew';
       case 'WON':
-        return 'check_circle';
+        return 'check';
       case 'LOST':
-        return 'cancel';
+        return 'close';
     }
   }
 
   potentialWin(bet: Bet): number {
     return betPotentialWin(bet);
+  }
+
+  eventGroups(events: BetEvent[] | null | undefined) {
+    return groupBetEventsForDisplay(events ?? []);
+  }
+
+  betDay(isoDate: string): string {
+    const day = new Date(isoDate).getDate();
+    return String(day);
+  }
+
+  betMonthShort(isoDate: string): string {
+    const months = [
+      'Gen',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mag',
+      'Giu',
+      'Lug',
+      'Ago',
+      'Set',
+      'Ott',
+      'Nov',
+      'Dic',
+    ];
+    return months[new Date(isoDate).getMonth()] ?? '';
   }
 }

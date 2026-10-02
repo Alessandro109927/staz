@@ -1,0 +1,20 @@
+<div
+  class="bet-event-group"
+  [class.bet-event-group--slip]="variant === 'slip'"
+>
+  <app-match-teams-display [eventName]="eventName" [compact]="true" />
+
+  <ul class="bet-event-group__picks">
+    @for (pick of picks; track pick.id) {
+      <li>
+        <app-bet-event-result-row
+          [layout]="variant === 'slip' ? 'slip-pick' : 'default'"
+          [betId]="betId"
+          [event]="pick"
+          [showEventName]="false"
+          (resultChanged)="resultChanged.emit()"
+        />
+      </li>
+    }
+  </ul>
+</div>

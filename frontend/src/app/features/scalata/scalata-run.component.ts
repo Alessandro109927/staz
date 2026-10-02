@@ -4,6 +4,7 @@ import {
   AbstractControl,
   FormArray,
   FormBuilder,
+  FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
   Validators,
@@ -18,11 +19,23 @@ import { BetChangeService } from '../../core/services/bet-change.service';
 import {
   BetEventItem,
   BetStatus,
+  OutcomeOption,
   ScalataRun,
   ScalataRunStep,
   combineOdds,
 } from '../../core/models';
 import { formatBetLabel, formatRiskLabel, parseOddsInput } from './scalata.helpers';
+import { OutcomeOptionsService } from '../../core/services/outcome-options.service';
+import { createEventGroupForm, createEventPickGroup } from '../../core/utils/event-form.factory';
+import {
+  EventGroupFormValue,
+  flattenEventGroups,
+  groupBetEventsForForm,
+  syncEventGroupsScorerValidators,
+} from '../../core/utils/event-form.helpers';
+import { isScorerOutcomeLabel } from '../../core/utils/outcome-option.util';
+import { MatchTeamsFieldComponent } from '../../shared/match-teams-field/match-teams-field.component';
+import { OutcomeFieldComponent } from '../../shared/outcome-field/outcome-field.component';
 
 function oddsValidator(control: AbstractControl): ValidationErrors | null {
   const odds = parseOddsInput(control.value);
@@ -42,6 +55,8 @@ function oddsValidator(control: AbstractControl): ValidationErrors | null {
     MatButtonModule,
     MatIconModule,
     MatSnackBarModule,
+    MatchTeamsFieldComponent,
+    OutcomeFieldComponent,
   ],
   templateUrl: './scalata-run.component.html',
   styleUrl: './scalata-run.component.scss',
@@ -53,8 +68,10 @@ export class ScalataRunComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly betChange = inject(BetChangeService);
+  private readonly outcomeOptionsService = inject(OutcomeOptionsService);
 
   run: ScalataRun | null = null;
+  outcomeOptions: OutcomeOption[] = [];
   loading = true;
   submitting = false;
   cashingOut = false;
@@ -63,6 +80,7 @@ export class ScalataRunComponent implements OnInit {
   selectedStepId: number | null = null;
   readonly formatRiskLabel = formatRiskLabel;
   readonly formatBetLabel = formatBetLabel;
+  readonly isScorerOutcomeLabel = isScorerOutcomeLabel;
 
   readonly form = this.fb.group({
     betDate: [new Date().toISOString().slice(0, 10), Validators.required],
@@ -70,6 +88,15 @@ export class ScalataRunComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.outcomeOptionsService.load().subscribe((options) => {
+      this.outcomeOptions = options;
+      syncEventGroupsScorerValidators(this.events, this.outcomeOptions);
+    });
+
+    this.events.valueChanges.subscribe(() => {
+      syncEventGroupsScorerValidators(this.events, this.outcomeOptions);
+    });
+
     this.route.paramMap.subscribe((params) => {
       const id = Number(params.get('id'));
       if (id) {
@@ -83,11 +110,30 @@ export class ScalataRunComponent implements OnInit {
   }
 
   get combinedOdds(): number | null {
-    const events = (this.events.getRawValue() as BetEventItem[]).map((event) => ({
+    const events = this.flattenEvents().map((event) => ({
       ...event,
       odds: parseOddsInput(event.odds),
     }));
     return combineOdds(events);
+  }
+
+  picksAt(eventIndex: number): FormArray {
+    return this.events.at(eventIndex).get('picks') as FormArray;
+  }
+
+  addPick(eventIndex: number): void {
+    const pick = createEventPickGroup(this.fb);
+    pick.get('odds')?.setValidators([Validators.required, oddsValidator]);
+    pick.get('odds')?.updateValueAndValidity();
+    this.picksAt(eventIndex).push(pick);
+  }
+
+  removePick(eventIndex: number, pickIndex: number): void {
+    const picks = this.picksAt(eventIndex);
+    if (picks.length === 1) {
+      return;
+    }
+    picks.removeAt(pickIndex);
   }
 
   get currentStep(): ScalataRunStep | null {
@@ -240,7 +286,7 @@ export class ScalataRunComponent implements OnInit {
 
     this.submitting = true;
     const { betDate } = this.form.getRawValue();
-    const events = (this.events.getRawValue() as BetEventItem[]).map((event) => ({
+    const events = this.flattenEvents().map((event) => ({
       eventName: event.eventName.trim(),
       outcome: event.outcome.trim(),
       odds: parseOddsInput(event.odds),
@@ -455,17 +501,19 @@ export class ScalataRunComponent implements OnInit {
       !!step.bet.events?.length;
 
     if (hasPendingDraft && step.bet) {
+      const grouped = groupBetEventsForForm(
+        [...step.bet.events]
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((event) => ({
+            eventName: event.eventName,
+            outcome: (event.outcome ?? '').trim() || '1',
+            odds: parseOddsInput(event.odds),
+          })),
+        this.outcomeOptions,
+      );
       this.form.setControl(
         'events',
-        this.fb.array(
-          step.bet.events.map((event) =>
-            this.createEventGroup(
-              parseOddsInput(event.odds),
-              event.eventName,
-              (event.outcome ?? '').trim() || '1',
-            ),
-          ),
-        ),
+        this.fb.array(grouped.map((group) => this.createEventGroupFromGroup(group))),
       );
       this.form.patchValue({
         betDate: step.bet.betDate.slice(0, 10),
@@ -483,28 +531,58 @@ export class ScalataRunComponent implements OnInit {
     this.formStepId = step.id;
     this.form.markAsPristine();
     this.form.markAsUntouched();
+    syncEventGroupsScorerValidators(this.events, this.outcomeOptions);
     this.form.updateValueAndValidity();
   }
 
   private normalizeOddsFields(): void {
-    for (const control of this.events.controls) {
-      const oddsControl = control.get('odds');
-      if (!oddsControl) {
+    for (const eventControl of this.events.controls) {
+      const picks = eventControl.get('picks') as FormArray | null;
+      if (!picks) {
         continue;
       }
-      const parsed = parseOddsInput(oddsControl.value);
-      if (Number.isFinite(parsed)) {
-        oddsControl.setValue(parsed, { emitEvent: false });
+      for (const pickControl of picks.controls) {
+        const oddsControl = pickControl.get('odds');
+        if (!oddsControl) {
+          continue;
+        }
+        const parsed = parseOddsInput(oddsControl.value);
+        if (Number.isFinite(parsed)) {
+          oddsControl.setValue(parsed, { emitEvent: false });
+        }
       }
     }
   }
 
+  private flattenEvents(): BetEventItem[] {
+    return flattenEventGroups(
+      this.events.getRawValue() as EventGroupFormValue[],
+      this.outcomeOptions,
+    );
+  }
+
+  private createEventGroupFromGroup(group: {
+    eventName: string;
+    picks: Array<{ outcome: string; odds: number }>;
+  }) {
+    const formGroup = createEventGroupForm(this.fb, group.eventName, group.picks);
+    this.applyScalataOddsValidators(formGroup);
+    return formGroup;
+  }
+
   private createEventGroup(odds: number, eventName = '', outcome = '') {
-    const parsedOdds = parseOddsInput(odds);
-    return this.fb.group({
-      eventName: [eventName, Validators.required],
-      outcome: [outcome, Validators.required],
-      odds: [parsedOdds, [Validators.required, oddsValidator]],
-    });
+    const formGroup = createEventGroupForm(this.fb, eventName, [
+      { outcome, odds: parseOddsInput(odds) },
+    ]);
+    this.applyScalataOddsValidators(formGroup);
+    return formGroup;
+  }
+
+  private applyScalataOddsValidators(eventGroup: FormGroup): void {
+    const picks = eventGroup.get('picks') as FormArray;
+    for (const pick of picks.controls) {
+      pick.get('odds')?.setValidators([Validators.required, oddsValidator]);
+      pick.get('odds')?.updateValueAndValidity({ emitEvent: false });
+    }
   }
 }

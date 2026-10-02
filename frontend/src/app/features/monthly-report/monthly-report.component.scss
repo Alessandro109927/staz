@@ -48,11 +48,16 @@
 .monthly-kpi {
   display: flex;
   flex-direction: column;
-  gap: $space-2;
   min-width: 0;
+  min-height: 100%;
 
-  &--profit {
+  &__body {
+    flex: 1;
     justify-content: center;
+  }
+
+  &--profit .monthly-kpi__body {
+    justify-content: flex-start;
   }
 }
 
@@ -79,96 +84,6 @@
   color: $color-neutral-600;
 }
 
-.monthly-report-table-section {
-  overflow: hidden;
-}
-
-.monthly-report-table-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: $space-4;
-  flex-wrap: wrap;
-  padding: $space-5 $space-6;
-  border-bottom: 1px solid $color-neutral-200;
-
-  @include down($bp-md) {
-    padding: $space-4;
-  }
-}
-
-.monthly-report-table-header__count {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  color: $color-neutral-600;
-  white-space: nowrap;
-}
-
-.monthly-report-table {
-  min-width: 760px;
-
-  th:not(:first-child),
-  td:not(:first-child) {
-    text-align: right;
-  }
-}
-
-.monthly-range-cards {
-  flex-direction: column;
-  gap: $space-3;
-  padding: $space-4;
-}
-
-.monthly-range-card {
-  display: flex;
-  flex-direction: column;
-  gap: $space-3;
-  padding: $space-4;
-  border: 1px solid $color-neutral-200;
-  border-radius: $radius-md;
-  background: $color-surface;
-}
-
-.monthly-range-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $space-3;
-  flex-wrap: wrap;
-}
-
-.monthly-range-card__total {
-  font-size: $font-size-sm;
-  color: $color-neutral-600;
-}
-
-.monthly-range-card__metrics {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: $space-3;
-  margin: 0;
-
-  dt {
-    margin: 0;
-    font-size: $font-size-xs;
-    font-weight: $font-weight-semibold;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: $color-neutral-600;
-  }
-
-  dd {
-    margin: 0;
-    font-size: $font-size-sm;
-    font-weight: $font-weight-semibold;
-    font-variant-numeric: tabular-nums;
-  }
-}
-
-.monthly-range-card__profit {
-  grid-column: 1 / -1;
-}
-
 .monthly-report-empty {
   display: flex;
   flex-direction: column;
@@ -177,6 +92,14 @@
   gap: $space-3;
   padding: $space-8 $space-6;
   text-align: center;
+  font-size: $font-size-base;
+  color: $color-neutral-600;
+  line-height: 1.5;
+
+  .vs-text-muted {
+    font-size: inherit;
+    color: inherit;
+  }
 
   mat-icon {
     font-size: 2.5rem;

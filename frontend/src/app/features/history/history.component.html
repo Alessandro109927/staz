@@ -5,21 +5,28 @@
       <p class="vs-text-muted">Tutte le giocate, esiti e movimenti di capitale.</p>
     </div>
 
-    <label class="vs-field history-filter">
-      <span class="vs-field__label">Filtro stato</span>
-      <select class="vs-input" [formControl]="statusFilter">
-        <option value="ALL">Tutte</option>
-        <option value="PENDING">In attesa</option>
-        <option value="WON">Vinte</option>
-        <option value="LOST">Perse</option>
-      </select>
-    </label>
+    <app-vs-select-field
+      class="history-filter"
+      label="Filtro stato"
+      [control]="statusFilter"
+      [options]="statusFilterOptions"
+    />
   </header>
 
-  <section class="vs-card--flush history-section">
-    @if (bets.length) {
-      <div class="table-scroll vs-hide-mobile">
-        <table class="vs-table history-table">
+  @if (bets.length) {
+    <div class="vs-table-area">
+      <app-vs-table-pagination
+        class="vs-table-toolbar-outside"
+        [page]="historyPage"
+        [pageSize]="historyPageSize"
+        [total]="bets.length"
+        ariaLabel="Paginazione storico scommesse"
+        (pageChange)="onHistoryPageChange($event)"
+        (pageSizeChange)="onHistoryPageSizeChange($event)"
+      />
+      <section class="vs-card--flush history-section">
+        <div class="table-scroll vs-hide-mobile">
+        <table class="vs-table vs-data-table history-table">
           <thead>
             <tr>
               <th>Data</th>
@@ -33,20 +40,25 @@
             </tr>
           </thead>
           <tbody>
-            @for (bet of bets; track bet.id) {
-              <tr [class.history-row--pending]="bet.status === 'PENDING'">
-                <td>
-                  <span class="history-date">{{ bet.betDate | date: 'dd/MM/yyyy' }}</span>
+            @for (bet of paginatedBets; track bet.id) {
+              <tr>
+                <td class="history-date-cell">
+                  <div class="history-date-stack" [attr.aria-label]="bet.betDate | date: 'longDate'">
+                    <span class="history-date-stack__day">{{ betDay(bet.betDate) }}</span>
+                    <span class="history-date-stack__month">{{ betMonthShort(bet.betDate) }}</span>
+                  </div>
                 </td>
                 <td>
-                  <div class="history-events-cell">
-                    <span class="history-type">{{ betTypeLabel(bet) }}</span>
-                    @if (bet.events?.length) {
-                      <div class="history-events-list">
-                        @for (event of bet.events; track event.id) {
-                          <app-bet-event-result-row
+                  <div class="history-bet-events">
+                    <span class="history-bet-events__id">#{{ bet.id }}</span>
+                    @if (bet.events.length) {
+                      <div class="history-bet-events__list">
+                        @for (group of eventGroups(bet.events); track group.eventName + group.picks[0].id) {
+                          <app-bet-event-group-row
+                            variant="slip"
                             [betId]="bet.id"
-                            [event]="event"
+                            [eventName]="group.eventName"
+                            [picks]="group.picks"
                             (resultChanged)="onEventResultChanged()"
                           />
                         }
@@ -57,36 +69,35 @@
                   </div>
                 </td>
                 <td>
-                  <div
-                    class="history-quota"
-                    [class.history-quota--multi]="(bet.events?.length ?? 0) > 1"
-                  >
+                  <div class="history-quota">
                     <strong>{{ bet.odds }}</strong>
-                    @if ((bet.events?.length ?? 0) > 1) {
-                      <span class="history-quota__tag">combinata</span>
-                    }
                   </div>
                 </td>
                 <td>
-                  <span class="history-value history-value--stake">€ {{ bet.amountStaked }}</span>
+                  <span class="history-value">€ {{ bet.amountStaked }}</span>
                 </td>
                 <td>
-                  <span class="history-value history-value--win">
-                    € {{ potentialWin(bet) | number: '1.2-2' }}
-                  </span>
+                  <span class="history-value">€ {{ potentialWin(bet) | number: '1.2-2' }}</span>
                 </td>
                 <td>
-                  <span [class]="statusBadgeClass(bet.status)">
-                    <mat-icon class="vs-icon-sm">{{ statusIcon(bet.status) }}</mat-icon>
-                    {{ statusLabel(bet.status) }}
+                  <span
+                    class="history-status-badge"
+                    [class]="statusBadgeClass(bet.status)"
+                    [attr.aria-label]="statusLabel(bet.status)"
+                    role="img"
+                  >
+                    <mat-icon
+                      class="history-status-icon"
+                      [class.history-status-icon--spin]="bet.status === 'PENDING'"
+                    >{{ statusIcon(bet.status) }}</mat-icon>
                   </span>
                 </td>
                 <td>
                   @if (bet.capitalDelta != null) {
                     <span
-                      class="history-value"
-                      [class.history-value--profit]="+bet.capitalDelta >= 0"
-                      [class.history-value--loss]="+bet.capitalDelta < 0"
+                      class="vs-badge history-profit-badge"
+                      [class.vs-badge--success]="+bet.capitalDelta >= 0"
+                      [class.vs-badge--danger]="+bet.capitalDelta < 0"
                     >
                       {{ +bet.capitalDelta >= 0 ? '+' : '' }}€ {{ bet.capitalDelta }}
                     </span>
@@ -121,24 +132,37 @@
       </div>
 
       <div class="history-cards vs-show-mobile-flex">
-        @for (bet of bets; track bet.id) {
-          <article class="history-card" [class.history-card--pending]="bet.status === 'PENDING'">
+        @for (bet of paginatedBets; track bet.id) {
+          <article class="history-card">
             <header class="history-card__head">
-              <span class="history-date">{{ bet.betDate | date: 'dd/MM/yyyy' }}</span>
-              <span [class]="statusBadgeClass(bet.status)">
-                <mat-icon class="vs-icon-sm">{{ statusIcon(bet.status) }}</mat-icon>
-                {{ statusLabel(bet.status) }}
+              <div class="history-date-stack" [attr.aria-label]="bet.betDate | date: 'longDate'">
+                <span class="history-date-stack__day">{{ betDay(bet.betDate) }}</span>
+                <span class="history-date-stack__month">{{ betMonthShort(bet.betDate) }}</span>
+              </div>
+              <span
+                class="history-status-badge"
+                [class]="statusBadgeClass(bet.status)"
+                [attr.aria-label]="statusLabel(bet.status)"
+                role="img"
+              >
+                <mat-icon
+                  class="history-status-icon"
+                  [class.history-status-icon--spin]="bet.status === 'PENDING'"
+                >{{ statusIcon(bet.status) }}</mat-icon>
               </span>
             </header>
 
-            <div class="history-card__events">
-              <span class="history-type">{{ betTypeLabel(bet) }}</span>
-              @if (bet.events?.length) {
-                <div class="history-events-list">
-                  @for (event of bet.events; track event.id) {
-                    <app-bet-event-result-row
+            <div class="history-card__head-divider" aria-hidden="true"></div>
+
+            <div class="history-bet-events">
+              @if (bet.events.length) {
+                <div class="history-bet-events__list">
+                  @for (group of eventGroups(bet.events); track group.eventName + group.picks[0].id) {
+                    <app-bet-event-group-row
+                      variant="slip"
                       [betId]="bet.id"
-                      [event]="event"
+                      [eventName]="group.eventName"
+                      [picks]="group.picks"
                       (resultChanged)="onEventResultChanged()"
                     />
                   }
@@ -152,26 +176,21 @@
               <div class="history-card__metric">
                 <dt>Quota</dt>
                 <dd>
-                  <span
-                    class="history-quota"
-                    [class.history-quota--multi]="(bet.events?.length ?? 0) > 1"
-                  >
+                  <div class="history-quota">
                     <strong>{{ bet.odds }}</strong>
-                  </span>
+                  </div>
                 </dd>
               </div>
               <div class="history-card__metric">
                 <dt>Puntata</dt>
                 <dd>
-                  <span class="history-value history-value--stake">€ {{ bet.amountStaked }}</span>
+                  <span class="history-value">€ {{ bet.amountStaked }}</span>
                 </dd>
               </div>
               <div class="history-card__metric">
                 <dt>Vincita</dt>
                 <dd>
-                  <span class="history-value history-value--win">
-                    € {{ potentialWin(bet) | number: '1.2-2' }}
-                  </span>
+                  <span class="history-value">€ {{ potentialWin(bet) | number: '1.2-2' }}</span>
                 </dd>
               </div>
               <div class="history-card__metric">
@@ -179,9 +198,9 @@
                 <dd>
                   @if (bet.capitalDelta != null) {
                     <span
-                      class="history-value"
-                      [class.history-value--profit]="+bet.capitalDelta >= 0"
-                      [class.history-value--loss]="+bet.capitalDelta < 0"
+                      class="vs-badge history-profit-badge"
+                      [class.vs-badge--success]="+bet.capitalDelta >= 0"
+                      [class.vs-badge--danger]="+bet.capitalDelta < 0"
                     >
                       {{ +bet.capitalDelta >= 0 ? '+' : '' }}€ {{ bet.capitalDelta }}
                     </span>
@@ -192,29 +211,35 @@
               </div>
             </dl>
 
-            <footer class="history-card__actions">
-              <button
-                type="button"
-                class="history-action history-action--edit"
-                aria-label="Modifica scommessa"
-                (click)="editBet(bet)"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                type="button"
-                class="history-action history-action--delete"
-                aria-label="Elimina scommessa"
-                (click)="deleteBet(bet)"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
+            <footer class="history-card__footer">
+              <span class="history-bet-events__id">#{{ bet.id }}</span>
+              <div class="history-card__actions">
+                <button
+                  type="button"
+                  class="history-action history-action--edit"
+                  aria-label="Modifica scommessa"
+                  (click)="editBet(bet)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  class="history-action history-action--delete"
+                  aria-label="Elimina scommessa"
+                  (click)="deleteBet(bet)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
             </footer>
           </article>
         }
       </div>
-    } @else {
+      </section>
+    </div>
+  } @else {
+    <section class="vs-card--flush history-section">
       <p class="history-empty-state">Nessuna scommessa trovata.</p>
-    }
-  </section>
+    </section>
+  }
 </div>

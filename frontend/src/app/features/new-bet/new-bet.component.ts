@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -20,7 +20,23 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/services/api.service';
 import { BetChangeService } from '../../core/services/bet-change.service';
-import { BetEventItem, StakePreview, BetStatus, combineOdds } from '../../core/models';
+import {
+  BetEventItem,
+  OutcomeOption,
+  StakePreview,
+  combineOdds,
+} from '../../core/models';
+import { OutcomeOptionsService } from '../../core/services/outcome-options.service';
+import { createEventGroupForm, createEventPickGroup } from '../../core/utils/event-form.factory';
+import {
+  EventGroupFormValue,
+  flattenEventGroups,
+  isValidEventGroups,
+  syncEventGroupsScorerValidators,
+} from '../../core/utils/event-form.helpers';
+import { isScorerOutcomeLabel } from '../../core/utils/outcome-option.util';
+import { MatchTeamsFieldComponent } from '../../shared/match-teams-field/match-teams-field.component';
+import { OutcomeFieldComponent } from '../../shared/outcome-field/outcome-field.component';
 
 function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
@@ -36,12 +52,15 @@ function roundMoney(value: number): number {
     MatButtonModule,
     MatSnackBarModule,
     MatIconModule,
+    MatchTeamsFieldComponent,
+    OutcomeFieldComponent,
   ],
   templateUrl: './new-bet.component.html',
   styleUrl: './new-bet.component.scss',
 })
-export class NewBetComponent implements OnDestroy {
+export class NewBetComponent implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);
+  private readonly outcomeOptionsService = inject(OutcomeOptionsService);
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<NewBetComponent>);
   private readonly snackBar = inject(MatSnackBar);
@@ -51,11 +70,11 @@ export class NewBetComponent implements OnDestroy {
 
   preview: StakePreview | null = null;
   previewError: string | null = null;
+  outcomeOptions: OutcomeOption[] = [];
+  readonly isScorerOutcomeLabel = isScorerOutcomeLabel;
 
   form = this.fb.group({
-    betDate: [new Date().toISOString().slice(0, 10), Validators.required],
-    status: ['PENDING' as BetStatus, Validators.required],
-    events: this.fb.array([this.createEventGroup()]),
+    events: this.fb.array([createEventGroupForm(this.fb)]),
     stakePercentage: [
       { value: null as number | null, disabled: true },
       [Validators.required, Validators.min(0.01)],
@@ -74,12 +93,34 @@ export class NewBetComponent implements OnDestroy {
     this.setupStakePreview();
   }
 
+  ngOnInit(): void {
+    this.outcomeOptionsService.load().subscribe((options) => {
+      this.outcomeOptions = options;
+      syncEventGroupsScorerValidators(this.events, this.outcomeOptions);
+    });
+
+    this.events.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      syncEventGroupsScorerValidators(this.events, this.outcomeOptions);
+    });
+  }
+
   get events(): FormArray {
     return this.form.controls.events;
   }
 
+  get flattenedPickCount(): number {
+    return this.flattenEvents().length;
+  }
+
   get combinedOdds(): number | null {
-    return combineOdds(this.events.getRawValue() as BetEventItem[]);
+    return combineOdds(this.flattenEvents());
+  }
+
+  get displayOdds(): number | null {
+    if (this.preview?.combinedOdds != null) {
+      return Number(this.preview.combinedOdds);
+    }
+    return this.combinedOdds;
   }
 
   ngOnDestroy(): void {
@@ -87,8 +128,12 @@ export class NewBetComponent implements OnDestroy {
     this.destroy$.complete();
   }
 
+  picksAt(eventIndex: number): FormArray {
+    return this.events.at(eventIndex).get('picks') as FormArray;
+  }
+
   addEvent(): void {
-    this.events.push(this.createEventGroup());
+    this.events.push(createEventGroupForm(this.fb));
   }
 
   removeEvent(index: number): void {
@@ -96,6 +141,18 @@ export class NewBetComponent implements OnDestroy {
       return;
     }
     this.events.removeAt(index);
+  }
+
+  addPick(eventIndex: number): void {
+    this.picksAt(eventIndex).push(createEventPickGroup(this.fb));
+  }
+
+  removePick(eventIndex: number, pickIndex: number): void {
+    const picks = this.picksAt(eventIndex);
+    if (picks.length === 1) {
+      return;
+    }
+    picks.removeAt(pickIndex);
   }
 
   cancel(): void {
@@ -107,14 +164,15 @@ export class NewBetComponent implements OnDestroy {
       return;
     }
 
-    const { betDate, status, stakePercentage, amountStaked, potentialWin } = this.form.getRawValue();
-    const events = this.events.getRawValue() as BetEventItem[];
+    const { stakePercentage, amountStaked, potentialWin } = this.form.getRawValue();
+    const events = this.flattenEvents();
+    const today = new Date().toISOString().slice(0, 10);
 
     this.api
       .createBet({
         events,
-        betDate: new Date(betDate!).toISOString(),
-        status: status!,
+        betDate: new Date(`${today}T12:00:00`).toISOString(),
+        status: 'PENDING',
         stakePercentageApplied: Number(stakePercentage),
         amountStaked: Number(amountStaked),
         potentialWin: Number(potentialWin),
@@ -131,12 +189,11 @@ export class NewBetComponent implements OnDestroy {
       });
   }
 
-  private createEventGroup() {
-    return this.fb.group({
-      eventName: ['', Validators.required],
-      outcome: ['', Validators.required],
-      odds: [1.75, [Validators.required, Validators.min(1.01)]],
-    });
+  private flattenEvents(): BetEventItem[] {
+    return flattenEventGroups(
+      this.events.getRawValue() as EventGroupFormValue[],
+      this.outcomeOptions,
+    );
   }
 
   private setupStakePreview(): void {
@@ -144,8 +201,14 @@ export class NewBetComponent implements OnDestroy {
       .pipe(
         debounceTime(300),
         distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
-        filter((events) => this.isValidEvents(events)),
-        switchMap((events) => this.api.calculateStake(events as BetEventItem[])),
+        filter((groups) =>
+          isValidEventGroups(groups as EventGroupFormValue[], this.outcomeOptions),
+        ),
+        switchMap((groups) =>
+          this.api.calculateStake(
+            flattenEventGroups(groups as EventGroupFormValue[], this.outcomeOptions),
+          ),
+        ),
         takeUntil(this.destroy$),
       )
       .subscribe({
@@ -199,9 +262,9 @@ export class NewBetComponent implements OnDestroy {
   }
 
   private refreshStakePreview(): void {
-    const initialEvents = this.events.getRawValue();
-    if (this.isValidEvents(initialEvents)) {
-      this.api.calculateStake(initialEvents as BetEventItem[]).subscribe({
+    const groups = this.events.getRawValue() as EventGroupFormValue[];
+    if (isValidEventGroups(groups, this.outcomeOptions)) {
+      this.api.calculateStake(flattenEventGroups(groups, this.outcomeOptions)).subscribe({
         next: (preview) => this.applyPreview(preview),
         error: (err) => {
           this.previewError = err.error?.message ?? 'Impossibile calcolare lo stake';
@@ -209,20 +272,5 @@ export class NewBetComponent implements OnDestroy {
         },
       });
     }
-  }
-
-  private isValidEvents(
-    events: Array<{ eventName?: string | null; outcome?: string | null; odds?: number | null }>,
-  ): boolean {
-    return (
-      events.length > 0 &&
-      events.every(
-        (event) =>
-          !!event.eventName?.trim() &&
-          !!event.outcome?.trim() &&
-          event.odds != null &&
-          event.odds > 1,
-      )
-    );
   }
 }

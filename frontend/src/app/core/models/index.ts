@@ -46,6 +46,23 @@ export interface StakingRule {
   stakePercentage: string;
 }
 
+export interface TeamOption {
+  id: number;
+  name: string;
+  logoUrl: string;
+  countryCode: string | null;
+}
+
+export type OutcomeOptionKind = 'standard' | 'scorer';
+
+export interface OutcomeOption {
+  id: number;
+  label: string;
+  description: string | null;
+  sortOrder: number;
+  kind: OutcomeOptionKind;
+}
+
 export type EventResultStatus = 'WON' | 'LOST' | null;
 
 export interface BetEventItem {

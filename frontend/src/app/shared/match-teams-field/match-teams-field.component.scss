@@ -1,0 +1,73 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+:host {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.match-teams-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: $space-3;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: $space-3 $space-4;
+  @include input-elevated;
+}
+
+.match-teams-card__row {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  width: 100%;
+  min-width: 0;
+}
+
+.match-teams-card__side {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.match-teams-card__side--home {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.match-teams-card__side--away {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.match-teams-card__vs {
+  flex: 0 0 auto;
+  padding: 0 $space-1;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.06em;
+  color: $color-neutral-900;
+  line-height: 1;
+  user-select: none;
+}
+
+@media (max-width: 560px) {
+  .match-teams-card {
+    padding: $space-3;
+    gap: $space-2;
+  }
+
+  .match-teams-card__row {
+    gap: $space-1;
+  }
+
+  .match-teams-card__vs {
+    font-size: $font-size-xs;
+    padding: 0;
+  }
+}

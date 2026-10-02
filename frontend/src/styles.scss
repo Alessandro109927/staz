@@ -1,9 +1,17 @@
 @use '@angular/material' as mat;
+@use 'styles/colors' as c;
 @use 'styles/variables' as *;
 @use 'styles/mixins' as *;
 @use 'styles/index';
 
-html,
+html {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 body {
   height: 100%;
   width: 100%;
@@ -11,14 +19,41 @@ body {
   overflow-x: hidden;
   max-width: 100%;
   font-family: $font-family;
-  background: $color-background;
-  color: $color-neutral-800;
+  background: c.$vs-bg;
+  color: c.$vs-text;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 app-root {
   display: block;
   width: 100%;
   min-height: 100vh;
+  font-family: $font-family;
+}
+
+mat-icon,
+.mat-icon {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: $icon-size-lg;
+  width: $icon-size-lg;
+  height: $icon-size-lg;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
 }
 
 @include mat.core();
@@ -28,7 +63,7 @@ $theme: mat.define-theme(
     color: (
       theme-type: light,
       primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
+      tertiary: mat.$azure-palette,
     ),
     typography: (
       brand-family: $font-family,
@@ -38,59 +73,273 @@ $theme: mat.define-theme(
 );
 
 :root {
-  --vs-primary: #{$color-primary};
-  --vs-primary-light: #{$color-primary-light};
-  --vs-secondary: #{$color-secondary};
-  --vs-tertiary: #{$color-tertiary};
-  --vs-success: #{$color-success};
-  --vs-neutral-600: #{$color-neutral-600};
-  --vs-surface: #{$color-surface};
-  --vs-background: #{$color-background};
+  --vs-black: #{c.$vs-black};
+  --vs-white: #{c.$vs-white};
+  --vs-primary: #{c.$vs-primary};
+  --vs-primary-light: #{c.$vs-accent-soft};
+  --vs-secondary: #{c.$vs-black};
+  --vs-tertiary: #{c.$vs-black};
+  --vs-success: #{c.$vs-profit};
+  --vs-danger: #{c.$vs-loss};
+  --vs-neutral-600: #{c.$vs-text-muted};
+  --vs-surface: #{c.$vs-surface};
+  --vs-background: #{c.$vs-bg};
+
+  --mat-sys-primary: #{c.$vs-black};
+  --mat-sys-on-primary: #{c.$vs-white};
+  --mat-sys-secondary: #{c.$vs-black};
+  --mat-sys-tertiary: #{c.$vs-black};
+  --mat-sys-error: #{c.$vs-black};
+  --mat-sys-on-error: #{c.$vs-white};
 }
 
 :root {
   @include mat.all-component-themes($theme);
 }
 
-// Override Material primary to match Fidelity palette
+// Token MDC bottoni (dopo il tema Material, altrimenti restano blu)
+:root {
+  --mat-app-background-color: #{c.$vs-bg};
+  --mat-app-text-color: #{c.$vs-text};
+
+  --mdc-text-button-label-text-color: #{c.$vs-black};
+  --mat-text-button-state-layer-color: #{c.$vs-black};
+  --mat-text-button-ripple-color: #{c.$vs-accent-medium};
+
+  --mdc-outlined-button-label-text-color: #{c.$vs-black};
+  --mdc-outlined-button-outline-color: #{c.$vs-black};
+  --mat-outlined-button-state-layer-color: #{c.$vs-black};
+  --mdc-outlined-button-disabled-outline-color: #{c.$vs-button-disabled-outline};
+  --mdc-outlined-button-disabled-label-text-color: #{c.$vs-button-disabled-text};
+
+  --mdc-filled-button-container-color: #{c.$vs-black};
+  --mdc-filled-button-label-text-color: #{c.$vs-on-primary};
+  --mdc-filled-button-disabled-container-color: #{c.$vs-button-disabled-bg};
+  --mdc-filled-button-disabled-label-text-color: #{c.$vs-button-disabled-label};
+
+  --mdc-protected-button-container-color: #{c.$vs-black};
+  --mdc-protected-button-label-text-color: #{c.$vs-on-primary};
+  --mdc-protected-button-disabled-container-color: #{c.$vs-button-disabled-bg};
+  --mdc-protected-button-disabled-label-text-color: #{c.$vs-button-disabled-label};
+
+  --mat-outlined-button-ripple-color: #{rgba(c.$vs-black, 0.12)};
+  --mat-protected-button-state-layer-color: #{c.$vs-black};
+  --mat-protected-button-ripple-color: #{rgba(c.$vs-black, 0.12)};
+  --mat-filled-button-state-layer-color: #{c.$vs-white};
+  --mat-filled-button-ripple-color: #{rgba(c.$vs-white, 0.14)};
+
+  --mdc-dialog-container-color: #{c.$vs-white};
+  --mat-dialog-container-surface-color: #{c.$vs-white};
+}
+
+// Material → monocromo (varianti colore)
 .mat-mdc-raised-button.mat-primary,
 .mat-mdc-unelevated-button.mat-primary,
 .mat-mdc-fab.mat-primary,
 .mat-mdc-mini-fab.mat-primary {
-  --mdc-protected-button-container-color: #{$color-primary};
-  --mat-fab-foreground-color: #fff;
-  --mat-fab-state-layer-color: #fff;
+  --mdc-protected-button-container-color: #{c.$vs-black};
+  --mdc-filled-button-container-color: #{c.$vs-black};
+  --mat-fab-foreground-color: #{c.$vs-white};
+  --mat-fab-state-layer-color: #{c.$vs-white};
+  --mdc-protected-button-label-text-color: #{c.$vs-white};
+  --mdc-filled-button-label-text-color: #{c.$vs-white};
+}
+
+.mat-mdc-outlined-button,
+.mat-mdc-outlined-button.mat-primary {
+  --mdc-outlined-button-label-text-color: #{c.$vs-black};
+  --mdc-outlined-button-outline-color: #{c.$vs-black};
+  --mat-outlined-button-state-layer-color: #{c.$vs-black};
+  --mdc-outlined-button-disabled-outline-color: #{c.$vs-button-disabled-outline};
+  --mdc-outlined-button-disabled-label-text-color: #{c.$vs-button-disabled-text};
+}
+
+.mat-mdc-button,
+.mat-mdc-button.mat-primary {
+  --mdc-text-button-label-text-color: #{c.$vs-black};
+  --mat-text-button-state-layer-color: #{c.$vs-black};
+}
+
+.mat-mdc-outlined-button:not(:disabled) mat-icon,
+.mat-mdc-outlined-button:not(:disabled) .mat-icon {
+  color: #{c.$vs-black};
+}
+
+.mat-mdc-unelevated-button.mat-primary[disabled],
+.mat-mdc-raised-button.mat-primary[disabled],
+.mat-mdc-unelevated-button.mat-mdc-button-disabled.mat-primary {
+  --mdc-filled-button-disabled-container-color: #{c.$vs-button-disabled-bg};
+  --mdc-filled-button-disabled-label-text-color: #{c.$vs-button-disabled-label};
+}
+
+.mat-mdc-button:not(:disabled) {
+  color: c.$vs-black;
+}
+
+.mat-mdc-outlined-button:not(:disabled) {
+  color: c.$vs-black;
+
+  .mdc-button__label,
+  mat-icon,
+  .mat-icon {
+    color: c.$vs-black;
+  }
+
+  .mdc-notched-outline {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: c.$vs-black;
+    }
+  }
+}
+
+.mat-mdc-unelevated-button.mat-primary:not(:disabled),
+.mat-mdc-raised-button.mat-primary:not(:disabled) {
+  background-color: c.$vs-black;
+  color: c.$vs-on-primary;
+}
+
+.mat-mdc-unelevated-button.mat-primary[disabled],
+.mat-mdc-raised-button.mat-primary[disabled] {
+  background-color: c.$vs-button-disabled-bg;
+  color: c.$vs-button-disabled-label;
+}
+
+.mat-mdc-dialog-actions .mat-mdc-button:not(:disabled) {
+  color: c.$vs-black;
 }
 
 .mat-toolbar.mat-primary {
-  --mat-toolbar-container-background-color: #{$color-primary};
+  --mat-toolbar-container-background-color: #{c.$vs-black};
+  --mat-toolbar-container-text-color: #{c.$vs-white};
+}
+
+.mat-mdc-tab-group,
+.mat-mdc-tab-nav-bar {
+  --mdc-tab-indicator-active-indicator-color: #{c.$vs-black};
+  --mat-tab-header-active-label-text-color: #{c.$vs-black};
+  --mat-tab-header-active-ripple-color: #{c.$vs-black};
+}
+
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  background-color: c.$vs-white;
 }
 
 .new-bet-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface {
   box-shadow: none;
+  width: 100%;
+  background-color: c.$vs-white;
 }
 
-.new-bet-dialog-panel .mat-mdc-dialog-content {
-  max-height: calc(90vh - 11rem);
-  padding-top: $space-2;
+.bet-form-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface {
+  min-width: min(980px, 98vw);
+}
+
+.bet-form-dialog-panel .mat-mdc-dialog-container {
+  overflow: visible;
+  --mat-dialog-headline-padding: 0;
+}
+
+.bet-form-dialog-panel .mat-mdc-dialog-container .mat-mdc-dialog-title + .mat-mdc-dialog-content {
+  max-height: calc(92vh - 11rem);
+  padding: $space-5 $space-6 $space-8;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.bet-form-dialog-panel .mat-mdc-dialog-actions {
+  padding-top: $space-3;
+  padding-bottom: $space-5;
+}
+
+.bet-form-dialog-panel .mat-mdc-dialog-title.table-header {
+  flex-shrink: 0;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: $space-5 $space-6;
+  border-bottom: 1px solid $color-neutral-200;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  line-height: 1.3;
+  color: c.$vs-black;
+
+  &::before {
+    display: none;
+  }
+
+  @include down($bp-md) {
+    padding: $space-4;
+  }
 }
 
 @include down($bp-md) {
-  .new-bet-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface {
-    margin: $space-3;
-    max-height: calc(100vh - #{$space-6});
+  $bet-form-dialog-viewport-inset: $space-4;
+  // Titolo table-header + azioni (altezza approssimativa per max-height del content).
+  $bet-form-dialog-chrome: 8.75rem;
+
+  // Gap uguale su tutti i lati: quasi full-screen, centrato nel viewport.
+  .cdk-overlay-pane.bet-form-dialog-panel {
+    position: fixed !important;
+    inset: calc(#{$bet-form-dialog-viewport-inset} + env(safe-area-inset-top, 0px))
+      calc(#{$bet-form-dialog-viewport-inset} + env(safe-area-inset-right, 0px))
+      calc(#{$bet-form-dialog-viewport-inset} + env(safe-area-inset-bottom, 0px))
+      calc(#{$bet-form-dialog-viewport-inset} + env(safe-area-inset-left, 0px)) !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-sizing: border-box;
   }
 
-  .new-bet-dialog-panel .mat-mdc-dialog-content {
-    max-height: calc(100vh - 10rem);
-    padding-left: $space-3;
-    padding-right: $space-3;
+  .bet-form-dialog-panel .mat-mdc-dialog-container {
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .bet-form-dialog-panel .mat-mdc-dialog-inner-container {
+    width: 100%;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .bet-form-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface {
+    min-width: 0;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  // Altezza massima esplicita: senza limite il content cresce e non scrolla mai.
+  .bet-form-dialog-panel .mat-mdc-dialog-container .mat-mdc-dialog-title + .mat-mdc-dialog-content {
+    max-height: calc(
+      100dvh - #{2 * $bet-form-dialog-viewport-inset} - #{$bet-form-dialog-chrome} -
+        env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+    ) !important;
+    padding: $space-4 $space-4 $space-6;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    box-sizing: border-box;
   }
 
   .mat-mdc-dialog-actions {
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: $space-2;
-    padding: $space-3;
+  }
+
+  .bet-form-dialog-panel .mat-mdc-dialog-actions {
+    flex-shrink: 0;
+    padding-inline: $space-4;
+    padding-top: $space-3;
+    padding-bottom: $space-5;
+    box-sizing: border-box;
   }
 }

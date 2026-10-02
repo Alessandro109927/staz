@@ -1,0 +1,47 @@
+<div class="win-rate-donut">
+  <div class="win-rate-donut__body">
+    <div class="win-rate-donut__meter">
+      <div
+        class="win-rate-donut__track"
+        role="progressbar"
+        [attr.aria-valuenow]="hasSettled ? winRatePercent : 0"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        [attr.aria-label]="
+          hasSettled ? 'Win rate ' + (winRatePercent | number: '1.0-0') + '%' : 'Nessuna scommessa regolata'
+        "
+      >
+        @if (hasSettled) {
+          <span class="win-rate-donut__segment win-rate-donut__segment--won" [style.flex-grow]="won"></span>
+          <span class="win-rate-donut__segment win-rate-donut__segment--lost" [style.flex-grow]="lost"></span>
+        } @else {
+          <span class="win-rate-donut__segment win-rate-donut__segment--empty"></span>
+        }
+      </div>
+    </div>
+
+    <ul class="win-rate-donut__legend">
+      @for (item of legend; track item.label) {
+        <li
+          class="win-rate-donut__legend-row"
+          [class.win-rate-donut__legend-row--summary]="item.summary"
+        >
+          <span class="win-rate-donut__legend-left">
+            @if (item.summary) {
+              <span class="win-rate-donut__dot win-rate-donut__dot--summary"></span>
+            } @else {
+              <span class="win-rate-donut__dot" [style.background-color]="item.color"></span>
+            }
+            <span class="win-rate-donut__legend-label">
+              {{ item.label }}
+              @if (item.detail) {
+                <span class="win-rate-donut__legend-detail">{{ item.detail }}</span>
+              }
+            </span>
+          </span>
+          <span class="win-rate-donut__legend-percent">{{ item.percent }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+</div>

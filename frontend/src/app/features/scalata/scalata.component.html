@@ -2,9 +2,8 @@
   <header class="scalata-header">
     <div>
       <h1 class="vs-heading-page">Scalata</h1>
-      <p class="vs-text-muted">
-        Pianifica una scalata all-in: imposta l'obiettivo e ottieni le quote ideali bet per bet,
-        con un percorso pensato per ridurre il rischio.
+      <p class="vs-text-muted scalata-header__subtitle">
+        Pianifica una scalata all-in: imposta l'obiettivo e ottieni le quote ideali bet per bet, con un percorso pensato per ridurre il rischio.
       </p>
     </div>
   </header>
@@ -21,15 +20,18 @@
       </p>
     </div>
     <a routerLink="/scalata/active" class="vs-btn-primary scalata-active-link">
-      <mat-icon>play_arrow</mat-icon>
+      <mat-icon>tools_ladder</mat-icon>
       {{ activeRunsCount > 0 ? 'Vai alle tue scalate' : 'Le tue scalate' }}
     </a>
   </section>
 
   <div class="scalata-layout">
-    <section class="vs-card scalata-form-card">
-      <h2 class="vs-heading-section">Configura il piano</h2>
+    <section class="vs-card--flush scalata-form-card">
+      <div class="table-header">
+        <h2 class="vs-heading-section">Configura il piano</h2>
+      </div>
 
+      <div class="dashboard-card-body scalata-form-card__body">
       <form [formGroup]="form" class="scalata-form">
         <div class="scalata-field-block">
           <span class="vs-field__label">Puntata iniziale (bankroll)</span>
@@ -51,15 +53,6 @@
             >
               Capitale attuale
             </button>
-            <button
-              type="button"
-              class="scalata-source-btn"
-              [class.scalata-source-btn--active]="stakeSource === 'system'"
-              [disabled]="systemSuggestedStake == null"
-              (click)="setStakeSource('system')"
-            >
-              Suggerita
-            </button>
           </div>
           <label class="vs-field">
             <div class="vs-input-affix">
@@ -75,12 +68,6 @@
           </label>
           @if (currentCapital != null) {
             <p class="scalata-hint">Capitale attuale: € {{ currentCapital | number: '1.2-2' }}</p>
-          }
-          @if (systemSuggestedStake != null) {
-            <p class="scalata-hint">
-              Puntata suggerita (regole stake, quota minima):
-              € {{ systemSuggestedStake | number: '1.2-2' }}
-            </p>
           }
         </div>
 
@@ -184,6 +171,7 @@
           </p>
         </div>
       </form>
+      </div>
     </section>
 
     <section class="scalata-results">
@@ -197,23 +185,26 @@
             </div>
           </article>
         } @else {
-          <article class="vs-card scalata-summary">
-            <div class="scalata-summary__hero">
-              <div>
-                <span class="vs-label">Obiettivo</span>
-                <p class="scalata-summary__target">
-                  +€ {{ plan.targetProfit | number: '1.2-2' }}
-                </p>
-                <p class="scalata-summary__meta">
-                  Da € {{ plan.startBankroll | number: '1.2-2' }}
-                  → € {{ plan.targetCapital | number: '1.2-2' }}
-                </p>
-              </div>
-              <div class="scalata-summary__badge">
-                <mat-icon>trending_up</mat-icon>
-                <span>{{ plan.totalDays }} bet</span>
-              </div>
+          <article class="vs-card--flush scalata-summary">
+            <div class="table-header">
+              <h2 class="vs-heading-section">Obiettivo</h2>
             </div>
+
+            <div class="dashboard-card-body scalata-summary__body">
+            <div class="scalata-summary__headline">
+              <p class="scalata-summary__target">
+                +€ {{ plan.targetProfit | number: '1.2-2' }}
+              </p>
+              <span class="scalata-summary__badge">
+                <mat-icon>tools_ladder</mat-icon>
+                <span>{{ plan.totalDays }} bet</span>
+              </span>
+            </div>
+            <p class="scalata-summary__meta vs-money-range">
+              <span>Da € {{ plan.startBankroll | number: '1.2-2' }}</span>
+              <mat-icon class="vs-money-range__arrow" aria-hidden="true">arrow_forward</mat-icon>
+              <span>€ {{ plan.targetCapital | number: '1.2-2' }}</span>
+            </p>
 
             <div class="scalata-summary__kpis">
               <div>
@@ -232,26 +223,16 @@
               }
             </div>
 
-            <div class="scalata-progress">
-              <div class="scalata-progress__track">
-                <div class="scalata-progress__fill" [style.width.%]="overallProgress()"></div>
-              </div>
-              <span class="scalata-progress__label">Avanzamento verso l'obiettivo (se tutte vincono)</span>
-            </div>
-
-            <p class="scalata-footnote">
-              *Stima indicativa assumendo probabilità ≈ 1/quota per ogni step. Non è una garanzia di vincita.
-            </p>
-
             <button
               type="button"
               class="vs-btn-primary scalata-start-btn"
               [disabled]="startingScalata"
               (click)="startScalata()"
             >
-              <mat-icon>rocket_launch</mat-icon>
+              <mat-icon>tools_ladder</mat-icon>
               {{ startingScalata ? 'Avvio in corso...' : 'Inizia scalata' }}
             </button>
+            </div>
           </article>
 
           <section class="scalata-timeline">
@@ -260,6 +241,7 @@
               Ogni bet punti l'intero bankroll sulla quota indicata. Puoi chiuderne più di una nello stesso giorno.
             </p>
 
+            <div class="scalata-timeline__steps">
             @for (step of plan.steps; track step.day) {
               <article class="scalata-step" [class]="'scalata-step--' + step.riskLevel">
                 <div class="scalata-step__marker">
@@ -291,22 +273,13 @@
                     </div>
                   </div>
 
-                  <div class="scalata-step__footer">
-                    <span>Profitto step: +€ {{ step.stepProfit | number: '1.2-2' }}</span>
-                    <span>Totale: +€ {{ step.cumulativeProfit | number: '1.2-2' }}</span>
-                    @if (step.remainingProfit > 0.009) {
-                      <span>Mancano € {{ step.remainingProfit | number: '1.2-2' }}</span>
-                    } @else {
-                      <span class="scalata-step__done">Obiettivo raggiunto</span>
-                    }
-                  </div>
-
                   <div class="scalata-step__mini-progress">
                     <div [style.width.%]="progressPercent($index)"></div>
                   </div>
                 </div>
               </article>
             }
+            </div>
           </section>
         }
       }

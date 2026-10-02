@@ -1,0 +1,25 @@
+<div class="match-teams-card">
+  <div class="match-teams-card__row">
+    <app-team-search-field
+      class="match-teams-card__side match-teams-card__side--home"
+      variant="match"
+      side="home"
+      label="Squadra casa"
+      placeholder="Casa"
+      [ngModel]="homeTeam"
+      (ngModelChange)="onHomeChange($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+    <div class="match-teams-card__vs" aria-hidden="true">VS</div>
+    <app-team-search-field
+      class="match-teams-card__side match-teams-card__side--away"
+      variant="match"
+      side="away"
+      label="Squadra ospite"
+      placeholder="Ospite"
+      [ngModel]="awayTeam"
+      (ngModelChange)="onAwayChange($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+</div>

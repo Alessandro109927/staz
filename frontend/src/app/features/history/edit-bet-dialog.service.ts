@@ -12,11 +12,11 @@ export class EditBetDialogService {
   open(bet: Bet): Observable<boolean> {
     return this.dialog
       .open(EditBetComponent, {
-        width: '560px',
-        maxWidth: '95vw',
-        maxHeight: '90vh',
+        width: '980px',
+        maxWidth: '98vw',
+        maxHeight: '100dvh',
         autoFocus: 'first-titled-element',
-        panelClass: 'new-bet-dialog-panel',
+        panelClass: ['new-bet-dialog-panel', 'bet-form-dialog-panel'],
         data: { bet },
       })
       .afterClosed()

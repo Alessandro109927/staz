@@ -8,16 +8,12 @@
     </div>
 
     @if (months.length) {
-      <label class="vs-field monthly-report-filter">
-        <span class="vs-field__label">Mese</span>
-        <select class="vs-input" [formControl]="monthControl">
-          @for (option of months; track option.year + '-' + option.month) {
-            <option [value]="option.year + '-' + option.month">
-              {{ monthLabel(option) }}
-            </option>
-          }
-        </select>
-      </label>
+      <app-vs-select-field
+        class="monthly-report-filter"
+        label="Mese"
+        [control]="monthControl"
+        [options]="monthSelectOptions"
+      />
     }
   </header>
 
@@ -33,145 +29,88 @@
     </section>
   } @else if (report) {
     <section class="monthly-report-kpis">
-      <article class="vs-card monthly-kpi monthly-kpi--profit">
-        <span class="vs-label">Profitto</span>
-        <p
-          class="monthly-kpi__value"
-          [class.monthly-kpi__value--success]="+report.profit >= 0"
-          [class.monthly-kpi__value--danger]="+report.profit < 0"
-        >
-          {{ +report.profit >= 0 ? '+' : '' }}€ {{ report.profit | number: '1.2-2' }}
-        </p>
-        @if (report.roi != null) {
-          <span class="monthly-kpi__meta">ROI {{ +report.roi >= 0 ? '+' : '' }}{{ report.roi }}%</span>
-        }
+      <article class="vs-card--flush monthly-kpi monthly-kpi--profit">
+        <div class="table-header">
+          <h2 class="vs-heading-section">Profitto</h2>
+        </div>
+        <div class="dashboard-card-body monthly-kpi__body">
+          <p
+            class="monthly-kpi__value"
+            [class.monthly-kpi__value--success]="+report.profit >= 0"
+            [class.monthly-kpi__value--danger]="+report.profit < 0"
+          >
+            {{ +report.profit >= 0 ? '+' : '' }}€ {{ report.profit | number: '1.2-2' }}
+          </p>
+          @if (report.roi != null) {
+            <span class="monthly-kpi__meta">ROI {{ +report.roi >= 0 ? '+' : '' }}{{ report.roi }}%</span>
+          }
+        </div>
       </article>
 
-      <article class="vs-card--compact monthly-kpi">
-        <span class="vs-label">Vinte</span>
-        <p class="monthly-kpi__value monthly-kpi__value--success">{{ report.won }}</p>
+      <article class="vs-card--flush monthly-kpi">
+        <div class="table-header">
+          <h2 class="vs-heading-section">Vinte</h2>
+        </div>
+        <div class="dashboard-card-body monthly-kpi__body">
+          <p class="monthly-kpi__value monthly-kpi__value--success">{{ report.won }}</p>
+        </div>
       </article>
 
-      <article class="vs-card--compact monthly-kpi">
-        <span class="vs-label">Perse</span>
-        <p class="monthly-kpi__value monthly-kpi__value--danger">{{ report.lost }}</p>
+      <article class="vs-card--flush monthly-kpi">
+        <div class="table-header">
+          <h2 class="vs-heading-section">Perse</h2>
+        </div>
+        <div class="dashboard-card-body monthly-kpi__body">
+          <p class="monthly-kpi__value monthly-kpi__value--danger">{{ report.lost }}</p>
+        </div>
       </article>
 
-      <article class="vs-card--compact monthly-kpi">
-        <span class="vs-label">In attesa</span>
-        <p class="monthly-kpi__value">{{ report.pending }}</p>
+      <article class="vs-card--flush monthly-kpi">
+        <div class="table-header">
+          <h2 class="vs-heading-section">In attesa</h2>
+        </div>
+        <div class="dashboard-card-body monthly-kpi__body">
+          <p class="monthly-kpi__value">{{ report.pending }}</p>
+        </div>
       </article>
 
-      <article class="vs-card--compact monthly-kpi">
-        <span class="vs-label">Win rate</span>
-        <p class="monthly-kpi__value">
-          {{ report.winRate != null ? report.winRate + '%' : '—' }}
-        </p>
+      <article class="vs-card--flush monthly-kpi">
+        <div class="table-header">
+          <h2 class="vs-heading-section">Win rate</h2>
+        </div>
+        <div class="dashboard-card-body monthly-kpi__body">
+          <p class="monthly-kpi__value">
+            {{ report.winRate != null ? report.winRate + '%' : '—' }}
+          </p>
+        </div>
       </article>
 
-      <article class="vs-card--compact monthly-kpi">
-        <span class="vs-label">Media quota</span>
-        <p class="monthly-kpi__value">
-          {{ report.averageOdds ?? '—' }}
-        </p>
+      <article class="vs-card--flush monthly-kpi">
+        <div class="table-header">
+          <h2 class="vs-heading-section">Media quota</h2>
+        </div>
+        <div class="dashboard-card-body monthly-kpi__body">
+          <p class="monthly-kpi__value">
+            {{ report.averageOdds ?? '—' }}
+          </p>
+        </div>
       </article>
     </section>
 
-    <section class="vs-card--flush monthly-report-table-section">
-      <div class="monthly-report-table-header">
-        <div>
-          <span class="vs-label">Analisi per fascia</span>
-          <h2 class="vs-heading-section">Quote 1–2, 2–3, 3–4…</h2>
-        </div>
-        <span class="monthly-report-table-header__count">
-          {{ report.total }} scommesse nel mese
-        </span>
-      </div>
-
+    <section class="vs-card--flush odds-range-section">
       @if (activeOddsRanges.length) {
-        <div class="table-scroll vs-hide-mobile">
-          <table class="vs-table monthly-report-table">
-            <thead>
-              <tr>
-                <th>Fascia quota</th>
-                <th>Totale</th>
-                <th>Vinte</th>
-                <th>Perse</th>
-                <th>In attesa</th>
-                <th>Win rate</th>
-                <th>Profitto</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (kpi of activeOddsRanges; track kpi.key) {
-                <tr>
-                  <td><strong>{{ kpi.label }}</strong></td>
-                  <td>{{ kpi.total }}</td>
-                  <td><span class="vs-value-success">{{ kpi.won }}</span></td>
-                  <td><span class="vs-value-danger">{{ kpi.lost }}</span></td>
-                  <td>{{ kpi.pending }}</td>
-                  <td>{{ kpi.winRate != null ? kpi.winRate + '%' : '—' }}</td>
-                  <td>
-                    @if (hasSettledBets(kpi)) {
-                      <span
-                        [class.vs-value-success]="+kpi.netProfit >= 0"
-                        [class.vs-value-danger]="+kpi.netProfit < 0"
-                      >
-                        {{ +kpi.netProfit >= 0 ? '+' : '' }}€ {{ kpi.netProfit }}
-                      </span>
-                    } @else {
-                      —
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+        <div class="table-header">
+          <h2 class="vs-heading-section">Fasce di quota</h2>
         </div>
 
-        <div class="monthly-range-cards vs-show-mobile-flex">
+        <div class="odds-range-section__donuts odds-range-section__donuts--auto dashboard-card-body">
           @for (kpi of activeOddsRanges; track kpi.key) {
-            <article class="monthly-range-card">
-              <header class="monthly-range-card__head">
-                <strong>{{ kpi.label }}</strong>
-                <span class="monthly-range-card__total">{{ kpi.total }} giocate</span>
-              </header>
-              <dl class="monthly-range-card__metrics">
-                <div>
-                  <dt>Vinte</dt>
-                  <dd class="vs-value-success">{{ kpi.won }}</dd>
-                </div>
-                <div>
-                  <dt>Perse</dt>
-                  <dd class="vs-value-danger">{{ kpi.lost }}</dd>
-                </div>
-                <div>
-                  <dt>In attesa</dt>
-                  <dd>{{ kpi.pending }}</dd>
-                </div>
-                <div>
-                  <dt>Win rate</dt>
-                  <dd>{{ kpi.winRate != null ? kpi.winRate + '%' : '—' }}</dd>
-                </div>
-                <div class="monthly-range-card__profit">
-                  <dt>Profitto</dt>
-                  <dd>
-                    @if (hasSettledBets(kpi)) {
-                      <span
-                        [class.vs-value-success]="+kpi.netProfit >= 0"
-                        [class.vs-value-danger]="+kpi.netProfit < 0"
-                      >
-                        {{ +kpi.netProfit >= 0 ? '+' : '' }}€ {{ kpi.netProfit }}
-                      </span>
-                    } @else {
-                      —
-                    }
-                  </dd>
-                </div>
-              </dl>
-            </article>
+            <app-odds-range-kpi-donut [kpi]="kpi" />
           }
         </div>
+        <p class="odds-range-section__footnote">
+          Margine = profitto netto ÷ totale giocato sulle scommesse regolate.
+        </p>
       } @else {
         <p class="monthly-report-empty monthly-report-empty--inline">
           Nessuna scommessa conclusa in questo mese.

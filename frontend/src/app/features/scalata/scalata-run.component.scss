@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use '../../../styles/variables' as *;
 @use '../../../styles/mixins' as *;
 
@@ -12,6 +13,11 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: $space-4;
+
+  @include down($bp-md) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .scalata-run-header__actions {
@@ -20,6 +26,11 @@
   align-items: flex-end;
   gap: $space-3;
   flex-shrink: 0;
+
+  @include down($bp-md) {
+    align-items: stretch;
+    width: 100%;
+  }
 }
 
 .scalata-run-profit {
@@ -54,14 +65,37 @@
   gap: $space-2;
 }
 
+.scalata-run-header__btn-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-3;
+  width: min(100%, 22rem);
+
+  @include down($bp-md) {
+    width: 100%;
+    max-width: none;
+  }
+
+  &:has(.vs-btn-ghost:only-child) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vs-btn-ghost {
+    width: 100%;
+    min-height: 2.75rem;
+    justify-content: center;
+    padding: $space-3 $space-4;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    box-sizing: border-box;
+  }
+}
+
 .scalata-delete-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: $space-2;
   color: $color-danger;
 
   &:hover:not(:disabled) {
-    color: darken($color-danger, 8%);
+    color: color.adjust($color-danger, $lightness: -8%);
   }
 }
 
@@ -114,7 +148,7 @@
 }
 
 .scalata-abandon-btn {
-  flex-shrink: 0;
+  gap: $space-2;
 }
 
 .scalata-run-layout {
@@ -195,66 +229,125 @@
   border: 1px solid $color-neutral-200;
   border-radius: $radius-md;
   background: $color-surface;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .event-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
 
-.event-remove-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: $color-neutral-600;
-  cursor: pointer;
-  padding: 0;
-
-  &:hover {
-    color: $color-danger;
+  strong {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    line-height: 1.3;
   }
 }
 
 .event-row__fields {
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
   gap: $space-3;
   min-width: 0;
+}
+
+.event-row__teams {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.event-picks {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  width: 100%;
+}
+
+.event-row__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: $space-3;
+  width: 100%;
+  min-width: 0;
+
+  &:has(.event-pick-remove) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+
+  &--scorer {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    &:has(.event-pick-remove) {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    }
+  }
 
   @include down($bp-sm) {
-    flex-direction: column;
-    align-items: stretch;
+    grid-template-columns: 1fr;
+
+    &:has(.event-pick-remove) {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    &--scorer {
+      grid-template-columns: 1fr;
+
+      &:has(.event-pick-remove) {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+    }
   }
 }
 
-.event-row__event {
-  flex: 1 1 40%;
-  min-width: 0;
-}
-
-.event-row__outcome {
-  flex: 1 1 30%;
-  min-width: 0;
-}
-
+.event-row__outcome,
+.event-row__scorer,
 .event-row__odds {
-  flex: 0 0 6.5rem;
-  width: 6.5rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.event-pick-remove {
+  align-self: end;
+  justify-self: end;
+  margin: 0 0 $space-1;
+  color: $color-neutral-600;
 
   @include down($bp-sm) {
-    flex: 1 1 100%;
-    width: 100%;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    margin-bottom: 0;
   }
 }
 
-.add-event-btn {
-  align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: $space-2;
+.add-pick {
+  align-self: center;
+  margin-top: $space-2;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  max-width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border-radius: $radius-full;
+  --mdc-outlined-button-container-shape: #{$radius-full};
+
+  .mat-mdc-button-touch-target {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  mat-icon {
+    margin: 0;
+  }
+}
+
+.add-event {
+  align-self: center;
+  margin: $space-2 0 0;
 }
 
 .bet-date {
@@ -273,7 +366,7 @@
 
   strong {
     font-size: $font-size-xl;
-    color: darken($color-success, 8%);
+    color: color.adjust($color-success, $lightness: -8%);
   }
 }
 
@@ -282,16 +375,27 @@
 }
 
 .scalata-step-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: $space-3;
-  align-items: center;
-}
+  align-items: stretch;
 
-.scalata-step-actions__won {
-  display: inline-flex;
-  align-items: center;
-  gap: $space-2;
+  @include down($bp-sm) {
+    grid-template-columns: 1fr;
+  }
+
+  .vs-btn-primary,
+  .vs-btn-ghost {
+    width: 100%;
+    min-height: 2.75rem;
+    justify-content: center;
+    gap: $space-2;
+    padding: $space-3 $space-4;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    text-align: center;
+    box-sizing: border-box;
+  }
 }
 
 .scalata-step-actions__lost {

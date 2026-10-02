@@ -1,0 +1,67 @@
+<label class="vs-field event-row__outcome outcome-field">
+  <span class="vs-field__label">Esito</span>
+
+  @if (hasPresetOptions) {
+    <div class="outcome-field__control">
+      <input
+        class="vs-input outcome-field__input"
+        type="text"
+        [formControl]="control"
+        placeholder="Scegli o scrivi esito"
+        autocomplete="off"
+        role="combobox"
+        aria-autocomplete="list"
+        [attr.aria-expanded]="panelOpen"
+        (focus)="onInputFocus()"
+        (input)="onInput()"
+      />
+      <button
+        type="button"
+        class="outcome-field__toggle"
+        aria-label="Apri elenco esiti"
+        [attr.aria-expanded]="panelOpen"
+        (mousedown)="$event.preventDefault()"
+        (click)="togglePanel($event)"
+      >
+        <mat-icon>{{ panelOpen ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+    </div>
+
+    @if (panelOpen) {
+      <ul
+        class="vs-dropdown-panel vs-dropdown-panel--fixed"
+        role="listbox"
+        [ngStyle]="panelStyle"
+      >
+        @if (filteredOptions.length) {
+          @for (option of filteredOptions; track option.id) {
+            <li>
+              <button
+                type="button"
+                class="vs-dropdown-option"
+                role="option"
+                [class.vs-dropdown-option--selected]="control.value === option.label"
+                (mousedown)="$event.preventDefault()"
+                (click)="selectOption(option)"
+              >
+                <span class="vs-dropdown-option__label">{{ option.label }}</span>
+                @if (option.description) {
+                  <span class="vs-dropdown-option__desc">{{ option.description }}</span>
+                }
+              </button>
+            </li>
+          }
+        } @else {
+          <li class="vs-dropdown-empty">Nessun esito corrisponde alla ricerca</li>
+        }
+      </ul>
+    }
+  } @else {
+    <input
+      class="vs-input"
+      type="text"
+      [formControl]="control"
+      placeholder="es., 1"
+    />
+  }
+</label>

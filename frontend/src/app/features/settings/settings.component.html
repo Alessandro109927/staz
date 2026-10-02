@@ -2,41 +2,19 @@
   <header class="settings-header">
     <div class="settings-header__title">
       <h1 class="vs-heading-page">Impostazioni</h1>
-      <p class="vs-text-muted">Capitale iniziale, regole di stake e parametri di gioco.</p>
+      <p class="vs-text-muted">Capitale iniziale, regole di stake, esiti e parametri di gioco.</p>
     </div>
   </header>
 
-  <section id="capitale" class="vs-card settings-capital">
-    <div class="settings-capital__head">
-      <div>
-        <span class="vs-label">Analisi Capitale</span>
-        <h2 class="settings-capital__title">Capitale iniziale</h2>
-        <p class="vs-text-muted settings-capital__desc">
-          Usato solo per calcolare stake e puntata. Non modifica il capitale attuale né il profitto dalle scommesse già registrate.
-        </p>
-      </div>
-
-      @if (capital) {
-        <div class="settings-capital__summary">
-          <div class="settings-capital__metric">
-            <span class="settings-capital__metric-label">Capitale attuale</span>
-            <strong class="settings-capital__metric-value">
-              € {{ capital.currentCapital | number: '1.2-2' }}
-            </strong>
-          </div>
-          <div class="settings-capital__metric">
-            <span class="settings-capital__metric-label">Profitto</span>
-            <strong
-              class="settings-capital__metric-value"
-              [class.settings-capital__metric-value--success]="profit >= 0"
-              [class.settings-capital__metric-value--danger]="profit < 0"
-            >
-              {{ profit >= 0 ? '+' : '' }}€ {{ profit | number: '1.2-2' }}
-            </strong>
-          </div>
-        </div>
-      }
+  <section id="capitale" class="vs-card--flush settings-capital">
+    <div class="table-header">
+      <h2 class="vs-heading-section">Capitale iniziale</h2>
     </div>
+
+    <div class="dashboard-card-body settings-capital__body">
+      <p class="vs-text-muted settings-capital__desc">
+        Usato solo per calcolare stake e puntata. Non modifica il capitale attuale né il profitto dalle scommesse già registrate.
+      </p>
 
     @if (capitalLoading) {
       <p class="settings-empty settings-empty--inline">Caricamento...</p>
@@ -69,25 +47,142 @@
         </div>
       </form>
     }
+    </div>
   </section>
 
-  <section class="settings-stake-section">
-    <div class="settings-stake-section__head">
-      <div>
-        <span class="vs-label">Regole di stake</span>
-        <h2 class="settings-stake-section__title">Fasce di quota</h2>
-      </div>
+  <section class="vs-card--flush settings-outcomes-section">
+    <div class="table-header vs-flex-between">
+      <h2 class="vs-heading-section">Elenco esiti</h2>
+      <button type="button" class="vs-btn-primary" (click)="openCreateOutcomeDialog()">
+        <mat-icon>add</mat-icon>
+        Nuovo esito
+      </button>
+    </div>
+  </section>
 
+  @if (outcomeOptions.length) {
+    <div class="vs-table-area">
+      <app-vs-table-pagination
+        class="vs-table-toolbar-outside"
+        [page]="outcomesPage"
+        [pageSize]="outcomesPageSize"
+        [total]="outcomeOptions.length"
+        ariaLabel="Paginazione elenco esiti"
+        (pageChange)="onOutcomesPageChange($event)"
+        (pageSizeChange)="onOutcomesPageSizeChange($event)"
+      />
+      <section class="vs-card--flush settings-table-panel">
+        <div class="table-scroll vs-hide-mobile">
+          <table class="vs-table vs-data-table settings-table">
+            <thead>
+              <tr>
+                <th>Esito</th>
+                <th>Descrizione</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (option of paginatedOutcomeOptions; track option.id) {
+                <tr>
+                  <td>
+                    <span class="settings-outcome-label">{{ option.label }}</span>
+                  </td>
+                  <td>
+                    @if (option.description) {
+                      <span class="settings-outcome-desc">{{ option.description }}</span>
+                    } @else {
+                      <span class="settings-outcome-desc settings-outcome-desc--empty">—</span>
+                    }
+                  </td>
+                  <td>
+                    <div class="settings-actions">
+                      <button
+                        type="button"
+                        class="settings-action settings-action--edit"
+                        aria-label="Modifica esito"
+                        (click)="openEditOutcomeDialog(option)"
+                      >
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button
+                        type="button"
+                        class="settings-action settings-action--delete"
+                        aria-label="Elimina esito"
+                        (click)="deleteOutcomeOption(option)"
+                      >
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="settings-cards vs-show-mobile-flex">
+          @for (option of paginatedOutcomeOptions; track option.id) {
+            <article class="settings-card">
+              <div class="settings-card__body">
+                <span class="settings-card__label">Esito</span>
+                <strong class="settings-outcome-label">{{ option.label }}</strong>
+                @if (option.description) {
+                  <span class="settings-outcome-desc">{{ option.description }}</span>
+                }
+              </div>
+              <div class="settings-actions">
+                <button
+                  type="button"
+                  class="settings-action settings-action--edit"
+                  aria-label="Modifica esito"
+                  (click)="openEditOutcomeDialog(option)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  class="settings-action settings-action--delete"
+                  aria-label="Elimina esito"
+                  (click)="deleteOutcomeOption(option)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    </div>
+  } @else {
+    <section class="vs-card--flush settings-table-panel">
+      <p class="settings-empty">Nessun esito in elenco. Aggiungine uno con «Nuovo esito».</p>
+    </section>
+  }
+
+  <section class="vs-card--flush settings-stake-section">
+    <div class="table-header vs-flex-between">
+      <h2 class="vs-heading-section">Fasce di quota</h2>
       <button type="button" class="vs-btn-primary" (click)="openCreateDialog()">
         <mat-icon>add</mat-icon>
         Nuova regola
       </button>
     </div>
+  </section>
 
-    <div class="vs-card--flush settings-section">
-      @if (rules.length) {
+  @if (rules.length) {
+    <div class="vs-table-area">
+      <app-vs-table-pagination
+        class="vs-table-toolbar-outside"
+        [page]="rulesPage"
+        [pageSize]="rulesPageSize"
+        [total]="rules.length"
+        ariaLabel="Paginazione fasce di quota"
+        (pageChange)="onRulesPageChange($event)"
+        (pageSizeChange)="onRulesPageSizeChange($event)"
+      />
+      <section class="vs-card--flush settings-table-panel">
         <div class="table-scroll vs-hide-mobile">
-          <table class="vs-table settings-table">
+          <table class="vs-table vs-data-table settings-table settings-table--stake">
             <thead>
               <tr>
                 <th>Range quota</th>
@@ -96,7 +191,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (rule of rules; track rule.id) {
+              @for (rule of paginatedRules; track rule.id) {
                 <tr>
                   <td>
                     <span class="settings-range">{{ formatRange(rule) }}</span>
@@ -131,7 +226,7 @@
         </div>
 
         <div class="settings-cards vs-show-mobile-flex">
-          @for (rule of rules; track rule.id) {
+          @for (rule of paginatedRules; track rule.id) {
             <article class="settings-card">
               <div class="settings-card__body">
                 <span class="settings-card__label">Range quota</span>
@@ -159,9 +254,11 @@
             </article>
           }
         </div>
-      } @else {
-        <p class="settings-empty">Nessuna regola configurata.</p>
-      }
+      </section>
     </div>
-  </section>
+  } @else {
+    <section class="vs-card--flush settings-table-panel settings-stake-section">
+      <p class="settings-empty">Nessuna regola configurata.</p>
+    </section>
+  }
 </div>

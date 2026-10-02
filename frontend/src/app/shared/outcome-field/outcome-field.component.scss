@@ -1,0 +1,83 @@
+@use '../../../styles/colors' as c;
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.outcome-field {
+  position: relative;
+}
+
+.outcome-field__control {
+  @include input-elevated;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  overflow: hidden;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:focus-within {
+    border-color: c.$vs-border-strong;
+    box-shadow: $shadow-input, 0 0 0 3px c.$vs-focus-ring;
+  }
+
+  &:has(.ng-invalid.ng-touched) {
+    border-color: c.$vs-border-strong;
+    box-shadow: $shadow-input;
+  }
+}
+
+.outcome-field__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-right: 2.75rem;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+
+  &:focus {
+    box-shadow: none;
+  }
+}
+
+.outcome-field__toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-left: 1px solid $color-neutral-200;
+  border-radius: 0;
+  background: $color-neutral-50;
+  color: $color-neutral-600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  mat-icon {
+    font-size: 1.35rem;
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  &:hover {
+    background: $color-neutral-200;
+    color: $color-neutral-900;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: -2px;
+  }
+}
+

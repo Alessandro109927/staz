@@ -18,7 +18,6 @@
 .history-header__title {
   display: flex;
   flex-direction: column;
-  gap: $space-2;
   min-width: 0;
 
   .vs-heading-page {
@@ -37,30 +36,40 @@
 
 .history-section {
   overflow: hidden;
+  background: $color-surface;
 }
 
 .history-table {
   min-width: 980px;
-  font-size: $font-size-base;
 
-  th {
-    font-size: $font-size-sm;
-    padding: $space-4 $space-5;
-    white-space: nowrap;
+  th:first-child {
+    border-right: 1px solid $color-neutral-200;
   }
 
-  td {
-    padding: $space-5;
+  td.history-date-cell {
+    width: 4.5rem;
+    padding-right: $space-4;
     vertical-align: middle;
+    border-right: 1px solid $color-neutral-200;
   }
 
-  th:not(:first-child):not(:nth-child(2)),
-  td:not(:first-child):not(:nth-child(2)) {
-    text-align: right;
+  td:nth-child(2) {
+    vertical-align: top;
+    padding-left: $space-5;
   }
 
-  th:last-child,
-  td:last-child {
+  th:nth-child(1),
+  td:nth-child(1) {
+    text-align: center;
+  }
+
+  th:nth-child(2),
+  td:nth-child(2) {
+    text-align: left;
+  }
+
+  th:nth-child(n + 3),
+  td:nth-child(n + 3) {
     text-align: center;
   }
 
@@ -74,43 +83,70 @@
   }
 }
 
-.history-row--pending {
-  background: rgba($color-primary, 0.03);
-}
-
-.history-date {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $color-neutral-600;
-  white-space: nowrap;
-}
-
-.history-events-cell {
+.history-date-stack {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  line-height: 1;
+  padding-top: $space-2;
+  color: $color-neutral-900;
+}
+
+.history-date-stack__day {
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.history-date-stack__month {
+  margin-top: $space-1;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+}
+
+.history-bet-events {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   gap: $space-2;
-  min-width: 14rem;
+  min-width: 16rem;
+  max-width: 100%;
   text-align: left;
 }
 
-.history-events-list {
-  display: flex;
-  flex-direction: column;
-  gap: $space-1;
-  width: 100%;
+.history-bet-events__id {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 1.625rem;
+  padding: 0 $space-2;
+  border-radius: $radius-sm;
+  background: $color-neutral-100;
+  color: $color-neutral-800;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
 }
 
-.history-type {
-  display: inline-flex;
+.history-bet-events > .history-bet-events__id {
   align-self: flex-start;
-  padding: $space-1 $space-2;
-  border-radius: $radius-sm;
-  background: $color-primary-light;
-  color: $color-primary;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+}
+
+.history-card__footer .history-bet-events__id {
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.history-bet-events__list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  width: 100%;
+  min-width: 0;
 }
 
 .history-events {
@@ -183,80 +219,89 @@
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.2rem;
-  min-width: 4.5rem;
-  min-height: 2.75rem;
-  padding: $space-2 $space-3;
-  border-radius: $radius-md;
-  background: $color-primary-light;
-  border: 1px solid rgba($color-primary, 0.2);
+  gap: 0.125rem;
   vertical-align: middle;
 
   strong {
-    font-size: $font-size-md;
+    font-size: $font-size-xl;
     font-weight: $font-weight-bold;
-    color: $color-primary;
-    line-height: 1;
+    color: $color-neutral-900;
+    line-height: 1.2;
     font-variant-numeric: tabular-nums;
   }
 }
 
-.history-quota--multi {
-  background: $color-success-light;
-  border-color: rgba($color-success, 0.28);
-
-  strong {
-    color: #15803d;
-  }
-}
-
-.history-quota__tag {
-  font-size: 0.625rem;
-  font-weight: $font-weight-semibold;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: $color-success;
-}
-
 .history-value {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: $space-1 $space-3;
-  border-radius: $radius-sm;
-  font-size: $font-size-sm;
+  font-size: $font-size-lg;
   font-weight: $font-weight-semibold;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-  border: 1px solid transparent;
+  color: $color-neutral-900;
 }
 
-.history-value--stake {
-  background: $color-neutral-100;
-  color: $color-neutral-800;
-  border-color: $color-neutral-200;
+.history-profit-badge {
+  font-size: 1.25rem;
+  font-weight: $font-weight-bold;
+  padding: $space-2 $space-4;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.history-value--win {
-  background: $color-success-light;
-  color: $color-success;
-  border-color: rgba($color-success, 0.2);
+.history-table .history-status-badge,
+.history-card .history-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: $radius-full;
+  background: transparent;
+  font-weight: $font-weight-medium;
+
+  &.vs-badge--success {
+    color: $color-success;
+    background: $color-success-light;
+  }
+
+  &.vs-badge--danger {
+    color: $color-danger;
+    background: $color-danger-light;
+  }
+
+  &.vs-badge--neutral {
+    color: $color-neutral-600;
+    background: $color-neutral-100;
+  }
 }
 
-.history-value--profit {
-  background: $color-success-light;
-  color: $color-success;
-  border-color: rgba($color-success, 0.2);
+.history-table .history-status-badge mat-icon.history-status-icon,
+.history-card .history-status-badge mat-icon.history-status-icon {
+  font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  line-height: 1;
+  font-weight: $font-weight-bold;
+
+  &.history-status-icon--spin {
+    animation: history-status-spin 1s linear infinite;
+  }
 }
 
-.history-value--loss {
-  background: $color-danger-light;
-  color: $color-danger;
-  border-color: rgba($color-danger, 0.2);
+@keyframes history-status-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .history-empty {
+  font-size: $font-size-lg;
   color: $color-neutral-400;
 }
 
@@ -292,9 +337,9 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 1rem;
-    width: 1rem;
-    height: 1rem;
+    font-size: $icon-size-sm;
+    width: $icon-size-sm;
+    height: $icon-size-sm;
     line-height: 1;
   }
 }
@@ -324,19 +369,18 @@
   min-width: 2rem;
   padding: 0;
   color: $color-neutral-600;
-  border-color: $color-neutral-200;
-  background: $color-neutral-50;
+  border-color: transparent;
+  background: transparent;
 
   mat-icon {
-    font-size: 1.125rem;
-    width: 1.125rem;
-    height: 1.125rem;
+    font-size: $icon-size-md;
+    width: $icon-size-md;
+    height: $icon-size-md;
   }
 
   &:hover {
-    color: $color-primary;
-    border-color: rgba($color-primary, 0.25);
-    background: $color-primary-light;
+    color: $color-neutral-900;
+    background: transparent;
   }
 }
 
@@ -347,14 +391,14 @@
   color: $color-neutral-600;
 
   mat-icon {
-    font-size: 1.125rem;
-    width: 1.125rem;
-    height: 1.125rem;
+    font-size: $icon-size-md;
+    width: $icon-size-md;
+    height: $icon-size-md;
   }
 
   &:hover {
-    color: $color-danger;
-    background: $color-danger-light;
+    color: $color-neutral-900;
+    background: transparent;
   }
 }
 
@@ -363,7 +407,8 @@
   padding: $space-8 $space-6;
   text-align: center;
   color: $color-neutral-600;
-  font-size: $font-size-base;
+  font-size: $font-size-md;
+  line-height: 1.5;
 }
 
 .history-cards {
@@ -380,11 +425,6 @@
   border: 1px solid $color-neutral-200;
   border-radius: $radius-md;
   background: $color-surface;
-
-  &--pending {
-    background: rgba($color-primary, 0.03);
-    border-color: rgba($color-primary, 0.15);
-  }
 }
 
 .history-card__head {
@@ -392,7 +432,29 @@
   align-items: center;
   justify-content: space-between;
   gap: $space-3;
-  flex-wrap: wrap;
+}
+
+.history-card__head-divider {
+  height: 0;
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid $color-neutral-200;
+}
+
+.history-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  padding-top: $space-3;
+  margin-top: $space-1;
+  border-top: 1px solid $color-neutral-200;
+}
+
+.history-card .history-bet-events {
+  min-width: 0;
+  width: 100%;
 }
 
 .history-card__events {
@@ -436,8 +498,7 @@
   display: flex;
   justify-content: flex-end;
   gap: $space-2;
-  padding-top: $space-2;
-  border-top: 1px solid $color-neutral-100;
+  flex-shrink: 0;
 }
 
 @include down($bp-lg) {

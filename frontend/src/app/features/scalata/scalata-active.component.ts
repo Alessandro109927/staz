@@ -2,28 +2,23 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/services/api.service';
-import { BetChangeService } from '../../core/services/bet-change.service';
 import { ScalataRun, ScalataRunStep } from '../../core/models';
 import { formatRiskLabel, formatBetLabel } from './scalata.helpers';
 
 @Component({
   selector: 'app-scalata-active',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatIconModule, MatSnackBarModule],
+  imports: [CommonModule, RouterLink, MatIconModule],
   templateUrl: './scalata-active.component.html',
   styleUrl: './scalata-active.component.scss',
 })
 export class ScalataActiveComponent implements OnInit {
   private readonly api = inject(ApiService);
-  private readonly snackBar = inject(MatSnackBar);
-  private readonly betChange = inject(BetChangeService);
 
   activeRuns: ScalataRun[] = [];
   finishedRuns: ScalataRun[] = [];
   loading = true;
-  deletingRunId: number | null = null;
   readonly formatRiskLabel = formatRiskLabel;
   readonly formatBetLabel = formatBetLabel;
 
@@ -41,42 +36,6 @@ export class ScalataActiveComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
-      },
-    });
-  }
-
-  deleteRun(run: ScalataRun, event: Event): void {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (this.deletingRunId != null) {
-      return;
-    }
-
-    const linkedBets = run.steps.filter((step) => step.betId != null).length;
-    const message =
-      `Eliminare definitivamente la scalata #${run.id}?\n\n` +
-      (linkedBets > 0
-        ? `Verranno rimosse anche le ${linkedBets} giocate collegate. `
-        : '') +
-      'Il capitale principale non cambia.';
-
-    if (!confirm(message)) {
-      return;
-    }
-
-    this.deletingRunId = run.id;
-    this.api.deleteScalataRun(run.id).subscribe({
-      next: () => {
-        this.activeRuns = this.activeRuns.filter((item) => item.id !== run.id);
-        this.finishedRuns = this.finishedRuns.filter((item) => item.id !== run.id);
-        this.deletingRunId = null;
-        this.betChange.notifyCreated();
-        this.snackBar.open('Scalata eliminata', 'OK', { duration: 3000 });
-      },
-      error: (err) => {
-        this.deletingRunId = null;
-        this.snackBar.open(err.error?.message ?? 'Errore', 'Chiudi', { duration: 5000 });
       },
     });
   }

@@ -1,18 +1,29 @@
 import { ChartConfiguration } from 'chart.js';
-import { Bet, Capital, OddsRangeKpi, profitFromCapital, startingCapitalValue } from '../../core/models';
+import {
+  VS_LOSS,
+  VS_LOSS_CHART_FILL_SOFT,
+  VS_PROFIT,
+  VS_PROFIT_CHART_FILL,
+} from '../../core/constants/app-colors';
+import { APP_FONT_FAMILY } from '../../core/constants/app-font';
+import { Bet, Capital, profitFromCapital, startingCapitalValue } from '../../core/models';
 import { moneyDifference } from '../../core/utils/money.util';
 
-const PRIMARY = '#1978e5';
-const PRIMARY_SOFT = 'rgba(25, 120, 229, 0.22)';
-const SUCCESS = '#16a34a';
-const SUCCESS_SOFT = 'rgba(22, 163, 74, 0.85)';
-const DANGER = '#dc2626';
-const DANGER_SOFT = 'rgba(220, 38, 38, 0.85)';
-const SECONDARY = '#6b8cae';
-const NEUTRAL = '#64748b';
-const NEUTRAL_LIGHT = '#94a3b8';
-const GRID = '#eef2f7';
-const FONT = "'Inter', Roboto, sans-serif";
+/** Allineati a `styles/_colors.scss`. */
+const BLACK = '#000000';
+const WHITE = '#ffffff';
+const GRID = 'rgba(0, 0, 0, 0.08)';
+const AXIS = 'rgba(0, 0, 0, 0.42)';
+const FILL = 'rgba(0, 0, 0, 0.14)';
+const FILL_SOFT = 'rgba(0, 0, 0, 0.06)';
+const SERIES = [
+  BLACK,
+  'rgba(0, 0, 0, 0.72)',
+  'rgba(0, 0, 0, 0.52)',
+  'rgba(0, 0, 0, 0.36)',
+  'rgba(0, 0, 0, 0.22)',
+] as const;
+const FONT = APP_FONT_FAMILY;
 
 interface MonthBucket {
   key: string;
@@ -78,7 +89,7 @@ function baseTooltip(): NonNullable<ChartConfiguration['options']>['plugins'] {
   return {
     legend: { display: false },
     tooltip: {
-      backgroundColor: '#0f172a',
+      backgroundColor: BLACK,
       padding: 10,
       cornerRadius: 8,
       titleFont: { size: 11, weight: 'bold' as const, family: FONT },
@@ -93,7 +104,7 @@ function axisXMinimal(maxTicks = 4) {
     grid: { display: false },
     border: { display: false },
     ticks: {
-      color: NEUTRAL_LIGHT,
+      color: AXIS,
       font: { size: 9, family: FONT },
       maxRotation: 0,
       autoSkip: true,
@@ -111,7 +122,7 @@ function axisYMinimal(
     grid: { color: GRID, drawTicks: false },
     border: { display: false },
     ticks: {
-      color: NEUTRAL_LIGHT,
+      color: AXIS,
       font: { size: 9, family: FONT },
       maxTicksLimit: maxTicks,
       callback: formatter,
@@ -159,7 +170,7 @@ function lineDataset(
     borderWidth: 2,
     pointRadius: pointCount <= 8 ? 3 : 0,
     pointHoverRadius: 5,
-    pointBackgroundColor: '#fff',
+    pointBackgroundColor: WHITE,
     pointBorderColor: color,
     pointBorderWidth: 2,
   };
@@ -198,8 +209,8 @@ export function buildCapitalEvolutionChart(
           label: 'Capitale',
           ...lineDataset(
             data,
-            PRIMARY,
-            'gradient:rgba(25, 120, 229, 0.2):rgba(25, 120, 229, 0.02)',
+            BLACK,
+            `gradient:${FILL}:${FILL_SOFT}`,
             data.length,
           ),
         },
@@ -234,7 +245,7 @@ export function buildInitialCapitalChart(capital: Capital): ChartConfiguration {
       datasets: [
         {
           data: [starting, current],
-          backgroundColor: [SECONDARY, current >= starting ? SUCCESS : DANGER],
+          backgroundColor: [SERIES[4], current >= starting ? VS_PROFIT : VS_LOSS],
           borderRadius: 8,
           borderSkipped: false,
           maxBarThickness: 32,
@@ -277,7 +288,8 @@ export function buildProfitChart(capital: Capital, bets: Bet[]): ChartConfigurat
     data.push(profit);
   }
 
-  const color = profit >= 0 ? SUCCESS : DANGER;
+  const lineColor = profit >= 0 ? VS_PROFIT : VS_LOSS;
+  const fillFrom = profit >= 0 ? VS_PROFIT_CHART_FILL : VS_LOSS_CHART_FILL_SOFT;
 
   return {
     type: 'line',
@@ -288,8 +300,8 @@ export function buildProfitChart(capital: Capital, bets: Bet[]): ChartConfigurat
           label: 'Profitto',
           ...lineDataset(
             data,
-            color,
-            `gradient:${profit >= 0 ? 'rgba(22, 163, 74, 0.18)' : 'rgba(220, 38, 38, 0.18)'}:rgba(255,255,255,0)`,
+            lineColor,
+            `gradient:${fillFrom}:rgba(255,255,255,0)`,
             data.length,
           ),
         },
@@ -316,46 +328,48 @@ export function buildProfitChart(capital: Capital, bets: Bet[]): ChartConfigurat
   };
 }
 
-export function buildMonthlyRoiChart(
+export function buildTotalRoiChart(
   capital: Capital,
   bets: Bet[],
 ): ChartConfiguration {
   const starting = startingCapitalValue(capital);
-  const buckets = createAllMonthBuckets(
-    getTimelineStart(capital, bets),
-    new Date(),
-  );
-  const monthlyProfit = buckets.map(() => 0);
+  const baseline = capital.startingCapital ?? capital.initialCapital;
+  const labels = [formatShortDate(capital.createdAt)];
+  const data = [0];
 
   for (const bet of sortedSettledBets(bets)) {
-    const index = buckets.findIndex(
-      (bucket) => bucket.key === monthKey(new Date(bet.settledAt!)),
-    );
-    if (index >= 0) {
-      monthlyProfit[index] += moneyDifference(
-        bet.capitalAfter!,
-        bet.capitalBefore,
-      );
-    }
+    labels.push(formatShortDate(bet.settledAt!));
+    const profitAtPoint = moneyDifference(bet.capitalAfter!, baseline);
+    data.push(starting > 0 ? (profitAtPoint / starting) * 100 : 0);
   }
 
-  const roiData = monthlyProfit.map((profit) =>
-    starting > 0 ? (profit / starting) * 100 : 0,
-  );
+  const totalRoi = starting > 0 ? (profitFromCapital(capital) / starting) * 100 : 0;
+  if (data.at(-1) !== totalRoi) {
+    labels.push('Oggi');
+    data.push(totalRoi);
+  }
+
+  if (data.length === 1) {
+    labels.push('Oggi');
+    data.push(totalRoi);
+  }
+
+  const lineColor = totalRoi >= 0 ? VS_PROFIT : VS_LOSS;
+  const fillFrom = totalRoi >= 0 ? VS_PROFIT_CHART_FILL : VS_LOSS_CHART_FILL_SOFT;
 
   return {
-    type: 'bar',
+    type: 'line',
     data: {
-      labels: buckets.map((bucket) => bucket.label),
+      labels,
       datasets: [
         {
-          data: roiData,
-          backgroundColor: roiData.map((value) =>
-            value >= 0 ? SUCCESS_SOFT : DANGER_SOFT,
+          label: 'ROI',
+          ...lineDataset(
+            data,
+            lineColor,
+            `gradient:${fillFrom}:rgba(255,255,255,0)`,
+            data.length,
           ),
-          borderRadius: 6,
-          borderSkipped: false,
-          maxBarThickness: 24,
         },
       ],
     },
@@ -373,7 +387,7 @@ export function buildMonthlyRoiChart(
         },
       },
       scales: {
-        x: axisXMinimal(4),
+        x: axisXMinimal(3),
         y: axisHidden(),
       },
     }),
@@ -388,7 +402,7 @@ export function buildAverageOddsChart(bets: Bet[]): ChartConfiguration {
   if (!ordered.length) {
     return {
       type: 'line',
-      data: { labels: ['—'], datasets: [{ data: [0], borderColor: NEUTRAL_LIGHT }] },
+      data: { labels: ['—'], datasets: [{ data: [0], borderColor: AXIS }] },
       options: baseChartOptions({
         plugins: baseTooltip(),
         scales: { x: axisHidden(), y: axisHidden() },
@@ -405,8 +419,8 @@ export function buildAverageOddsChart(bets: Bet[]): ChartConfiguration {
           label: 'Quota',
           ...lineDataset(
             ordered.map((bet) => Number(bet.odds)),
-            PRIMARY,
-            'gradient:rgba(25, 120, 229, 0.15):rgba(25, 120, 229, 0)',
+            BLACK,
+            `gradient:${FILL}:rgba(255,255,255,0)`,
             ordered.length,
           ),
         },
@@ -461,7 +475,7 @@ export function buildBetsTimelineChart(
         {
           data: totals,
           backgroundColor: buckets.map((bucket) =>
-            bucket.key === currentKey ? PRIMARY : PRIMARY_SOFT,
+            bucket.key === currentKey ? BLACK : FILL,
           ),
           borderRadius: 6,
           borderSkipped: false,
@@ -491,181 +505,3 @@ export function buildBetsTimelineChart(
   };
 }
 
-const ODDS_RANGE_COLORS: Record<string, string> = {
-  '1-2': PRIMARY,
-  '2-3': SUCCESS,
-  '3-4': '#c45c26',
-  '4-5': SECONDARY,
-  '5+': '#9333ea',
-};
-
-function oddsRangeColor(kpi: OddsRangeKpi): string {
-  return ODDS_RANGE_COLORS[kpi.key] ?? PRIMARY;
-}
-
-interface OddsRangeSegment {
-  kpi: OddsRangeKpi;
-  index: number;
-  value: number;
-}
-
-export interface OddsRangeChartItem {
-  key: string;
-  label: string;
-  color: string;
-  value: string;
-  percent: number;
-  valueTone?: 'primary' | 'success' | 'danger';
-}
-
-function oddsRangePercent(value: number, total: number): number {
-  if (total <= 0) {
-    return 0;
-  }
-  return Math.round((value / total) * 100);
-}
-
-function buildOddsRangeSegments(
-  kpis: OddsRangeKpi[],
-  getValue: (kpi: OddsRangeKpi) => number,
-  filter?: (kpi: OddsRangeKpi, value: number) => boolean,
-): OddsRangeSegment[] {
-  return kpis
-    .map((kpi, index) => ({
-      kpi,
-      index,
-      value: getValue(kpi),
-    }))
-    .filter(
-      (segment) =>
-        segment.value > 0 &&
-        (filter ? filter(segment.kpi, segment.value) : true),
-    );
-}
-
-export function buildOddsRangeVolumeItems(
-  kpis: OddsRangeKpi[],
-): OddsRangeChartItem[] {
-  const segments = buildOddsRangeSegments(kpis, (kpi) => kpi.total);
-  const total = segments.reduce((sum, segment) => sum + segment.value, 0);
-
-  return segments.map((segment) => ({
-    key: segment.kpi.key,
-    label: segment.kpi.label,
-    color: oddsRangeColor(segment.kpi),
-    value: `${segment.value} scommesse`,
-    percent: oddsRangePercent(segment.value, total),
-    valueTone: 'primary',
-  }));
-}
-
-export function buildOddsRangeProfitItems(
-  kpis: OddsRangeKpi[],
-): OddsRangeChartItem[] {
-  const segments = buildOddsRangeSegments(
-    kpis,
-    (kpi) => Math.abs(Number(kpi.netProfit)),
-    (kpi) => kpi.settled > 0 && Number(kpi.netProfit) !== 0,
-  );
-  const total = segments.reduce((sum, segment) => sum + segment.value, 0);
-
-  return segments.map((segment) => {
-    const profit = Number(segment.kpi.netProfit);
-    const sign = profit >= 0 ? '+' : '-';
-
-    return {
-      key: segment.kpi.key,
-      label: segment.kpi.label,
-      color: oddsRangeColor(segment.kpi),
-      value: `${sign}€ ${Math.abs(profit).toFixed(2)}`,
-      percent: oddsRangePercent(segment.value, total),
-      valueTone: profit >= 0 ? 'success' : 'danger',
-    };
-  });
-}
-
-function buildOddsRangePieChart(
-  segments: OddsRangeSegment[],
-  options?: {
-    getColor?: (kpi: OddsRangeKpi, index: number) => string;
-    tooltipLabel?: (kpi: OddsRangeKpi, value: number, percent: number) => string;
-  },
-): ChartConfiguration<'pie'> | undefined {
-  if (!segments.length) {
-    return undefined;
-  }
-
-  const total = segments.reduce((sum, segment) => sum + segment.value, 0);
-
-  return {
-    type: 'pie',
-    data: {
-      labels: segments.map((segment) => segment.kpi.label),
-      datasets: [
-        {
-          data: segments.map((segment) => segment.value),
-          backgroundColor: segments.map((segment) =>
-            options?.getColor?.(segment.kpi, segment.index) ??
-            oddsRangeColor(segment.kpi),
-          ),
-          borderWidth: 2,
-          borderColor: '#ffffff',
-          hoverOffset: 8,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 700, easing: 'easeOutQuart' },
-      plugins: {
-        ...baseTooltip(),
-        legend: { display: false },
-        tooltip: {
-          ...baseTooltip()?.tooltip,
-          titleFont: { size: 13, weight: 'bold' as const, family: FONT },
-          bodyFont: { size: 12, family: FONT },
-          padding: 12,
-          callbacks: {
-            title: (items) => items[0]?.label ?? '',
-            label: (ctx) => {
-              const segment = segments[ctx.dataIndex];
-              const percent = oddsRangePercent(segment.value, total);
-              return options?.tooltipLabel
-                ? ` ${options.tooltipLabel(segment.kpi, segment.value, percent)}`
-                : ` ${segment.value} (${percent}%)`;
-            },
-          },
-        },
-      },
-    },
-  };
-}
-
-export function buildOddsRangeVolumeChart(
-  kpis: OddsRangeKpi[],
-): ChartConfiguration<'pie'> | undefined {
-  const segments = buildOddsRangeSegments(kpis, (kpi) => kpi.total);
-
-  return buildOddsRangePieChart(segments, {
-    tooltipLabel: (_kpi, value, percent) => `${value} scommesse (${percent}%)`,
-  });
-}
-
-export function buildOddsRangeProfitChart(
-  kpis: OddsRangeKpi[],
-): ChartConfiguration<'pie'> | undefined {
-  const segments = buildOddsRangeSegments(
-    kpis,
-    (kpi) => Math.abs(Number(kpi.netProfit)),
-    (kpi) => kpi.settled > 0 && Number(kpi.netProfit) !== 0,
-  );
-
-  return buildOddsRangePieChart(segments, {
-    tooltipLabel: (kpi, _value, percent) => {
-      const profit = Number(kpi.netProfit);
-      const sign = profit >= 0 ? '+' : '-';
-      return `${sign}€ ${Math.abs(profit).toFixed(2)} (${percent}%)`;
-    },
-  });
-}

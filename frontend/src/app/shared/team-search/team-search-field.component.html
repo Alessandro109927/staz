@@ -1,0 +1,61 @@
+<label
+  class="vs-field team-search"
+  [class.team-search--match]="variant === 'match'"
+  [class.team-search--home]="side === 'home'"
+  [class.team-search--away]="side === 'away'"
+>
+  <span class="vs-field__label" [class.team-search__label--sr]="variant === 'match'">{{
+    label
+  }}</span>
+  <div class="team-search__control">
+    @if (variant === 'match' && side === 'away' && selectedLogoUrl) {
+      <img class="team-search__badge" [src]="selectedLogoUrl" alt="" width="28" height="28" />
+    }
+    <input
+      class="vs-input team-search__input"
+      type="text"
+      [id]="inputId"
+      [placeholder]="placeholder"
+      [formControl]="searchControl"
+      [attr.aria-label]="variant === 'match' ? label : null"
+      autocomplete="off"
+      role="combobox"
+      aria-autocomplete="list"
+      [attr.aria-expanded]="panelOpen"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+    />
+    @if ((variant === 'default' || side === 'home') && selectedLogoUrl) {
+      <img class="team-search__badge" [src]="selectedLogoUrl" alt="" [attr.width]="variant === 'match' ? 28 : 22" [attr.height]="variant === 'match' ? 28 : 22" />
+    }
+    @if (loading) {
+      <span class="team-search__hint" aria-hidden="true">…</span>
+    }
+  </div>
+
+  @if (panelOpen && (options.length > 0 || searchError)) {
+    <ul class="vs-dropdown-panel vs-dropdown-panel--fixed" role="listbox" [ngStyle]="panelStyle">
+      @if (searchError) {
+        <li class="vs-dropdown-empty">{{ searchError }}</li>
+      } @else {
+        @for (team of options; track team.id) {
+          <li>
+            <button
+              type="button"
+              class="vs-dropdown-option team-search__option"
+              role="option"
+              (mousedown)="$event.preventDefault()"
+              (click)="selectTeam(team)"
+            >
+              <img [src]="team.logoUrl" alt="" width="24" height="24" class="team-search__option-logo" />
+              <span class="vs-dropdown-option__label team-search__option-name">{{ team.name }}</span>
+              @if (team.countryCode) {
+                <span class="team-search__option-country">{{ team.countryCode }}</span>
+              }
+            </button>
+          </li>
+        }
+      }
+    </ul>
+  }
+</label>

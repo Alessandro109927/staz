@@ -48,6 +48,14 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.vs-table-area {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  width: 100%;
+  min-width: 0;
+}
+
 .vs-hide-mobile {
   @include down($bp-lg) {
     display: none !important;

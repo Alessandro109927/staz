@@ -15,7 +15,7 @@ import {
   formatRiskLabel,
 } from './scalata.helpers';
 
-type StakeSource = 'manual' | 'capital' | 'system';
+type StakeSource = 'manual' | 'capital';
 
 @Component({
   selector: 'app-scalata',
@@ -33,8 +33,6 @@ export class ScalataComponent implements OnInit {
   plan: ScalataPlan | null = null;
   stakeSource: StakeSource = 'manual';
   currentCapital: number | null = null;
-  systemSuggestedStake: number | null = null;
-  loadingSuggestion = false;
   startingScalata = false;
   activeRunsCount = 0;
 
@@ -53,7 +51,6 @@ export class ScalataComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCapital();
-    this.loadSystemSuggestion();
     this.loadActiveRuns();
     this.form.valueChanges.subscribe(() => this.recalculate());
     this.recalculate();
@@ -96,10 +93,6 @@ export class ScalataComponent implements OnInit {
     if (source === 'capital' && this.currentCapital != null) {
       this.form.patchValue({ startBankroll: this.currentCapital });
     }
-
-    if (source === 'system' && this.systemSuggestedStake != null) {
-      this.form.patchValue({ startBankroll: this.systemSuggestedStake });
-    }
   }
 
   onDaysModeChange(): void {
@@ -120,17 +113,6 @@ export class ScalataComponent implements OnInit {
     return clampPercent((step.cumulativeProfit / this.plan.targetProfit) * 100);
   }
 
-  overallProgress(): number {
-    if (!this.plan?.feasible || !this.plan.steps.length) {
-      return 0;
-    }
-    const last = this.plan.steps.at(-1);
-    if (!last) {
-      return 0;
-    }
-    return clampPercent((last.cumulativeProfit / this.plan.targetProfit) * 100);
-  }
-
   private recalculate(): void {
     if (this.form.invalid) {
       this.plan = null;
@@ -149,29 +131,6 @@ export class ScalataComponent implements OnInit {
     };
 
     this.plan = buildScalataPlan(input);
-  }
-
-  private loadSystemSuggestion(): void {
-    this.loadingSuggestion = true;
-    const referenceOdds = this.form.controls.minDailyOdds.value;
-
-    this.api
-      .calculateStake([
-        {
-          eventName: 'Scalata',
-          outcome: '1',
-          odds: referenceOdds,
-        },
-      ])
-      .subscribe({
-        next: (preview) => {
-          this.systemSuggestedStake = Number(preview.amountStaked);
-          this.loadingSuggestion = false;
-        },
-        error: () => {
-          this.loadingSuggestion = false;
-        },
-      });
   }
 
   private loadCapital(): void {

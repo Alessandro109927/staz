@@ -1,0 +1,131 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+:host(.match-teams-display--inline) {
+  width: auto;
+  max-width: 100%;
+}
+
+.match-teams-card {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: $space-3 $space-4;
+
+  &:not(.match-teams-card--compact) {
+    @include input-elevated;
+  }
+
+  &--compact {
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    gap: $space-3;
+    width: auto;
+    max-width: 100%;
+  }
+
+  &--inline {
+    flex: 0 1 auto;
+  }
+}
+
+.match-teams-card__side {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.match-teams-card--compact .match-teams-card__side {
+  flex: 0 1 auto;
+}
+
+.match-teams-card__side--home {
+  justify-content: flex-start;
+}
+
+.match-teams-card__side--away {
+  justify-content: flex-start;
+}
+
+.match-teams-card__name {
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  color: $color-neutral-900;
+  line-height: 1.25;
+  min-width: 0;
+  @include truncate;
+}
+
+.match-teams-card--compact .match-teams-card__name {
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+}
+
+.match-teams-card__logo {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.match-teams-card--compact .match-teams-card__logo {
+  width: 32px;
+  height: 32px;
+}
+
+.match-teams-card__vs {
+  flex: 0 0 auto;
+  padding: 0 $space-1;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.06em;
+  color: $color-neutral-900;
+  line-height: 1;
+  user-select: none;
+}
+
+.match-teams-card--compact .match-teams-card__vs {
+  font-size: $font-size-xs;
+}
+
+.match-teams-card__sep {
+  flex: 0 0 auto;
+  padding: 0 $space-1;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-neutral-900;
+  line-height: 1;
+  user-select: none;
+}
+
+@include down($bp-md) {
+  .match-teams-card--compact {
+    gap: $space-2;
+
+    .match-teams-card__name {
+      display: none;
+    }
+
+    .match-teams-card__side {
+      flex: 0 0 auto;
+    }
+
+    .match-teams-card__sep {
+      font-size: $font-size-sm;
+      padding: 0;
+    }
+  }
+}

@@ -1,0 +1,41 @@
+<h2 mat-dialog-title>{{ option ? 'Modifica esito' : 'Nuovo esito' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="outcome-option-form">
+    <label class="vs-field">
+      <span class="vs-field__label">Esito</span>
+      <input
+        class="vs-input"
+        type="text"
+        formControlName="label"
+        placeholder="es. 1, X, Over 2.5, GG"
+        maxlength="120"
+      />
+    </label>
+
+    <mat-checkbox class="outcome-option-form__check" formControlName="isScorer">
+      Marcatore — in scommessa chiedi anche il nome del giocatore
+    </mat-checkbox>
+
+    <label class="vs-field">
+      <span class="vs-field__label">Descrizione</span>
+      <input
+        class="vs-input"
+        type="text"
+        formControlName="description"
+        placeholder="es. Vittoria squadra casa, entrambe segnano"
+        maxlength="255"
+      />
+    </label>
+    <p class="outcome-option-form__hint vs-text-muted">
+      La descrizione compare nel menu Esito quando registri una scommessa. Puoi sempre digitare un esito a mano.
+    </p>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Annulla</button>
+  <button mat-flat-button color="primary" type="button" [disabled]="form.invalid" (click)="submit()">
+    {{ option ? 'Salva modifiche' : 'Aggiungi esito' }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,30 @@
+@use '../styles/variables' as *;
+
+.app-page-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgba($color-neutral-900, 0.06);
+}
+
+.app-page-loader__bar {
+  height: 100%;
+  width: 35%;
+  background: $color-neutral-900;
+  animation: app-page-loader-indeterminate 1.1s ease-in-out infinite;
+}
+
+@keyframes app-page-loader-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(400%);
+  }
+}

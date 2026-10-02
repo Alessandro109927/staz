@@ -50,21 +50,24 @@
           </button>
         }
 
-        @if (isActive) {
-          <button type="button" class="vs-btn-ghost scalata-abandon-btn" (click)="abandonRun()">
-            Abbandona
-          </button>
-        }
+        <div class="scalata-run-header__btn-row">
+          @if (isActive) {
+            <button type="button" class="vs-btn-ghost scalata-abandon-btn" (click)="abandonRun()">
+              <mat-icon>flag</mat-icon>
+              Abbandona
+            </button>
+          }
 
-        <button
-          type="button"
-          class="vs-btn-ghost scalata-delete-btn"
-          [disabled]="deleting"
-          (click)="deleteRun()"
-        >
-          <mat-icon>delete</mat-icon>
-          Elimina scalata
-        </button>
+          <button
+            type="button"
+            class="vs-btn-ghost scalata-delete-btn"
+            [disabled]="deleting"
+            (click)="deleteRun()"
+          >
+            <mat-icon>delete</mat-icon>
+            Elimina scalata
+          </button>
+        </div>
       </div>
     </header>
 
@@ -109,8 +112,8 @@
                           <strong>Evento {{ i + 1 }}</strong>
                           @if (events.length > 1) {
                             <button
+                              mat-icon-button
                               type="button"
-                              class="event-remove-btn"
                               aria-label="Rimuovi evento"
                               (click)="removeEvent(i)"
                             >
@@ -120,50 +123,80 @@
                         </div>
 
                         <div class="event-row__fields">
-                          <label class="vs-field event-row__event">
-                            <span class="vs-field__label">Evento / Partita</span>
-                            <input
-                              class="vs-input"
-                              type="text"
-                              formControlName="eventName"
-                              placeholder="es., Milan - Inter"
-                            />
-                          </label>
+                          <div class="event-row__teams">
+                            <app-match-teams-field [group]="$any(event)" />
+                          </div>
 
-                          <label class="vs-field event-row__outcome">
-                            <span class="vs-field__label">Esito</span>
-                            <input
-                              class="vs-input"
-                              type="text"
-                              formControlName="outcome"
-                              placeholder="es., 1"
-                            />
-                          </label>
+                          <div formArrayName="picks" class="event-picks">
+                            @for (pick of picksAt(i).controls; track $index; let pi = $index) {
+                              <div
+                                class="event-row__meta"
+                                [class.event-row__meta--scorer]="isScorerOutcomeLabel($any(pick).controls.outcome.value, outcomeOptions)"
+                                [formGroupName]="pi"
+                              >
+                                <app-outcome-field
+                                  [control]="$any(pick).controls.outcome"
+                                  [options]="outcomeOptions"
+                                  [listId]="'scalata-outcome-' + i + '-' + pi"
+                                />
 
-                          <label class="vs-field event-row__odds">
-                            <span class="vs-field__label">Quota</span>
-                            <input
-                              class="vs-input"
-                              type="text"
-                              inputmode="decimal"
-                              formControlName="odds"
-                              placeholder="1,38"
-                            />
-                          </label>
+                                @if (isScorerOutcomeLabel($any(pick).controls.outcome.value, outcomeOptions)) {
+                                  <label class="vs-field event-row__scorer">
+                                    <span class="vs-field__label">Marcatore</span>
+                                    <input
+                                      class="vs-input"
+                                      type="text"
+                                      formControlName="scorerName"
+                                      placeholder="Nome giocatore"
+                                      maxlength="120"
+                                    />
+                                  </label>
+                                }
+
+                                <label class="vs-field event-row__odds">
+                                  <span class="vs-field__label">Quota</span>
+                                  <input
+                                    class="vs-input"
+                                    type="text"
+                                    inputmode="decimal"
+                                    formControlName="odds"
+                                    placeholder="1,38"
+                                  />
+                                </label>
+
+                                @if (picksAt(i).length > 1) {
+                                  <button
+                                    mat-icon-button
+                                    type="button"
+                                    class="event-pick-remove"
+                                    aria-label="Rimuovi esito"
+                                    (click)="removePick(i, pi)"
+                                  >
+                                    <mat-icon>close</mat-icon>
+                                  </button>
+                                }
+                              </div>
+                            }
+                          </div>
+
+                          <button
+                            mat-stroked-button
+                            type="button"
+                            class="add-pick"
+                            aria-label="Aggiungi esito"
+                            (click)="addPick(i)"
+                          >
+                            <mat-icon>add</mat-icon>
+                          </button>
                         </div>
                       </div>
                     }
                   </div>
 
-                  <button type="button" class="vs-btn-ghost add-event-btn" (click)="addEvent()">
+                  <button mat-flat-button color="primary" type="button" class="add-event" (click)="addEvent()">
                     <mat-icon>add</mat-icon>
                     Aggiungi evento
                   </button>
-
-                  <label class="vs-field bet-date">
-                    <span class="vs-field__label">Data giocata</span>
-                    <input class="vs-input" type="date" formControlName="betDate" />
-                  </label>
 
                   @if (combinedOdds) {
                     <div class="scalata-odds-preview">
@@ -179,6 +212,7 @@
                       [disabled]="form.invalid || submitting"
                       (click)="submitStep('PENDING')"
                     >
+                      <mat-icon>schedule</mat-icon>
                       Salva (in attesa)
                     </button>
                     <button
@@ -196,6 +230,7 @@
                       [disabled]="form.invalid || submitting"
                       (click)="submitStep('LOST')"
                     >
+                      <mat-icon>cancel</mat-icon>
                       Bet persa
                     </button>
                   </div>

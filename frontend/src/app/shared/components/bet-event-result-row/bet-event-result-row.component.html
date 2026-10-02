@@ -1,32 +1,51 @@
-<div class="event-result-row" [class.event-result-row--saving]="saving">
-  <div class="event-result-toggle" role="group" aria-label="Esito partita">
-    <button
-      type="button"
-      class="event-result-toggle__btn event-result-toggle__btn--won"
-      [class.is-active]="event.resultStatus === 'WON'"
-      [disabled]="saving"
-      aria-label="Segna come vinta"
-      (click)="toggleResult('WON')"
-    >
-      <mat-icon>check</mat-icon>
-    </button>
-    <button
-      type="button"
-      class="event-result-toggle__btn event-result-toggle__btn--lost"
-      [class.is-active]="event.resultStatus === 'LOST'"
-      [disabled]="saving"
-      aria-label="Segna come persa"
-      (click)="toggleResult('LOST')"
-    >
-      <mat-icon>close</mat-icon>
-    </button>
-  </div>
-
-  <span class="event-result-row__name">{{ event.eventName }}</span>
-
-  @if (event.outcome) {
-    <span class="event-result-row__outcome">{{ event.outcome }}</span>
+<div
+  class="event-result-row"
+  [class.event-result-row--slip-pick]="layout === 'slip-pick'"
+  [class.event-result-row--saving]="saving"
+>
+  @if (showEventName) {
+    <span class="event-result-row__name">{{ event.eventName }}</span>
   }
 
-  <span class="event-result-row__odds">{{ event.odds }}</span>
+  @if (layout === 'default' || layout === 'slip-pick') {
+    <div class="event-result-toggle" role="group" aria-label="Esito partita">
+      <button
+        type="button"
+        class="event-result-toggle__btn event-result-toggle__btn--won"
+        [class.is-active]="event.resultStatus === 'WON'"
+        [disabled]="saving"
+        aria-label="Segna come vinta"
+        (click)="toggleResult('WON')"
+      >
+        <mat-icon>check</mat-icon>
+      </button>
+      <button
+        type="button"
+        class="event-result-toggle__btn event-result-toggle__btn--lost"
+        [class.is-active]="event.resultStatus === 'LOST'"
+        [disabled]="saving"
+        aria-label="Segna come persa"
+        (click)="toggleResult('LOST')"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  }
+
+  @if (layout === 'slip-pick') {
+    <span class="event-result-row__pick">
+      @if (event.outcome) {
+        <span class="event-result-row__outcome">{{ event.outcome }}</span>
+      }
+      @if (event.odds) {
+        <span class="event-result-row__odds-inline"> ({{ event.odds }})</span>
+      }
+    </span>
+  } @else {
+    @if (event.outcome) {
+      <span class="event-result-row__outcome">{{ event.outcome }}</span>
+    }
+
+    <span class="event-result-row__odds">{{ event.odds }}</span>
+  }
 </div>

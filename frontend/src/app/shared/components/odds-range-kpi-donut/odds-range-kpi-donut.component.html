@@ -1,0 +1,43 @@
+<article class="fascia-donut">
+  <header class="fascia-donut__head">
+    <h3 class="fascia-donut__title">{{ kpi.label }}</h3>
+  </header>
+
+  <div class="fascia-donut__body">
+    <div class="fascia-donut__chart-wrap">
+      @if (chart) {
+        <app-vs-chart class="fascia-donut__chart" [config]="chart" [height]="152" />
+      }
+      <div class="fascia-donut__center" aria-hidden="true">
+        <strong class="fascia-donut__center-value">{{ kpi.total }}</strong>
+      </div>
+    </div>
+
+    <ul class="fascia-donut__legend">
+      @for (item of legend; track item.label) {
+        <li class="fascia-donut__legend-row" [class.fascia-donut__legend-row--metric]="item.metric">
+          <span class="fascia-donut__legend-left">
+            @if (!item.metric) {
+              <span class="fascia-donut__dot" [style.background-color]="item.color"></span>
+            } @else {
+              <span class="fascia-donut__dot fascia-donut__dot--metric"></span>
+            }
+            <span class="fascia-donut__legend-label">
+              {{ item.label }}
+              @if (item.detail) {
+                <span class="fascia-donut__legend-detail">{{ item.detail }}</span>
+              }
+            </span>
+          </span>
+          <span
+            class="fascia-donut__legend-percent"
+            [class.vs-value-success]="isProfitPositive(item) || isMarginPositive(item)"
+            [class.vs-value-danger]="isProfitNegative(item) || isMarginNegative(item)"
+          >
+            {{ item.percent }}
+          </span>
+        </li>
+      }
+    </ul>
+  </div>
+</article>

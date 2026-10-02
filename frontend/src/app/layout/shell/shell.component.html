@@ -10,10 +10,7 @@
 
   <aside class="shell-sidenav" [class.shell-sidenav--open]="navOpen">
     <div class="brand">
-      <div class="brand__icon">
-        <mat-icon>bolt</mat-icon>
-      </div>
-      <span class="brand__name">Staz</span>
+      <span class="brand__name">STAZ</span>
       <button
         type="button"
         class="shell-sidenav__close"
@@ -38,11 +35,11 @@
         <span>Report mensile</span>
       </a>
       <a routerLink="/scalata" routerLinkActive="active" (click)="closeNav()">
-        <mat-icon>stairs</mat-icon>
+        <mat-icon>tools_ladder</mat-icon>
         <span>Scalata</span>
       </a>
       <a routerLink="/settings" routerLinkActive="active" (click)="closeNav()">
-        <mat-icon>tune</mat-icon>
+        <mat-icon>settings</mat-icon>
         <span>Impostazioni</span>
       </a>
     </nav>
@@ -64,14 +61,10 @@
           <mat-icon>person</mat-icon>
           <div class="sidebar-user__info">
             <span class="sidebar-user__name">{{ user.firstName }} {{ user.lastName }}</span>
-            <span class="sidebar-user__username">{{ user.username }}</span>
+            <span class="sidebar-user__username">{{ user.email }}</span>
           </div>
         </div>
       }
-      <a routerLink="/settings" fragment="capitale" routerLinkActive="active" (click)="closeNav()">
-        <mat-icon>account_balance_wallet</mat-icon>
-        <span>Analisi Capitale</span>
-      </a>
       <button type="button" class="sidebar-logout" (click)="logout()">
         <mat-icon>logout</mat-icon>
         <span>Esci</span>
@@ -92,10 +85,18 @@
 
       @if (capital) {
         <div class="header-balance">
-          <div class="header-balance__value" [class.header-balance__value--negative]="profit < 0">
+          <div
+            class="header-balance__value"
+            [class.header-balance__value--positive]="profit >= 0"
+            [class.header-balance__value--negative]="profit < 0"
+          >
             {{ profit >= 0 ? '+' : '' }}€ {{ profit | number: '1.2-2' }}
           </div>
-          <div class="header-balance__roi" [class.header-balance__roi--negative]="roi < 0">
+          <div
+            class="header-balance__roi"
+            [class.header-balance__roi--positive]="roi >= 0"
+            [class.header-balance__roi--negative]="roi < 0"
+          >
             {{ roi >= 0 ? '+' : '' }}{{ roi | number: '1.1-1' }}% ROI
           </div>
         </div>

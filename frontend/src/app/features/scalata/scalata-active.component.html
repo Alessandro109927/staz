@@ -20,7 +20,7 @@
     <p class="vs-text-muted">Caricamento...</p>
   } @else if (!activeRuns.length && !finishedRuns.length) {
     <article class="vs-card scalata-empty">
-      <mat-icon>timeline</mat-icon>
+      <mat-icon>tools_ladder</mat-icon>
       <div>
         <h2 class="vs-heading-section">Nessuna scalata</h2>
         <p class="vs-text-muted">
@@ -43,9 +43,10 @@
                     <h3 class="vs-heading-section">
                       +€ {{ run.targetProfit | number: '1.2-2' }}
                     </h3>
-                    <p class="vs-text-muted">
-                      Da € {{ run.startBankroll | number: '1.2-2' }}
-                      → € {{ run.targetCapital | number: '1.2-2' }}
+                    <p class="vs-text-muted vs-money-range">
+                      <span>Da € {{ run.startBankroll | number: '1.2-2' }}</span>
+                      <mat-icon class="vs-money-range__arrow" aria-hidden="true">arrow_forward</mat-icon>
+                      <span>€ {{ run.targetCapital | number: '1.2-2' }}</span>
                     </p>
                   </div>
                   <mat-icon>chevron_right</mat-icon>
@@ -53,9 +54,13 @@
 
                 @if (currentStep(run); as step) {
                   <div class="scalata-active-card__step">
-                    <span class="vs-label">Prossima giocata</span>
-                    <strong>Puntata all-in € {{ step.stake | number: '1.2-2' }}</strong>
-                    <span>Quota target {{ step.plannedOdds | number: '1.2-2' }}</span>
+                    <div class="scalata-active-card__step-detail">
+                      <span class="vs-label vs-label--inline">Prossima giocata</span>
+                      <strong>Puntata all-in € {{ step.stake | number: '1.2-2' }}</strong>
+                      <span class="scalata-active-card__step-quota">
+                        Quota target {{ step.plannedOdds | number: '1.2-2' }}
+                      </span>
+                    </div>
                     <span class="scalata-active-card__risk">{{ formatRiskLabel(step.riskLevel) }}</span>
                   </div>
                 }
@@ -69,15 +74,6 @@
                   </span>
                 </div>
               </a>
-              <button
-                type="button"
-                class="scalata-active-card__delete"
-                [disabled]="deletingRunId === run.id"
-                aria-label="Elimina scalata"
-                (click)="deleteRun(run, $event)"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
             </article>
           }
         </div>
@@ -106,9 +102,10 @@
                         +€ {{ run.targetProfit | number: '1.2-2' }}
                       }
                     </h3>
-                    <p class="vs-text-muted">
-                      Da € {{ run.startBankroll | number: '1.2-2' }}
-                      → € {{ run.targetCapital | number: '1.2-2' }}
+                    <p class="vs-text-muted vs-money-range">
+                      <span>Da € {{ run.startBankroll | number: '1.2-2' }}</span>
+                      <mat-icon class="vs-money-range__arrow" aria-hidden="true">arrow_forward</mat-icon>
+                      <span>€ {{ run.targetCapital | number: '1.2-2' }}</span>
                     </p>
                   </div>
                   <mat-icon>chevron_right</mat-icon>
@@ -138,15 +135,6 @@
                   </span>
                 </div>
               </a>
-              <button
-                type="button"
-                class="scalata-active-card__delete"
-                [disabled]="deletingRunId === run.id"
-                aria-label="Elimina scalata"
-                (click)="deleteRun(run, $event)"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
             </article>
           }
         </div>

@@ -1,3 +1,4 @@
+@use 'colors' as c;
 @use 'variables' as *;
 @use 'mixins' as *;
 
@@ -26,6 +27,33 @@
   overflow: hidden;
 }
 
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+  flex-wrap: wrap;
+  padding: $space-5 $space-6;
+  border-bottom: 1px solid $color-neutral-200;
+
+  @include down($bp-md) {
+    padding: $space-4;
+  }
+}
+
+.dashboard-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: $space-2;
+  padding: $space-5 $space-6;
+
+  @include down($bp-md) {
+    padding: $space-4;
+  }
+}
+
 // ─── Badge / pill ───────────────────────────────────────────
 .vs-badge {
   display: inline-flex;
@@ -41,12 +69,13 @@
 
   mat-icon,
   .mat-icon {
+    font-family: 'Material Symbols Outlined';
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1rem;
-    height: 1rem;
-    font-size: 1rem;
+    width: $icon-size-sm;
+    height: $icon-size-sm;
+    font-size: $icon-size-sm;
     line-height: 1;
     margin: 0;
   }
@@ -89,18 +118,19 @@
 }
 
 .vs-input {
+  @include input-elevated;
   width: 100%;
   box-sizing: border-box;
   padding: 0.75rem 1rem;
-  border: 1px solid $color-neutral-200;
-  border-radius: $radius-sm;
-  background: $color-neutral-50;
   color: $color-neutral-900;
   font-size: $font-size-base;
   font-family: inherit;
   font-weight: $font-weight-normal;
   line-height: 1.4;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
 
   &::placeholder {
     color: $color-neutral-400;
@@ -112,8 +142,8 @@
 
   &:focus {
     outline: none;
-    border-color: $color-primary;
-    background: $color-surface;
+    border-color: c.$vs-border-strong;
+    box-shadow: $shadow-input, 0 0 0 3px c.$vs-focus-ring;
   }
 
   &:disabled {
@@ -122,9 +152,175 @@
   }
 
   &.ng-invalid.ng-touched {
-    border-color: $color-danger;
-    background: $color-danger-light;
+    border-color: c.$vs-border-strong;
+    background: c.$vs-accent-soft;
+    box-shadow: $shadow-input;
   }
+}
+
+// Select nativa — stesso guscio di team-search / outcome-field
+.vs-select {
+  @include input-elevated;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  overflow: visible;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:focus-within {
+    border-color: c.$vs-border-strong;
+    box-shadow: $shadow-input, 0 0 0 3px c.$vs-focus-ring;
+  }
+
+  &:has(.ng-invalid.ng-touched) {
+    border-color: c.$vs-border-strong;
+    box-shadow: $shadow-input;
+  }
+}
+
+.vs-select__native {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  appearance: none;
+  margin: 0;
+  padding: 0.75rem 2.75rem 0.75rem 1rem;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  color: $color-neutral-900;
+  font-size: $font-size-base;
+  font-family: inherit;
+  font-weight: $font-weight-normal;
+  line-height: 1.4;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+.vs-select__chevron {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid $color-neutral-200;
+  background: $color-neutral-50;
+  color: $color-neutral-600;
+  pointer-events: none;
+
+  mat-icon {
+    font-size: 1.35rem;
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+}
+
+.vs-select__trigger {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0.75rem 2.75rem 0.75rem 1rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: $color-neutral-900;
+  font-size: $font-size-base;
+  font-family: inherit;
+  font-weight: $font-weight-normal;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+// Pannello opzioni (esito, squadre, filtri)
+.vs-dropdown-panel {
+  margin: 0;
+  padding: $space-1;
+  list-style: none;
+  max-height: 14rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: $color-surface;
+  border: 1px solid $color-neutral-200;
+  border-radius: $radius-lg;
+  box-shadow: 0 10px 28px c.$vs-shadow-strong;
+}
+
+.vs-dropdown-panel--fixed {
+  position: fixed;
+  z-index: 1200;
+}
+
+.vs-dropdown-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  width: 100%;
+  padding: $space-2 $space-3;
+  margin: 0;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  line-height: 1.35;
+  word-break: break-word;
+
+  &:hover,
+  &:focus-visible {
+    background: $color-neutral-100;
+    outline: none;
+  }
+
+  &--selected {
+    background: c.$vs-accent-soft;
+
+    .vs-dropdown-option__label {
+      font-weight: $font-weight-bold;
+    }
+  }
+}
+
+.vs-dropdown-option__label {
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  color: $color-neutral-900;
+}
+
+.vs-dropdown-option__desc {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-normal;
+  color: $color-neutral-600;
+  line-height: 1.35;
+}
+
+.vs-dropdown-empty {
+  padding: $space-3;
+  font-size: $font-size-sm;
+  color: $color-neutral-600;
 }
 
 .vs-field--compact {
@@ -132,13 +328,27 @@
 }
 
 .vs-input-affix {
+  @include input-elevated;
   display: flex;
   align-items: stretch;
   min-width: 0;
+  overflow: hidden;
 
   .vs-input {
     flex: 1;
     min-width: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &.ng-invalid.ng-touched {
+      background: $color-danger-light;
+    }
   }
 }
 
@@ -147,8 +357,9 @@
   display: inline-flex;
   align-items: center;
   padding: 0 $space-3;
-  border: 1px solid $color-neutral-200;
-  background: $color-neutral-100;
+  border: none;
+  border-left: 1px solid $color-neutral-200;
+  background: $color-neutral-50;
   color: $color-neutral-600;
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
@@ -156,23 +367,8 @@
 }
 
 .vs-input-affix__prefix {
-  border-right: none;
-  border-radius: $radius-sm 0 0 $radius-sm;
-
-  + .vs-input {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-}
-
-.vs-input-affix__suffix {
   border-left: none;
-  border-radius: 0 $radius-sm $radius-sm 0;
-}
-
-.vs-input-affix:has(.vs-input-affix__suffix) .vs-input {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+  border-right: 1px solid $color-neutral-200;
 }
 
 // ─── Buttons ────────────────────────────────────────────────
@@ -184,8 +380,8 @@
   padding: $space-3 $space-5;
   border: none;
   border-radius: $radius-md;
-  background: $color-primary;
-  color: #fff;
+  background: c.$vs-primary;
+  color: c.$vs-on-primary;
   font-size: $font-size-base;
   font-weight: $font-weight-semibold;
   font-family: inherit;
@@ -254,7 +450,11 @@
   font-size: $font-size-sm;
 
   th {
-    @include label-uppercase;
+    font-size: $font-size-base;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $color-neutral-900;
     text-align: left;
     padding: $space-3 $space-4;
     border-bottom: 1px solid $color-neutral-200;
@@ -268,6 +468,25 @@
     vertical-align: middle;
   }
 
+  &.vs-data-table {
+    font-size: $font-size-base;
+
+    tbody tr:hover td {
+      background: transparent;
+    }
+
+    th {
+      padding: $space-4 $space-5;
+      white-space: nowrap;
+    }
+
+    td {
+      font-size: $font-size-base;
+      padding: $space-5;
+      vertical-align: middle;
+    }
+  }
+
   tr:last-child td {
     border-bottom: none;
   }
@@ -277,27 +496,44 @@
   }
 }
 
+
 // ─── Material Icons (inline nei bottoni / label) ────────────
 .vs-btn-ghost mat-icon,
 .vs-btn-primary mat-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
+  font-size: $icon-size-md;
+  width: $icon-size-md;
+  height: $icon-size-md;
 }
 
 .vs-search mat-icon {
   color: $color-neutral-400;
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
+  font-size: $icon-size-lg;
+  width: $icon-size-lg;
+  height: $icon-size-lg;
 }
 
 .vs-icon-inline {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
+  font-size: $icon-size-md;
+  width: $icon-size-md;
+  height: $icon-size-md;
   vertical-align: middle;
   margin-right: $space-1;
+}
+
+.vs-money-range {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $space-1;
+  margin: 0;
+
+  &__arrow {
+    flex-shrink: 0;
+    font-size: $icon-size-sm;
+    width: $icon-size-sm;
+    height: $icon-size-sm;
+    color: $color-neutral-600;
+  }
 }
 
 .vs-icon-sm {
@@ -305,9 +541,9 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
+  font-size: $icon-size-sm;
+  width: $icon-size-sm;
+  height: $icon-size-sm;
   line-height: 1;
 }
 
@@ -357,11 +593,7 @@ h1 .vs-icon-inline {
 .vs-sparkline {
   height: 48px;
   margin-top: $space-3;
-  background: linear-gradient(
-    180deg,
-    rgba($color-primary, 0.06) 0%,
-    transparent 100%
-  );
+  background: linear-gradient(180deg, c.$vs-accent-soft 0%, transparent 100%);
   border-radius: $radius-sm;
   position: relative;
 
@@ -369,7 +601,7 @@ h1 .vs-icon-inline {
     content: '';
     position: absolute;
     inset: 4px 0 0;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40' preserveAspectRatio='none'%3E%3Cpath d='M0 35 L20 28 L40 32 L60 18 L80 22 L100 8 L120 12' fill='none' stroke='%231978E5' stroke-width='2.5'/%3E%3C/svg%3E")
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40' preserveAspectRatio='none'%3E%3Cpath d='M0 35 L20 28 L40 32 L60 18 L80 22 L100 8 L120 12' fill='none' stroke='%23000000' stroke-width='2.5'/%3E%3C/svg%3E")
       no-repeat center / 100% 100%;
   }
 }
@@ -380,20 +612,20 @@ h1 .vs-icon-inline {
   position: relative;
   min-height: 160px;
   padding: $space-6;
-  background: linear-gradient(135deg, $color-neutral-800 0%, $color-primary-dark 100%);
-  color: #fff;
+  background: c.$vs-black;
+  color: c.$vs-text-inverse;
   overflow: hidden;
 
   &::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 80% 20%, rgba($color-primary, 0.4), transparent 60%);
+    background: radial-gradient(circle at 80% 20%, c.$vs-inverse-accent-medium, transparent 60%);
     pointer-events: none;
   }
 
   .vs-label {
-    color: rgba(255, 255, 255, 0.7);
+    color: c.$vs-inverse-accent-medium;
   }
 }
 
@@ -403,15 +635,15 @@ h1 .vs-icon-inline {
   align-items: center;
   min-width: 52px;
   padding: $space-2 $space-3;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid c.$vs-inverse-accent-medium;
   border-radius: $radius-sm;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: c.$vs-inverse-accent-soft;
+  color: c.$vs-text-inverse;
   font-size: $font-size-xs;
   cursor: pointer;
 
   strong {
     font-size: $font-size-base;
-    color: $color-primary-light;
+    color: c.$vs-white;
   }
 }

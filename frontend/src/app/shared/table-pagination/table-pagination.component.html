@@ -1,0 +1,41 @@
+<nav class="vs-table-pagination" [attr.aria-label]="ariaLabel">
+  <div class="vs-table-pagination__group">
+    <label class="vs-table-pagination__page-size">
+      <span class="vs-table-pagination__page-size-label">Per pagina</span>
+      <select
+        class="vs-table-pagination__page-size-select"
+        [value]="pageSize"
+        aria-label="Elementi per pagina"
+        (change)="onPageSizeSelect($event)"
+      >
+        @for (size of pageSizeOptions; track size) {
+          <option [value]="size">{{ size }}</option>
+        }
+      </select>
+    </label>
+    <span class="vs-table-pagination__range">{{ rangeLabel }}</span>
+    <div class="vs-table-pagination__controls">
+      <button
+        type="button"
+        class="vs-table-pagination__btn"
+        [disabled]="!canGoPrev"
+        aria-label="Pagina precedente"
+        (click)="goPrev()"
+      >
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <span class="vs-table-pagination__page">
+        {{ page }} / {{ totalPagesCount }}
+      </span>
+      <button
+        type="button"
+        class="vs-table-pagination__btn"
+        [disabled]="!canGoNext"
+        aria-label="Pagina successiva"
+        (click)="goNext()"
+      >
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  </div>
+</nav>

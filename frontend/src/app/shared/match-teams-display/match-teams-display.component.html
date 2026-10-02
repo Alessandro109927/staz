@@ -1,0 +1,31 @@
+<div
+  class="match-teams-card"
+  [class.match-teams-card--compact]="compact"
+  [class.match-teams-card--inline]="inline"
+>
+  <div class="match-teams-card__side match-teams-card__side--home">
+    <span class="match-teams-card__name">{{ home || eventName }}</span>
+    @if (homeLogo) {
+      <img
+        class="match-teams-card__logo"
+        [src]="homeLogo"
+        [attr.alt]="home || eventName"
+        width="32"
+        height="32"
+      />
+    }
+  </div>
+  @if (away) {
+    @if (compact) {
+      <span class="match-teams-card__sep" aria-hidden="true">-</span>
+    } @else {
+      <div class="match-teams-card__vs" aria-hidden="true">VS</div>
+    }
+    <div class="match-teams-card__side match-teams-card__side--away">
+      @if (awayLogo) {
+        <img class="match-teams-card__logo" [src]="awayLogo" [attr.alt]="away" width="32" height="32" />
+      }
+      <span class="match-teams-card__name">{{ away }}</span>
+    </div>
+  }
+</div>

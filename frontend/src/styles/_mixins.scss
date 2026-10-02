@@ -1,9 +1,17 @@
+@use 'colors' as c;
 @use 'variables' as *;
 
 @mixin card-base {
-  background: $color-surface;
+  background: c.$vs-surface;
   border-radius: $radius-lg;
-  border: 1px solid $color-neutral-200;
+  border: 1px solid c.$vs-border;
+}
+
+@mixin input-elevated {
+  background: c.$vs-surface;
+  border: 1px solid c.$vs-border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-input;
 }
 
 @mixin flex-center {

@@ -7,6 +7,8 @@ import { CapitalModule } from './capital/capital.module';
 import { DatabaseModule } from './database/database.module';
 import { ScalataModule } from './scalata/scalata.module';
 import { StakingRulesModule } from './staking-rules/staking-rules.module';
+import { TeamsModule } from './teams/teams.module';
+import { OutcomeOptionsModule } from './outcome-options/outcome-options.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { StakingRulesModule } from './staking-rules/staking-rules.module';
     StakingRulesModule,
     BetsModule,
     ScalataModule,
+    TeamsModule,
+    OutcomeOptionsModule,
     DatabaseModule,
   ],
 })

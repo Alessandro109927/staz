@@ -1,0 +1,17 @@
+.outcome-option-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: min(100%, 22rem);
+}
+
+.outcome-option-form__check {
+  display: block;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.outcome-option-form__hint {
+  margin: 0;
+  font-size: 0.875rem;
+}
