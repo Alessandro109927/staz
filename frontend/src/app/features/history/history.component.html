@@ -106,10 +106,10 @@
                   }
                 </td>
                 <td>
-                  <div class="history-actions">
+                  <div class="vs-table-row-actions">
                     <button
                       type="button"
-                      class="history-action history-action--edit"
+                      class="vs-table-row-action"
                       aria-label="Modifica scommessa"
                       (click)="editBet(bet)"
                     >
@@ -117,7 +117,7 @@
                     </button>
                     <button
                       type="button"
-                      class="history-action history-action--delete"
+                      class="vs-table-row-action"
                       aria-label="Elimina scommessa"
                       (click)="deleteBet(bet)"
                     >
@@ -213,10 +213,10 @@
 
             <footer class="history-card__footer">
               <span class="history-bet-events__id">#{{ bet.id }}</span>
-              <div class="history-card__actions">
+              <div class="history-card__actions vs-table-row-actions">
                 <button
                   type="button"
-                  class="history-action history-action--edit"
+                  class="vs-table-row-action"
                   aria-label="Modifica scommessa"
                   (click)="editBet(bet)"
                 >
@@ -224,7 +224,7 @@
                 </button>
                 <button
                   type="button"
-                  class="history-action history-action--delete"
+                  class="vs-table-row-action"
                   aria-label="Elimina scommessa"
                   (click)="deleteBet(bet)"
                 >

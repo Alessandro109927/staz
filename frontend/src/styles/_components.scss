@@ -405,6 +405,50 @@
   box-sizing: border-box;
 }
 
+// Azioni riga tabella (modifica / elimina) — allineate a storico scommesse
+.vs-table-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  flex-wrap: nowrap;
+  vertical-align: middle;
+}
+
+.vs-table-row-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $color-neutral-600;
+  font-family: inherit;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  mat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: $icon-size-md;
+    width: $icon-size-md;
+    height: $icon-size-md;
+    line-height: 1;
+  }
+
+  &:hover {
+    color: $color-neutral-900;
+    background: transparent;
+  }
+}
+
 .vs-btn-ghost {
   display: inline-flex;
   align-items: center;

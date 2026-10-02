@@ -28,8 +28,15 @@ export class OutcomeOptionsService {
         ...item,
         kind: item.kind ?? 'standard',
       }))
-      .sort((a, b) =>
-        a.label.localeCompare(b.label, 'it', { sensitivity: 'base', numeric: true }),
-      );
+      .sort((a, b) => {
+        const order = (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+        if (order !== 0) {
+          return order;
+        }
+        return a.label.localeCompare(b.label, 'it', {
+          sensitivity: 'base',
+          numeric: true,
+        });
+      });
   }
 }

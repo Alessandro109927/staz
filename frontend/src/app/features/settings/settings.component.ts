@@ -50,6 +50,7 @@ export class SettingsComponent implements OnInit {
   rulesPage = 1;
   outcomesPageSize = DEFAULT_TABLE_PAGE_SIZE;
   rulesPageSize = DEFAULT_TABLE_PAGE_SIZE;
+  outcomeImporting = false;
   capital: Capital | null = null;
   capitalLoading = true;
   capitalSaving = false;
@@ -131,6 +132,95 @@ export class SettingsComponent implements OnInit {
       this.outcomeOptions = options;
       this.outcomesPage = clampPage(this.outcomesPage, options.length, this.outcomesPageSize);
     });
+  }
+
+  downloadOutcomeCatalog(): void {
+    this.api.downloadOutcomeCatalog().subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = 'outcome-catalog.json';
+        anchor.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.snackBar.open('Download non riuscito', 'Chiudi', { duration: 5000 });
+      },
+    });
+  }
+
+  onOutcomeCatalogFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed: unknown = JSON.parse(String(reader.result ?? ''));
+        if (!Array.isArray(parsed)) {
+          throw new Error('Formato non valido');
+        }
+        const items = parsed as Array<{
+          label: string;
+          description?: string | null;
+          sortOrder?: number;
+          kind?: OutcomeOption['kind'];
+        }>;
+        if (!items.every((row) => typeof row?.label === 'string' && row.label.trim())) {
+          throw new Error('Ogni voce deve avere label');
+        }
+
+        const hasExisting = this.outcomeOptions.length > 0;
+        const importFromFile = (doReplace: boolean) => {
+          this.outcomeImporting = true;
+          this.api.importOutcomeOptions({ items, replace: doReplace }).subscribe({
+            next: (options) => {
+              this.outcomeOptionsService.invalidate();
+              this.outcomeOptions = options;
+              this.outcomesPage = clampPage(
+                this.outcomesPage,
+                options.length,
+                this.outcomesPageSize,
+              );
+              this.outcomeImporting = false;
+              this.snackBar.open('Esiti importati da JSON', 'OK', { duration: 3000 });
+            },
+            error: (err) => {
+              this.outcomeImporting = false;
+              this.snackBar.open(err.error?.message ?? 'Import non riuscito', 'Chiudi', {
+                duration: 5000,
+              });
+            },
+          });
+        };
+
+        if (hasExisting) {
+          const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+            data: {
+              title: 'Importa JSON',
+              message:
+                'Conferma sostituisce l\'elenco con il file. Annulla unisce le voci per etichetta.',
+            },
+          });
+          dialogRef.afterClosed().subscribe((confirmed) => {
+            if (confirmed === undefined) {
+              return;
+            }
+            importFromFile(confirmed === true);
+          });
+        } else {
+          importFromFile(false);
+        }
+      } catch {
+        this.snackBar.open('File JSON non valido', 'Chiudi', { duration: 5000 });
+      }
+    };
+    reader.readAsText(file);
   }
 
   get paginatedOutcomeOptions(): OutcomeOption[] {

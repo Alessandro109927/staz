@@ -1,0 +1,686 @@
+[
+  {
+    "label": "1",
+    "description": "Vittoria squadra di casa",
+    "kind": "standard",
+    "sortOrder": 0
+  },
+  {
+    "label": "1/1",
+    "description": "Parziale 1 – Finale 1 (casa–casa)",
+    "kind": "standard",
+    "sortOrder": 1
+  },
+  {
+    "label": "1/2",
+    "description": "Parziale 1 – Finale 2",
+    "kind": "standard",
+    "sortOrder": 2
+  },
+  {
+    "label": "1/X",
+    "description": "Parziale 1 – Finale X",
+    "kind": "standard",
+    "sortOrder": 3
+  },
+  {
+    "label": "12",
+    "description": "Casa o ospite, no pareggio",
+    "kind": "standard",
+    "sortOrder": 4
+  },
+  {
+    "label": "1X",
+    "description": "Casa o pareggio (doppia chance)",
+    "kind": "standard",
+    "sortOrder": 5
+  },
+  {
+    "label": "2",
+    "description": "Vittoria squadra ospite",
+    "kind": "standard",
+    "sortOrder": 6
+  },
+  {
+    "label": "2/1",
+    "description": "Parziale 2 – Finale 1",
+    "kind": "standard",
+    "sortOrder": 7
+  },
+  {
+    "label": "2/2",
+    "description": "Parziale 2 – Finale 2 (ospite–ospite)",
+    "kind": "standard",
+    "sortOrder": 8
+  },
+  {
+    "label": "2/X",
+    "description": "Parziale 2 – Finale X",
+    "kind": "standard",
+    "sortOrder": 9
+  },
+  {
+    "label": "Dispari",
+    "description": "Somma gol dispari",
+    "kind": "standard",
+    "sortOrder": 10
+  },
+  {
+    "label": "GG",
+    "description": "Entrambe le squadre segnano",
+    "kind": "standard",
+    "sortOrder": 11
+  },
+  {
+    "label": "Marcatore",
+    "description": "Giocatore segna (indica il nome in scommessa)",
+    "kind": "scorer",
+    "sortOrder": 12
+  },
+  {
+    "label": "Multigol 1-3",
+    "description": "Totale gol tra 1 e 3",
+    "kind": "standard",
+    "sortOrder": 13
+  },
+  {
+    "label": "Multigol 1T 1-3",
+    "description": "Gol totali nel primo tempo tra 1 e 3",
+    "kind": "standard",
+    "sortOrder": 14
+  },
+  {
+    "label": "Multigol 1T 2-3",
+    "description": "Gol totali nel primo tempo tra 2 e 3",
+    "kind": "standard",
+    "sortOrder": 15
+  },
+  {
+    "label": "Multigol 1T 2-4",
+    "description": "Gol totali nel primo tempo tra 2 e 4",
+    "kind": "standard",
+    "sortOrder": 16
+  },
+  {
+    "label": "Multigol 1T 2-5",
+    "description": "Gol totali nel primo tempo tra 2 e 5",
+    "kind": "standard",
+    "sortOrder": 17
+  },
+  {
+    "label": "Multigol 1T 2-6",
+    "description": "Gol totali nel primo tempo tra 2 e 6",
+    "kind": "standard",
+    "sortOrder": 18
+  },
+  {
+    "label": "Multigol 1T 3-4",
+    "description": "Gol totali nel primo tempo tra 3 e 4",
+    "kind": "standard",
+    "sortOrder": 19
+  },
+  {
+    "label": "Multigol 1T 3-5",
+    "description": "Gol totali nel primo tempo tra 3 e 5",
+    "kind": "standard",
+    "sortOrder": 20
+  },
+  {
+    "label": "Multigol 1T 3-6",
+    "description": "Gol totali nel primo tempo tra 3 e 6",
+    "kind": "standard",
+    "sortOrder": 21
+  },
+  {
+    "label": "Multigol 1T 4-5",
+    "description": "Gol totali nel primo tempo tra 4 e 5",
+    "kind": "standard",
+    "sortOrder": 22
+  },
+  {
+    "label": "Multigol 1T 4-6",
+    "description": "Gol totali nel primo tempo tra 4 e 6",
+    "kind": "standard",
+    "sortOrder": 23
+  },
+  {
+    "label": "Multigol 1T 5-6",
+    "description": "Gol totali nel primo tempo tra 5 e 6",
+    "kind": "standard",
+    "sortOrder": 24
+  },
+  {
+    "label": "Multigol 2-3",
+    "description": "Totale gol tra 2 e 3",
+    "kind": "standard",
+    "sortOrder": 25
+  },
+  {
+    "label": "Multigol 2-4",
+    "description": "Totale gol tra 2 e 4",
+    "kind": "standard",
+    "sortOrder": 26
+  },
+  {
+    "label": "Multigol 2-5",
+    "description": "Totale gol tra 2 e 5",
+    "kind": "standard",
+    "sortOrder": 27
+  },
+  {
+    "label": "Multigol 2-6",
+    "description": "Totale gol tra 2 e 6",
+    "kind": "standard",
+    "sortOrder": 28
+  },
+  {
+    "label": "Multigol 3-4",
+    "description": "Totale gol tra 3 e 4",
+    "kind": "standard",
+    "sortOrder": 29
+  },
+  {
+    "label": "Multigol 3-5",
+    "description": "Totale gol tra 3 e 5",
+    "kind": "standard",
+    "sortOrder": 30
+  },
+  {
+    "label": "Multigol 3-6",
+    "description": "Totale gol tra 3 e 6",
+    "kind": "standard",
+    "sortOrder": 31
+  },
+  {
+    "label": "Multigol 4-5",
+    "description": "Totale gol tra 4 e 5",
+    "kind": "standard",
+    "sortOrder": 32
+  },
+  {
+    "label": "Multigol 4-6",
+    "description": "Totale gol tra 4 e 6",
+    "kind": "standard",
+    "sortOrder": 33
+  },
+  {
+    "label": "Multigol 5-6",
+    "description": "Totale gol tra 5 e 6",
+    "kind": "standard",
+    "sortOrder": 34
+  },
+  {
+    "label": "Multigol Casa 1-2",
+    "description": "Gol squadra di casa tra 1 e 2",
+    "kind": "standard",
+    "sortOrder": 35
+  },
+  {
+    "label": "Multigol Casa 1-3",
+    "description": "Gol squadra di casa tra 1 e 3",
+    "kind": "standard",
+    "sortOrder": 36
+  },
+  {
+    "label": "Multigol Casa 1-4",
+    "description": "Gol squadra di casa tra 1 e 4",
+    "kind": "standard",
+    "sortOrder": 37
+  },
+  {
+    "label": "Multigol Casa 1-5",
+    "description": "Gol squadra di casa tra 1 e 5",
+    "kind": "standard",
+    "sortOrder": 38
+  },
+  {
+    "label": "Multigol Casa 1-6",
+    "description": "Gol squadra di casa tra 1 e 6",
+    "kind": "standard",
+    "sortOrder": 39
+  },
+  {
+    "label": "Multigol Casa 1T 1-2",
+    "description": "Gol squadra di casa nel primo tempo tra 1 e 2",
+    "kind": "standard",
+    "sortOrder": 40
+  },
+  {
+    "label": "Multigol Casa 1T 1-3",
+    "description": "Gol squadra di casa nel primo tempo tra 1 e 3",
+    "kind": "standard",
+    "sortOrder": 41
+  },
+  {
+    "label": "Multigol Casa 1T 1-4",
+    "description": "Gol squadra di casa nel primo tempo tra 1 e 4",
+    "kind": "standard",
+    "sortOrder": 42
+  },
+  {
+    "label": "Multigol Casa 1T 1-5",
+    "description": "Gol squadra di casa nel primo tempo tra 1 e 5",
+    "kind": "standard",
+    "sortOrder": 43
+  },
+  {
+    "label": "Multigol Casa 1T 1-6",
+    "description": "Gol squadra di casa nel primo tempo tra 1 e 6",
+    "kind": "standard",
+    "sortOrder": 44
+  },
+  {
+    "label": "Multigol Casa 1T 2-3",
+    "description": "Gol squadra di casa nel primo tempo tra 2 e 3",
+    "kind": "standard",
+    "sortOrder": 45
+  },
+  {
+    "label": "Multigol Casa 1T 2-4",
+    "description": "Gol squadra di casa nel primo tempo tra 2 e 4",
+    "kind": "standard",
+    "sortOrder": 46
+  },
+  {
+    "label": "Multigol Casa 1T 2-5",
+    "description": "Gol squadra di casa nel primo tempo tra 2 e 5",
+    "kind": "standard",
+    "sortOrder": 47
+  },
+  {
+    "label": "Multigol Casa 1T 2-6",
+    "description": "Gol squadra di casa nel primo tempo tra 2 e 6",
+    "kind": "standard",
+    "sortOrder": 48
+  },
+  {
+    "label": "Multigol Casa 1T 3-4",
+    "description": "Gol squadra di casa nel primo tempo tra 3 e 4",
+    "kind": "standard",
+    "sortOrder": 49
+  },
+  {
+    "label": "Multigol Casa 1T 3-5",
+    "description": "Gol squadra di casa nel primo tempo tra 3 e 5",
+    "kind": "standard",
+    "sortOrder": 50
+  },
+  {
+    "label": "Multigol Casa 1T 3-6",
+    "description": "Gol squadra di casa nel primo tempo tra 3 e 6",
+    "kind": "standard",
+    "sortOrder": 51
+  },
+  {
+    "label": "Multigol Casa 1T 4-5",
+    "description": "Gol squadra di casa nel primo tempo tra 4 e 5",
+    "kind": "standard",
+    "sortOrder": 52
+  },
+  {
+    "label": "Multigol Casa 1T 4-6",
+    "description": "Gol squadra di casa nel primo tempo tra 4 e 6",
+    "kind": "standard",
+    "sortOrder": 53
+  },
+  {
+    "label": "Multigol Casa 1T 5-6",
+    "description": "Gol squadra di casa nel primo tempo tra 5 e 6",
+    "kind": "standard",
+    "sortOrder": 54
+  },
+  {
+    "label": "Multigol Casa 2-3",
+    "description": "Gol squadra di casa tra 2 e 3",
+    "kind": "standard",
+    "sortOrder": 55
+  },
+  {
+    "label": "Multigol Casa 2-4",
+    "description": "Gol squadra di casa tra 2 e 4",
+    "kind": "standard",
+    "sortOrder": 56
+  },
+  {
+    "label": "Multigol Casa 2-5",
+    "description": "Gol squadra di casa tra 2 e 5",
+    "kind": "standard",
+    "sortOrder": 57
+  },
+  {
+    "label": "Multigol Casa 2-6",
+    "description": "Gol squadra di casa tra 2 e 6",
+    "kind": "standard",
+    "sortOrder": 58
+  },
+  {
+    "label": "Multigol Casa 3-4",
+    "description": "Gol squadra di casa tra 3 e 4",
+    "kind": "standard",
+    "sortOrder": 59
+  },
+  {
+    "label": "Multigol Casa 3-5",
+    "description": "Gol squadra di casa tra 3 e 5",
+    "kind": "standard",
+    "sortOrder": 60
+  },
+  {
+    "label": "Multigol Casa 3-6",
+    "description": "Gol squadra di casa tra 3 e 6",
+    "kind": "standard",
+    "sortOrder": 61
+  },
+  {
+    "label": "Multigol Casa 4-5",
+    "description": "Gol squadra di casa tra 4 e 5",
+    "kind": "standard",
+    "sortOrder": 62
+  },
+  {
+    "label": "Multigol Casa 4-6",
+    "description": "Gol squadra di casa tra 4 e 6",
+    "kind": "standard",
+    "sortOrder": 63
+  },
+  {
+    "label": "Multigol Casa 5-6",
+    "description": "Gol squadra di casa tra 5 e 6",
+    "kind": "standard",
+    "sortOrder": 64
+  },
+  {
+    "label": "Multigol Ospite 1-2",
+    "description": "Gol squadra ospite tra 1 e 2",
+    "kind": "standard",
+    "sortOrder": 65
+  },
+  {
+    "label": "Multigol Ospite 1-3",
+    "description": "Gol squadra ospite tra 1 e 3",
+    "kind": "standard",
+    "sortOrder": 66
+  },
+  {
+    "label": "Multigol Ospite 1-4",
+    "description": "Gol squadra ospite tra 1 e 4",
+    "kind": "standard",
+    "sortOrder": 67
+  },
+  {
+    "label": "Multigol Ospite 1-5",
+    "description": "Gol squadra ospite tra 1 e 5",
+    "kind": "standard",
+    "sortOrder": 68
+  },
+  {
+    "label": "Multigol Ospite 1-6",
+    "description": "Gol squadra ospite tra 1 e 6",
+    "kind": "standard",
+    "sortOrder": 69
+  },
+  {
+    "label": "Multigol Ospite 1T 1-2",
+    "description": "Gol squadra ospite nel primo tempo tra 1 e 2",
+    "kind": "standard",
+    "sortOrder": 70
+  },
+  {
+    "label": "Multigol Ospite 1T 1-3",
+    "description": "Gol squadra ospite nel primo tempo tra 1 e 3",
+    "kind": "standard",
+    "sortOrder": 71
+  },
+  {
+    "label": "Multigol Ospite 1T 1-4",
+    "description": "Gol squadra ospite nel primo tempo tra 1 e 4",
+    "kind": "standard",
+    "sortOrder": 72
+  },
+  {
+    "label": "Multigol Ospite 1T 1-5",
+    "description": "Gol squadra ospite nel primo tempo tra 1 e 5",
+    "kind": "standard",
+    "sortOrder": 73
+  },
+  {
+    "label": "Multigol Ospite 1T 1-6",
+    "description": "Gol squadra ospite nel primo tempo tra 1 e 6",
+    "kind": "standard",
+    "sortOrder": 74
+  },
+  {
+    "label": "Multigol Ospite 1T 2-3",
+    "description": "Gol squadra ospite nel primo tempo tra 2 e 3",
+    "kind": "standard",
+    "sortOrder": 75
+  },
+  {
+    "label": "Multigol Ospite 1T 2-4",
+    "description": "Gol squadra ospite nel primo tempo tra 2 e 4",
+    "kind": "standard",
+    "sortOrder": 76
+  },
+  {
+    "label": "Multigol Ospite 1T 2-5",
+    "description": "Gol squadra ospite nel primo tempo tra 2 e 5",
+    "kind": "standard",
+    "sortOrder": 77
+  },
+  {
+    "label": "Multigol Ospite 1T 2-6",
+    "description": "Gol squadra ospite nel primo tempo tra 2 e 6",
+    "kind": "standard",
+    "sortOrder": 78
+  },
+  {
+    "label": "Multigol Ospite 1T 3-4",
+    "description": "Gol squadra ospite nel primo tempo tra 3 e 4",
+    "kind": "standard",
+    "sortOrder": 79
+  },
+  {
+    "label": "Multigol Ospite 1T 3-5",
+    "description": "Gol squadra ospite nel primo tempo tra 3 e 5",
+    "kind": "standard",
+    "sortOrder": 80
+  },
+  {
+    "label": "Multigol Ospite 1T 3-6",
+    "description": "Gol squadra ospite nel primo tempo tra 3 e 6",
+    "kind": "standard",
+    "sortOrder": 81
+  },
+  {
+    "label": "Multigol Ospite 1T 4-5",
+    "description": "Gol squadra ospite nel primo tempo tra 4 e 5",
+    "kind": "standard",
+    "sortOrder": 82
+  },
+  {
+    "label": "Multigol Ospite 1T 4-6",
+    "description": "Gol squadra ospite nel primo tempo tra 4 e 6",
+    "kind": "standard",
+    "sortOrder": 83
+  },
+  {
+    "label": "Multigol Ospite 1T 5-6",
+    "description": "Gol squadra ospite nel primo tempo tra 5 e 6",
+    "kind": "standard",
+    "sortOrder": 84
+  },
+  {
+    "label": "Multigol Ospite 2-3",
+    "description": "Gol squadra ospite tra 2 e 3",
+    "kind": "standard",
+    "sortOrder": 85
+  },
+  {
+    "label": "Multigol Ospite 2-4",
+    "description": "Gol squadra ospite tra 2 e 4",
+    "kind": "standard",
+    "sortOrder": 86
+  },
+  {
+    "label": "Multigol Ospite 2-5",
+    "description": "Gol squadra ospite tra 2 e 5",
+    "kind": "standard",
+    "sortOrder": 87
+  },
+  {
+    "label": "Multigol Ospite 2-6",
+    "description": "Gol squadra ospite tra 2 e 6",
+    "kind": "standard",
+    "sortOrder": 88
+  },
+  {
+    "label": "Multigol Ospite 3-4",
+    "description": "Gol squadra ospite tra 3 e 4",
+    "kind": "standard",
+    "sortOrder": 89
+  },
+  {
+    "label": "Multigol Ospite 3-5",
+    "description": "Gol squadra ospite tra 3 e 5",
+    "kind": "standard",
+    "sortOrder": 90
+  },
+  {
+    "label": "Multigol Ospite 3-6",
+    "description": "Gol squadra ospite tra 3 e 6",
+    "kind": "standard",
+    "sortOrder": 91
+  },
+  {
+    "label": "Multigol Ospite 4-5",
+    "description": "Gol squadra ospite tra 4 e 5",
+    "kind": "standard",
+    "sortOrder": 92
+  },
+  {
+    "label": "Multigol Ospite 4-6",
+    "description": "Gol squadra ospite tra 4 e 6",
+    "kind": "standard",
+    "sortOrder": 93
+  },
+  {
+    "label": "Multigol Ospite 5-6",
+    "description": "Gol squadra ospite tra 5 e 6",
+    "kind": "standard",
+    "sortOrder": 94
+  },
+  {
+    "label": "NG",
+    "description": "Almeno una squadra non segna",
+    "kind": "standard",
+    "sortOrder": 95
+  },
+  {
+    "label": "Over 0.5",
+    "description": "Almeno 1 gol totali",
+    "kind": "standard",
+    "sortOrder": 96
+  },
+  {
+    "label": "Over 1.5",
+    "description": "Almeno 2 gol totali",
+    "kind": "standard",
+    "sortOrder": 97
+  },
+  {
+    "label": "Over 2.5",
+    "description": "Almeno 3 gol totali",
+    "kind": "standard",
+    "sortOrder": 98
+  },
+  {
+    "label": "Over 3.5",
+    "description": "Almeno 4 gol totali",
+    "kind": "standard",
+    "sortOrder": 99
+  },
+  {
+    "label": "Over 4.5",
+    "description": "Almeno 5 gol totali",
+    "kind": "standard",
+    "sortOrder": 100
+  },
+  {
+    "label": "Pari",
+    "description": "Somma gol pari",
+    "kind": "standard",
+    "sortOrder": 101
+  },
+  {
+    "label": "Segna casa",
+    "description": "La squadra di casa segna almeno un gol",
+    "kind": "standard",
+    "sortOrder": 102
+  },
+  {
+    "label": "Segna ospite",
+    "description": "La squadra ospite segna almeno un gol",
+    "kind": "standard",
+    "sortOrder": 103
+  },
+  {
+    "label": "Under 0.5",
+    "description": "Nessun gol",
+    "kind": "standard",
+    "sortOrder": 104
+  },
+  {
+    "label": "Under 1.5",
+    "description": "Massimo 1 gol totali",
+    "kind": "standard",
+    "sortOrder": 105
+  },
+  {
+    "label": "Under 2.5",
+    "description": "Massimo 2 gol totali",
+    "kind": "standard",
+    "sortOrder": 106
+  },
+  {
+    "label": "Under 3.5",
+    "description": "Massimo 3 gol totali",
+    "kind": "standard",
+    "sortOrder": 107
+  },
+  {
+    "label": "Under 4.5",
+    "description": "Massimo 4 gol totali",
+    "kind": "standard",
+    "sortOrder": 108
+  },
+  {
+    "label": "X",
+    "description": "Pareggio",
+    "kind": "standard",
+    "sortOrder": 109
+  },
+  {
+    "label": "X/1",
+    "description": "Parziale X – Finale 1",
+    "kind": "standard",
+    "sortOrder": 110
+  },
+  {
+    "label": "X/2",
+    "description": "Parziale X – Finale 2",
+    "kind": "standard",
+    "sortOrder": 111
+  },
+  {
+    "label": "X/X",
+    "description": "Parziale X – Finale X",
+    "kind": "standard",
+    "sortOrder": 112
+  },
+  {
+    "label": "X2",
+    "description": "Pareggio o ospite (doppia chance)",
+    "kind": "standard",
+    "sortOrder": 113
+  }
+]

@@ -53,8 +53,46 @@
   gap: $space-3;
 }
 
-.settings-outcomes-section {
+.settings-block {
   margin-bottom: $space-6;
+}
+
+.settings-outcomes-section,
+.settings-stake-section {
+  margin-bottom: 0;
+}
+
+.settings-outcomes-header {
+  align-items: center;
+  gap: $space-4;
+  flex-wrap: wrap;
+}
+
+.settings-outcomes-header__title {
+  margin: 0;
+  text-align: left;
+}
+
+.settings-outcomes-header__hint {
+  margin: $space-1 0 0;
+  font-size: $font-size-sm;
+  max-width: 36rem;
+
+  code {
+    font-size: 0.92em;
+  }
+}
+
+.settings-outcomes-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.settings-outcomes-header__file {
+  display: none;
 }
 
 .settings-outcome-label {
@@ -69,18 +107,6 @@
   &--empty {
     color: $color-neutral-400;
   }
-}
-
-.settings-stake-section {
-  margin-bottom: 0;
-}
-
-.settings-outcomes-section {
-  margin-bottom: 0;
-}
-
-.settings-table-panel {
-  margin-bottom: $space-6;
 }
 
 .table-scroll {
@@ -129,50 +155,8 @@
   border-radius: $radius-sm;
   background: $color-primary-light;
   color: $color-primary;
-  border: 1px solid rgba($color-primary, 0.18);
   font-weight: $font-weight-semibold;
   font-variant-numeric: tabular-nums;
-}
-
-.settings-actions {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: $space-2;
-}
-
-.settings-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  min-width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: 1px solid $color-neutral-200;
-  border-radius: $radius-sm;
-  background: $color-neutral-50;
-  color: $color-neutral-600;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-
-  mat-icon {
-    font-size: $icon-size-md;
-    width: $icon-size-md;
-    height: $icon-size-md;
-  }
-
-  &--edit:hover {
-    color: $color-primary;
-    border-color: rgba($color-primary, 0.25);
-    background: $color-primary-light;
-  }
-
-  &--delete:hover {
-    color: $color-danger;
-    border-color: rgba($color-danger, 0.25);
-    background: $color-danger-light;
-  }
 }
 
 .settings-empty {
@@ -226,12 +210,34 @@
     max-width: none;
   }
 
-  .settings-stake-section .table-header,
-  .settings-outcomes-section .table-header {
+  .settings-stake-section .table-header {
     align-items: stretch;
 
     .vs-btn-primary {
       width: 100%;
+      justify-content: center;
+    }
+  }
+
+}
+
+@include down($bp-md) {
+  .settings-outcomes-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .settings-outcomes-header__actions {
+    width: 100%;
+    margin-left: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: $space-2;
+
+    .vs-btn-ghost,
+    .vs-btn-primary {
+      width: 100%;
+      box-sizing: border-box;
       justify-content: center;
     }
   }

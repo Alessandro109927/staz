@@ -233,4 +233,22 @@ export class ApiService {
   deleteOutcomeOption(id: number): Observable<{ deleted: boolean }> {
     return this.http.delete<{ deleted: boolean }>(`${this.baseUrl}/outcome-options/${id}`);
   }
+
+  importOutcomeOptions(payload: {
+    items: Array<{
+      label: string;
+      description?: string | null;
+      sortOrder?: number;
+      kind?: OutcomeOption['kind'];
+    }>;
+    replace?: boolean;
+  }): Observable<OutcomeOption[]> {
+    return this.http.post<OutcomeOption[]>(`${this.baseUrl}/outcome-options/import`, payload);
+  }
+
+  downloadOutcomeCatalog(): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/outcome-options/export`, {
+      responseType: 'blob',
+    });
+  }
 }

@@ -305,15 +305,6 @@
   color: $color-neutral-400;
 }
 
-.history-actions {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: $space-2;
-  flex-wrap: nowrap;
-  vertical-align: middle;
-}
-
 .history-action {
   display: inline-flex;
   align-items: center;
@@ -361,44 +352,6 @@
 
   &:hover {
     background: rgba($color-danger, 0.14);
-  }
-}
-
-.history-action--edit {
-  width: 2rem;
-  min-width: 2rem;
-  padding: 0;
-  color: $color-neutral-600;
-  border-color: transparent;
-  background: transparent;
-
-  mat-icon {
-    font-size: $icon-size-md;
-    width: $icon-size-md;
-    height: $icon-size-md;
-  }
-
-  &:hover {
-    color: $color-neutral-900;
-    background: transparent;
-  }
-}
-
-.history-action--delete {
-  width: 2rem;
-  min-width: 2rem;
-  padding: 0;
-  color: $color-neutral-600;
-
-  mat-icon {
-    font-size: $icon-size-md;
-    width: $icon-size-md;
-    height: $icon-size-md;
-  }
-
-  &:hover {
-    color: $color-neutral-900;
-    background: transparent;
   }
 }
 

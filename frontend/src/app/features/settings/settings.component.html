@@ -50,18 +50,8 @@
     </div>
   </section>
 
-  <section class="vs-card--flush settings-outcomes-section">
-    <div class="table-header vs-flex-between">
-      <h2 class="vs-heading-section">Elenco esiti</h2>
-      <button type="button" class="vs-btn-primary" (click)="openCreateOutcomeDialog()">
-        <mat-icon>add</mat-icon>
-        Nuovo esito
-      </button>
-    </div>
-  </section>
-
-  @if (outcomeOptions.length) {
-    <div class="vs-table-area">
+  <div class="vs-table-area settings-block">
+    @if (outcomeOptions.length) {
       <app-vs-table-pagination
         class="vs-table-toolbar-outside"
         [page]="outcomesPage"
@@ -71,7 +61,40 @@
         (pageChange)="onOutcomesPageChange($event)"
         (pageSizeChange)="onOutcomesPageSizeChange($event)"
       />
-      <section class="vs-card--flush settings-table-panel">
+    }
+
+    <section class="vs-card--flush settings-outcomes-section">
+      <div class="table-header vs-flex-between settings-outcomes-header">
+        <h2 class="vs-heading-section settings-outcomes-header__title">Elenco esiti</h2>
+        <div class="settings-outcomes-header__actions">
+          <input
+            #outcomeCatalogFile
+            type="file"
+            accept="application/json,.json"
+            class="settings-outcomes-header__file"
+            (change)="onOutcomeCatalogFileSelected($event)"
+          />
+          <button type="button" class="vs-btn-ghost" (click)="outcomeCatalogFile.click()">
+            <mat-icon>upload_file</mat-icon>
+            Importa JSON
+          </button>
+          <button
+            type="button"
+            class="vs-btn-ghost"
+            [disabled]="!outcomeOptions.length"
+            (click)="downloadOutcomeCatalog()"
+          >
+            <mat-icon>download</mat-icon>
+            Scarica JSON
+          </button>
+          <button type="button" class="vs-btn-primary" (click)="openCreateOutcomeDialog()">
+            <mat-icon>add</mat-icon>
+            Nuovo esito
+          </button>
+        </div>
+      </div>
+
+      @if (outcomeOptions.length) {
         <div class="table-scroll vs-hide-mobile">
           <table class="vs-table vs-data-table settings-table">
             <thead>
@@ -95,10 +118,10 @@
                     }
                   </td>
                   <td>
-                    <div class="settings-actions">
+                    <div class="vs-table-row-actions">
                       <button
                         type="button"
-                        class="settings-action settings-action--edit"
+                        class="vs-table-row-action"
                         aria-label="Modifica esito"
                         (click)="openEditOutcomeDialog(option)"
                       >
@@ -106,7 +129,7 @@
                       </button>
                       <button
                         type="button"
-                        class="settings-action settings-action--delete"
+                        class="vs-table-row-action"
                         aria-label="Elimina esito"
                         (click)="deleteOutcomeOption(option)"
                       >
@@ -130,10 +153,10 @@
                   <span class="settings-outcome-desc">{{ option.description }}</span>
                 }
               </div>
-              <div class="settings-actions">
+              <div class="vs-table-row-actions">
                 <button
                   type="button"
-                  class="settings-action settings-action--edit"
+                  class="vs-table-row-action"
                   aria-label="Modifica esito"
                   (click)="openEditOutcomeDialog(option)"
                 >
@@ -141,7 +164,7 @@
                 </button>
                 <button
                   type="button"
-                  class="settings-action settings-action--delete"
+                  class="vs-table-row-action"
                   aria-label="Elimina esito"
                   (click)="deleteOutcomeOption(option)"
                 >
@@ -151,26 +174,16 @@
             </article>
           }
         </div>
-      </section>
-    </div>
-  } @else {
-    <section class="vs-card--flush settings-table-panel">
-      <p class="settings-empty">Nessun esito in elenco. Aggiungine uno con «Nuovo esito».</p>
+      } @else {
+        <p class="settings-empty">
+          Nessun esito in elenco. Aggiungine uno o importa un file JSON.
+        </p>
+      }
     </section>
-  }
+  </div>
 
-  <section class="vs-card--flush settings-stake-section">
-    <div class="table-header vs-flex-between">
-      <h2 class="vs-heading-section">Fasce di quota</h2>
-      <button type="button" class="vs-btn-primary" (click)="openCreateDialog()">
-        <mat-icon>add</mat-icon>
-        Nuova regola
-      </button>
-    </div>
-  </section>
-
-  @if (rules.length) {
-    <div class="vs-table-area">
+  <div class="vs-table-area settings-block">
+    @if (rules.length) {
       <app-vs-table-pagination
         class="vs-table-toolbar-outside"
         [page]="rulesPage"
@@ -180,7 +193,18 @@
         (pageChange)="onRulesPageChange($event)"
         (pageSizeChange)="onRulesPageSizeChange($event)"
       />
-      <section class="vs-card--flush settings-table-panel">
+    }
+
+    <section class="vs-card--flush settings-stake-section">
+      <div class="table-header vs-flex-between">
+        <h2 class="vs-heading-section">Fasce di quota</h2>
+        <button type="button" class="vs-btn-primary" (click)="openCreateDialog()">
+          <mat-icon>add</mat-icon>
+          Nuova regola
+        </button>
+      </div>
+
+      @if (rules.length) {
         <div class="table-scroll vs-hide-mobile">
           <table class="vs-table vs-data-table settings-table settings-table--stake">
             <thead>
@@ -200,10 +224,10 @@
                     <span class="settings-stake">{{ rule.stakePercentage }}%</span>
                   </td>
                   <td>
-                    <div class="settings-actions">
+                    <div class="vs-table-row-actions">
                       <button
                         type="button"
-                        class="settings-action settings-action--edit"
+                        class="vs-table-row-action"
                         aria-label="Modifica regola"
                         (click)="openEditDialog(rule)"
                       >
@@ -211,7 +235,7 @@
                       </button>
                       <button
                         type="button"
-                        class="settings-action settings-action--delete"
+                        class="vs-table-row-action"
                         aria-label="Elimina regola"
                         (click)="deleteRule(rule)"
                       >
@@ -233,10 +257,10 @@
                 <strong class="settings-range">{{ formatRange(rule) }}</strong>
                 <span class="settings-stake">{{ rule.stakePercentage }}%</span>
               </div>
-              <div class="settings-actions">
+              <div class="vs-table-row-actions">
                 <button
                   type="button"
-                  class="settings-action settings-action--edit"
+                  class="vs-table-row-action"
                   aria-label="Modifica regola"
                   (click)="openEditDialog(rule)"
                 >
@@ -244,7 +268,7 @@
                 </button>
                 <button
                   type="button"
-                  class="settings-action settings-action--delete"
+                  class="vs-table-row-action"
                   aria-label="Elimina regola"
                   (click)="deleteRule(rule)"
                 >
@@ -254,11 +278,9 @@
             </article>
           }
         </div>
-      </section>
-    </div>
-  } @else {
-    <section class="vs-card--flush settings-table-panel settings-stake-section">
-      <p class="settings-empty">Nessuna regola configurata.</p>
+      } @else {
+        <p class="settings-empty">Nessuna regola configurata.</p>
+      }
     </section>
-  }
+  </div>
 </div>

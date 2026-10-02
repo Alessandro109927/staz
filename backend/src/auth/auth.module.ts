@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { OutcomeOptionsModule } from '../outcome-options/outcome-options.module';
 import { StakingRulesModule } from '../staking-rules/staking-rules.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -12,6 +13,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
   imports: [
     TypeOrmModule.forFeature([User]),
     forwardRef(() => StakingRulesModule),
+    forwardRef(() => OutcomeOptionsModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

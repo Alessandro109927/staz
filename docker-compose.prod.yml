@@ -37,6 +37,9 @@ services:
       LEGACY_OWNER_USERNAME: ${LEGACY_OWNER_USERNAME:-}
       LEGACY_OWNER_PASSWORD: ${LEGACY_OWNER_PASSWORD:-}
       BZZOIRO_SPORTS_API_KEY: ${BZZOIRO_SPORTS_API_KEY:-}
+      OUTCOME_CATALOG_SYNC_PATH: /data/outcome-catalog.json
+    volumes:
+      - ./data:/data
     depends_on:
       postgres:
         condition: service_healthy
