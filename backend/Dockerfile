@@ -12,6 +12,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+RUN apk add --no-cache ca-certificates
+
 ENV NODE_ENV=production
 
 COPY package.json package-lock.json ./

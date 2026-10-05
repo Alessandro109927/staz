@@ -1,5 +1,5 @@
-@use '../../../styles/variables' as *;
-@use './multigol-card';
+@use "../../../styles/variables" as *;
+@use "./multigol-card";
 
 .multigol-detail {
   display: flex;
@@ -172,7 +172,11 @@
 
       dt {
         color: $color-success;
-        border-bottom-color: color-mix(in srgb, $color-success 22%, $color-neutral-200);
+        border-bottom-color: color-mix(
+          in srgb,
+          $color-success 22%,
+          $color-neutral-200
+        );
       }
 
       dd {
