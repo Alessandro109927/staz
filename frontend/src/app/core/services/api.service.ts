@@ -18,6 +18,10 @@ import {
   StakingRule,
   TeamOption,
   OutcomeOption,
+  MultigolAnalysis,
+  MultigolOpportunity,
+  MultigolOpportunitiesResponse,
+  MultigolScoutCompetition,
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -250,5 +254,47 @@ export class ApiService {
     return this.http.get(`${this.baseUrl}/outcome-options/export`, {
       responseType: 'blob',
     });
+  }
+
+  getMultigolCompetitions(): Observable<MultigolScoutCompetition[]> {
+    return this.http.get<MultigolScoutCompetition[]>(
+      `${this.baseUrl}/multigol-scout/competitions`,
+    );
+  }
+
+  getMultigolLeagueOpportunities(
+    leagueCode: string,
+    from?: string,
+    to?: string,
+  ): Observable<MultigolOpportunity[]> {
+    let params = new HttpParams();
+    if (from) {
+      params = params.set('from', from);
+    }
+    if (to) {
+      params = params.set('to', to);
+    }
+    return this.http.get<MultigolOpportunity[]>(
+      `${this.baseUrl}/multigol-scout/leagues/${encodeURIComponent(leagueCode)}/opportunities`,
+      { params },
+    );
+  }
+
+  getMultigolOpportunities(from?: string, to?: string): Observable<MultigolOpportunitiesResponse> {
+    let params = new HttpParams();
+    if (from) {
+      params = params.set('from', from);
+    }
+    if (to) {
+      params = params.set('to', to);
+    }
+    return this.http.get<MultigolOpportunitiesResponse>(
+      `${this.baseUrl}/multigol-scout/opportunities`,
+      { params },
+    );
+  }
+
+  getMultigolAnalysis(matchId: number): Observable<MultigolAnalysis> {
+    return this.http.get<MultigolAnalysis>(`${this.baseUrl}/multigol-scout/matches/${matchId}`);
   }
 }

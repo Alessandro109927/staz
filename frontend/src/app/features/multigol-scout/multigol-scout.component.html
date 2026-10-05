@@ -1,0 +1,178 @@
+<div class="vs-page multigol-page">
+  <header class="multigol-header">
+    <div>
+      <h1 class="vs-heading-page">Scout Multigol</h1>
+      <p class="vs-text-muted">
+        La scansione completa può richiedere diversi minuti per il limite API.
+      </p>
+    </div>
+    <button type="button" class="vs-btn-primary" (click)="reload()" [disabled]="loading">
+      <mat-icon>refresh</mat-icon>
+      Aggiorna
+    </button>
+  </header>
+
+  @if (loading) {
+    <div class="multigol-progress vs-card">
+      <p class="multigol-progress__label">{{ progressLabel || 'Avvio scansione…' }}</p>
+    </div>
+  }
+
+  @if (error) {
+    <div class="vs-card multigol-error">{{ error }}</div>
+  }
+
+  @if (allItems.length || nationOptions.length) {
+    <div class="multigol-filters vs-card">
+      <div class="multigol-filters__block multigol-filters__block--nations">
+        <p class="multigol-filters__label">
+          Nazione
+          @if (nationOptions.length && totalLeagues) {
+            <span class="multigol-filters__count">
+              ({{ nationOptions.length }} paesi · {{ totalLeagues }} campionati)
+            </span>
+          }
+        </p>
+        <p class="vs-text-muted multigol-filters__hint">
+          Selezione multipla — nessuna selezione = tutte. Più campionati possono essere nello stesso paese.
+        </p>
+        <div class="multigol-nations">
+          @for (nation of nationOptions; track nation.key) {
+            <button
+              type="button"
+              class="multigol-nation-chip"
+              [class.is-active]="isNationActive(nation.key)"
+              [attr.title]="nation.areaName"
+              [attr.aria-label]="nation.areaName"
+              (click)="toggleNation(nation.key)"
+            >
+              @if (nationFlag(nation.areaCode, nation.areaName); as flag) {
+                @if (flag.kind === 'emoji') {
+                  <span class="multigol-nation-chip__emoji" aria-hidden="true">{{ flag.value }}</span>
+                } @else {
+                  <img
+                    class="multigol-nation-chip__flag"
+                    [src]="flag.value"
+                    alt=""
+                    width="24"
+                    height="18"
+                    loading="lazy"
+                  />
+                }
+              } @else {
+                <span class="multigol-nation-chip__fallback">{{
+                  nation.areaCode ?? nation.areaName.slice(0, 3)
+                }}</span>
+              }
+            </button>
+          }
+        </div>
+        @if (selectedNationKeys.size) {
+          <button type="button" class="multigol-filters__clear" (click)="clearNations()">
+            Azzera nazioni
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  @if (allItems.length && !loading && !error) {
+    <div class="multigol-list-toolbar">
+      <p class="vs-text-muted multigol-count">
+        {{ displayItems.length }} partite
+        @if (selectedNationKeys.size && displayItems.length !== allItems.length) {
+          (su {{ allItems.length }} totali)
+        }
+      </p>
+      <div class="multigol-list-toolbar__sort">
+        <app-vs-select-field
+          label="Ordina per"
+          [control]="sortControl"
+          [options]="sortOptions"
+        />
+      </div>
+    </div>
+  }
+
+  @if (displayItems.length) {
+    <ul class="multigol-list">
+      @for (item of displayItems; track item.matchId) {
+        <li class="vs-card multigol-card">
+          <a [routerLink]="['/multigol-scout', item.matchId]" class="multigol-card__link">
+            <span class="multigol-card__meta" [attr.title]="item.leagueName">
+              @if (nationFlag(item.areaCode, item.areaName ?? ''); as flag) {
+                @if (flag.kind === 'emoji') {
+                  <span class="multigol-card__meta-flag multigol-card__meta-flag--emoji" aria-hidden="true">{{
+                    flag.value
+                  }}</span>
+                } @else {
+                  <img
+                    class="multigol-card__meta-flag"
+                    [src]="flag.value"
+                    alt=""
+                    width="20"
+                    height="15"
+                    loading="lazy"
+                  />
+                }
+                <span class="multigol-card__meta-sep" aria-hidden="true">–</span>
+              }
+              <span class="multigol-card__when">{{ formatKickoff(item.utcDate) }}</span>
+            </span>
+            <div class="multigol-card__match">
+              <div class="multigol-card__club">
+                @if (item.homeTeam.crest) {
+                  <img
+                    class="multigol-card__crest"
+                    [src]="item.homeTeam.crest"
+                    alt=""
+                    loading="lazy"
+                    (error)="onCrestError($event)"
+                  />
+                } @else {
+                  <span class="multigol-card__crest multigol-card__crest--ph" aria-hidden="true"></span>
+                }
+                <span class="multigol-card__name" [attr.title]="item.homeTeam.name">{{
+                  item.homeTeam.name
+                }}</span>
+              </div>
+              <span class="multigol-card__vs" aria-hidden="true">VS</span>
+              <div class="multigol-card__club">
+                @if (item.awayTeam.crest) {
+                  <img
+                    class="multigol-card__crest"
+                    [src]="item.awayTeam.crest"
+                    alt=""
+                    loading="lazy"
+                    (error)="onCrestError($event)"
+                  />
+                } @else {
+                  <span class="multigol-card__crest multigol-card__crest--ph" aria-hidden="true"></span>
+                }
+                <span class="multigol-card__name" [attr.title]="item.awayTeam.name">{{
+                  item.awayTeam.name
+                }}</span>
+              </div>
+            </div>
+            <div class="multigol-card__prob-block">
+              <span class="multigol-card__prob-value">{{ item.probabilityPercent }}%</span>
+            </div>
+            <span class="multigol-card__pick-label">{{ item.outcomeLabel }}</span>
+            <span class="multigol-card__cta">
+              Vai al dettaglio
+              <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+            </span>
+          </a>
+        </li>
+      }
+    </ul>
+  } @else if (!loading && !error && allItems.length && !displayItems.length) {
+    <div class="vs-card">
+      <p>Nessuna partita corrisponde ai filtri selezionati.</p>
+    </div>
+  } @else if (!loading && !error) {
+    <div class="vs-card">
+      <p>Nessuna partita supera la soglia multigol 1-6 nel periodo.</p>
+    </div>
+  }
+</div>

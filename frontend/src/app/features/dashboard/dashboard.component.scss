@@ -4,7 +4,7 @@
 .kpi-main {
   display: flex;
   flex-direction: column;
-  min-height: 320px;
+  width: 100%;
 }
 
 .kpi-main__value-row {
@@ -47,28 +47,28 @@
   padding: $space-3 $space-3 $space-2;
   border-radius: $radius-md;
   background: linear-gradient(180deg, $color-neutral-50 0%, rgba($color-neutral-50, 0.35) 100%);
-  border: 1px solid $color-neutral-100;
   min-height: 148px;
 }
 
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: minmax(0, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: $space-4;
-  min-height: 320px;
+  width: 100%;
+
+  @include down($bp-lg) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
   @include down($bp-md) {
     grid-template-columns: 1fr;
-    grid-auto-rows: auto;
-    min-height: 0;
   }
 }
 
 .kpi-mini {
   display: flex;
   flex-direction: column;
-  min-height: calc((320px - #{$space-4}) / 2);
+  min-height: 0;
 }
 
 .kpi-mini__body {
@@ -80,8 +80,6 @@
 }
 
 .kpi-mini--donut {
-  min-height: calc((320px - #{$space-4}) / 2);
-
   .kpi-mini__body--donut {
     flex: 1 1 auto;
     display: flex;
@@ -362,17 +360,6 @@
   }
 }
 
-@include down($bp-lg) {
-  .kpi-main,
-  .kpi-grid {
-    min-height: 0;
-  }
-
-  .kpi-mini {
-    min-height: 0;
-  }
-
-}
 
 @include down($bp-md) {
   .vs-page-header {

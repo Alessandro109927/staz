@@ -1,0 +1,423 @@
+@use '../../../styles/variables' as *;
+@use './multigol-card';
+
+.multigol-detail {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  width: 100%;
+}
+
+.multigol-error-box {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  padding: $space-5;
+
+  p {
+    margin: 0;
+  }
+}
+
+.multigol-back {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  color: $color-neutral-600;
+  text-decoration: none;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  &:hover {
+    color: $color-neutral-900;
+  }
+}
+
+.multigol-detail__stats {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+}
+
+.multigol-detail__stats-title {
+  margin: 0;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+}
+
+.multigol-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-4;
+  align-items: stretch;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.multigol-compare-card {
+  display: flex;
+  flex-direction: column;
+  padding: $space-5;
+  min-height: 100%;
+
+  &__head {
+    margin: 0 0 $space-3;
+    padding: 0;
+    border: 1px solid $color-neutral-200;
+    border-radius: $radius-md;
+    background: $color-surface;
+    overflow: hidden;
+  }
+
+  &__head-title {
+    margin: 0;
+    padding: $space-3 $space-4;
+    border-bottom: 1px solid $color-neutral-200;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+    color: $color-neutral-800;
+  }
+
+  &__head-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-4;
+    text-align: center;
+  }
+
+  &__crest {
+    width: 3.25rem;
+    height: 3.25rem;
+    object-fit: contain;
+
+    &--ph {
+      display: block;
+      width: 3.25rem;
+      height: 3.25rem;
+      border-radius: $radius-sm;
+      background: $color-neutral-200;
+    }
+  }
+
+  &__name {
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    line-height: 1.25;
+    color: $color-neutral-900;
+  }
+
+  &__stats {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+    flex: 1;
+  }
+
+  &__filter {
+    margin-top: 1rem;
+  }
+
+  &__row-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-3;
+  }
+
+  &__row {
+    margin: 0;
+    padding: 0;
+    border-radius: $radius-md;
+    border: 1px solid $color-neutral-200;
+    background: $color-surface;
+    overflow: hidden;
+
+    dt {
+      display: block;
+      margin: 0;
+      padding: $space-3 $space-4;
+      border-bottom: 1px solid $color-neutral-200;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: $color-neutral-800;
+    }
+
+    dd {
+      margin: 0;
+      padding: $space-4;
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      line-height: 1.5;
+      color: $color-neutral-900;
+    }
+
+    &--standing dd,
+    &--form dd {
+      padding: $space-4;
+    }
+
+    &--highlight {
+      border-color: transparent;
+      background: $color-success-light;
+
+      dt {
+        color: $color-success;
+        border-bottom-color: color-mix(in srgb, $color-success 22%, $color-neutral-200);
+      }
+
+      dd {
+        font-size: $font-size-xl;
+        font-weight: $font-weight-bold;
+        line-height: 1.1;
+        color: $color-success;
+      }
+    }
+  }
+}
+
+.multigol-standing-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: $space-2;
+
+  &__cell {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+    border-radius: $radius-sm;
+    border: 1px solid $color-neutral-200;
+    background: $color-neutral-50;
+    text-align: center;
+    overflow: hidden;
+
+    &--position .multigol-standing-metrics__value {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      line-height: 1.1;
+    }
+  }
+
+  &__label {
+    display: block;
+    padding: $space-2 $space-2;
+    border-bottom: 1px solid $color-neutral-200;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $color-neutral-600;
+  }
+
+  &__value {
+    display: block;
+    padding: $space-3 $space-2;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-900;
+  }
+
+  &__fallback {
+    margin: 0;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    line-height: 1.5;
+    color: $color-neutral-900;
+  }
+}
+
+.multigol-form-goals__venue-toggle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  margin-bottom: $space-3;
+}
+
+.multigol-form-goals__venue-btn {
+  padding: $space-1 $space-3;
+  border: 1px solid $color-neutral-200;
+  border-radius: $radius-full;
+  background: $color-surface;
+  color: $color-neutral-600;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    border-color: $color-primary;
+    color: $color-primary;
+  }
+
+  &--active {
+    border-color: $color-primary;
+    background: $color-primary-light;
+    color: $color-primary;
+  }
+}
+
+.multigol-form-goals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+    padding: $space-3 0;
+  }
+
+  &__divider {
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-top: 1px solid $color-neutral-200;
+    list-style: none;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+  }
+
+  &__date {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-600;
+  }
+
+  &__venue {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $color-neutral-600;
+  }
+
+  &__score {
+    flex-shrink: 0;
+    min-width: 2.5rem;
+    font-size: $font-size-md;
+    font-weight: $font-weight-medium;
+    font-variant-numeric: tabular-nums;
+    color: $color-neutral-800;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  &__gf {
+    font-weight: $font-weight-bold;
+    color: $color-neutral-900;
+  }
+
+  &__sep {
+    margin: 0 1px;
+    color: $color-neutral-400;
+  }
+
+  &__matchup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: $space-2;
+    min-width: 0;
+  }
+
+  &__side {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    min-width: 0;
+
+    &--home {
+      justify-content: flex-end;
+    }
+
+    &--away {
+      justify-content: flex-start;
+    }
+  }
+
+  &__team-name {
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+    line-height: 1.25;
+    color: $color-neutral-900;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__crest {
+    width: 1.75rem;
+    height: 1.75rem;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  &__fallback {
+    margin: 0;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    line-height: 1.5;
+    color: $color-neutral-900;
+  }
+
+  &__empty {
+    margin: 0;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    line-height: 1.5;
+    color: $color-neutral-600;
+  }
+}
+
+.multigol-stats-h2h {
+  width: 100%;
+  margin-top: 2.5rem;
+
+  &__body {
+    gap: $space-4;
+  }
+
+  &__list {
+    margin-top: 0;
+  }
+
+  &__rates {
+    margin: 0;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    line-height: 1.5;
+    color: $color-neutral-600;
+  }
+
+  &__text {
+    margin: 0;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    line-height: 1.6;
+    color: $color-neutral-800;
+  }
+}

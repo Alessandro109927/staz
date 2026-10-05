@@ -227,3 +227,123 @@ export interface CreateScalataPayload {
   minDailyOdds: number;
   oddsStrategy: 'uniform' | 'decreasing';
 }
+
+export interface MultigolScoutCompetition {
+  key: string;
+  id: number;
+  code: string | null;
+  name: string;
+  areaName: string | null;
+  areaCode: string | null;
+}
+
+export interface MultigolOpportunity {
+  matchId: number;
+  leagueCode: string;
+  leagueName: string;
+  areaName: string | null;
+  areaCode: string | null;
+  utcDate: string;
+  eventName: string;
+  homeTeam: { id: number; name: string; crest: string | null };
+  awayTeam: { id: number; name: string; crest: string | null };
+  outcomeLabel: string;
+  probabilityPercent: number;
+  teaser: string;
+}
+
+export interface MultigolOpportunitiesResponse {
+  from: string;
+  to: string;
+  leagues: string[];
+  items: MultigolOpportunity[];
+}
+
+export interface MultigolStandingSnapshot {
+  position: number | null;
+  points: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  playedGames: number;
+}
+
+export interface MultigolVenueStatSlice {
+  standingDetail: MultigolStandingSnapshot | null;
+  lambda: number;
+  pMultigol1to6: number;
+  bandRate: number | null;
+  bandHits?: number;
+  bandMatches?: number;
+}
+
+export interface MultigolTeamVenueStats {
+  all: MultigolVenueStatSlice;
+  home: MultigolVenueStatSlice;
+  away: MultigolVenueStatSlice;
+}
+
+export interface MultigolH2hMatchEntry {
+  matchId: number;
+  utcDate: string;
+  homeTeamName: string;
+  homeTeamCrest: string;
+  awayTeamName: string;
+  awayTeamCrest: string;
+  scoreHome: number;
+  scoreAway: number;
+  fixtureHomeAtHome: boolean;
+}
+
+export interface MultigolFormGoalEntry {
+  matchId: number;
+  opponentId?: number;
+  opponentName: string;
+  opponentCrest?: string | null;
+  goalsScored: number;
+  goalsConceded: number;
+  venue: 'home' | 'away';
+  utcDate: string;
+}
+
+export interface MultigolAnalysis {
+  matchId: number;
+  leagueCode: string;
+  leagueName: string;
+  areaName: string | null;
+  areaCode: string | null;
+  utcDate: string;
+  eventName: string;
+  homeTeam: { id: number; name: string; crest: string | null };
+  awayTeam: { id: number; name: string; crest: string | null };
+  pick: {
+    outcomeLabel: string;
+    probability: number;
+    lambdaSide: number;
+  } | null;
+  pHome1to6: number;
+  pAway1to6: number;
+  lambdaHome: number;
+  lambdaAway: number;
+  stats: {
+    homeStanding: string;
+    awayStanding: string;
+    homeStandingDetail: MultigolStandingSnapshot | null;
+    awayStandingDetail: MultigolStandingSnapshot | null;
+    homeFormGoals: string;
+    awayFormGoals: string;
+    homeFormGoalsDetail?: MultigolFormGoalEntry[];
+    awayFormGoalsDetail?: MultigolFormGoalEntry[];
+    h2hSummary: string;
+    h2hMatchesDetail?: MultigolH2hMatchEntry[];
+    h2hMultigolHomePct?: number | null;
+    h2hMultigolAwayPct?: number | null;
+    homeBandRate: number | null;
+    awayBandRate: number | null;
+    homeVenueStats?: MultigolTeamVenueStats;
+    awayVenueStats?: MultigolTeamVenueStats;
+  };
+  analysis: string;
+  explanation: string;
+  aiExplanation: string | null;
+  aiEnabled: boolean;
+}

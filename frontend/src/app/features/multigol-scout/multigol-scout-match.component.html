@@ -1,0 +1,546 @@
+<div class="vs-page multigol-detail">
+  <a routerLink="/multigol-scout" class="multigol-back">
+    <mat-icon>arrow_back</mat-icon>
+    Torna allo scout
+  </a>
+
+  @if (loading) {
+    <p class="vs-text-muted">Analisi in corso…</p>
+  } @else if (error) {
+    <div class="vs-card multigol-error-box">
+      <p>{{ error }}</p>
+      <p class="vs-text-muted">
+        Suggerimento: apri prima l’elenco Scout, attendi che finisca il caricamento, poi entra nel
+        dettaglio. Se hai appena caricato molte partite, aspetta ~1 minuto.
+      </p>
+      <button type="button" class="vs-btn-secondary" (click)="retry()">Riprova</button>
+    </div>
+  } @else if (data) {
+    <div class="vs-card multigol-card multigol-card--detail">
+      <div class="multigol-card__body">
+        <div class="multigol-detail-hero__head">
+          <span class="multigol-card__meta" [attr.title]="data.leagueName">
+            @if (nationFlag(data.areaCode, data.areaName ?? ''); as flag) {
+              @if (flag.kind === 'emoji') {
+                <span
+                  class="multigol-card__meta-flag multigol-card__meta-flag--emoji"
+                  aria-hidden="true"
+                >{{ flag.value }}</span>
+              } @else {
+                <img
+                  class="multigol-card__meta-flag"
+                  [src]="flag.value"
+                  alt=""
+                  width="20"
+                  height="15"
+                  loading="lazy"
+                />
+              }
+              <span class="multigol-card__meta-sep" aria-hidden="true">–</span>
+            }
+            <span class="multigol-card__when">{{ formatKickoff(data.utcDate) }}</span>
+          </span>
+          <span class="multigol-detail-hero__league vs-text-muted">{{ data.leagueName }}</span>
+        </div>
+
+        <div class="multigol-detail-hero__main">
+          <div class="multigol-detail-hero__club multigol-detail-hero__club--home">
+            @if (data.homeTeam.crest) {
+              <img
+                class="multigol-detail-hero__crest"
+                [src]="data.homeTeam.crest"
+                alt=""
+                loading="lazy"
+                (error)="onCrestError($event)"
+              />
+            } @else {
+              <span class="multigol-detail-hero__crest multigol-detail-hero__crest--ph" aria-hidden="true"></span>
+            }
+            <span class="multigol-detail-hero__name" [attr.title]="data.homeTeam.name">{{
+              data.homeTeam.name
+            }}</span>
+          </div>
+
+          <span class="multigol-detail-hero__vs" aria-hidden="true">VS</span>
+
+          @if (data.pick) {
+            <div class="multigol-detail-hero__pick">
+              <div class="multigol-card__prob-block">
+                <span class="multigol-card__prob-value">{{ pickProbabilityPercent(data) }}%</span>
+              </div>
+              <span class="multigol-card__pick-label">{{ data.pick.outcomeLabel }}</span>
+            </div>
+          }
+
+          <div class="multigol-detail-hero__club multigol-detail-hero__club--away">
+            @if (data.awayTeam.crest) {
+              <img
+                class="multigol-detail-hero__crest"
+                [src]="data.awayTeam.crest"
+                alt=""
+                loading="lazy"
+                (error)="onCrestError($event)"
+              />
+            } @else {
+              <span class="multigol-detail-hero__crest multigol-detail-hero__crest--ph" aria-hidden="true"></span>
+            }
+            <span class="multigol-detail-hero__name" [attr.title]="data.awayTeam.name">{{
+              data.awayTeam.name
+            }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="multigol-detail__stats">
+
+      <div class="multigol-compare">
+        <article class="vs-card multigol-compare-card">
+          <header class="multigol-compare-card__head">
+            <p class="multigol-compare-card__head-title">Casa</p>
+            <div class="multigol-compare-card__head-main">
+              @if (data.homeTeam.crest) {
+                <img
+                  class="multigol-compare-card__crest"
+                  [src]="data.homeTeam.crest"
+                  alt=""
+                  loading="lazy"
+                  (error)="onCrestError($event)"
+                />
+              } @else {
+                <span
+                  class="multigol-compare-card__crest multigol-compare-card__crest--ph"
+                  aria-hidden="true"
+                ></span>
+              }
+              <h3 class="multigol-compare-card__name">{{ data.homeTeam.name }}</h3>
+            </div>
+          </header>
+          <dl class="multigol-compare-card__stats">
+            @if (venueStatSlice(data, true); as slice) {
+              <div class="multigol-compare-card__filter">
+                <ng-container
+                  *ngTemplateOutlet="
+                    compareVenueToggle;
+                    context: { teamId: data.homeTeam.id, teamName: data.homeTeam.name }
+                  "
+                ></ng-container>
+              </div>
+            @if (data.pick) {
+              <div class="multigol-compare-card__row-pair">
+                <div class="multigol-compare-card__row">
+                  <dt>Gol attesi{{ compareVenueScopeSuffix(data.homeTeam.id) }}</dt>
+                  <dd>{{ slice.lambda | number: '1.2-2' }}</dd>
+                </div>
+                <div class="multigol-compare-card__row multigol-compare-card__row--highlight">
+                  <dt>Prob. multigol 1–6</dt>
+                  <dd>{{ (slice.pMultigol1to6 * 100) | number: '1.1-1' }}%</dd>
+                </div>
+              </div>
+            }
+            <div class="multigol-compare-card__row multigol-compare-card__row--standing">
+              <dt>Classifica{{ compareVenueScopeSuffix(data.homeTeam.id) }}</dt>
+              <dd>
+                @if (slice.standingDetail; as st) {
+                  <div class="multigol-standing-metrics">
+                    @if (st.position != null) {
+                      <div class="multigol-standing-metrics__cell multigol-standing-metrics__cell--position">
+                        <span class="multigol-standing-metrics__label">Posto</span>
+                        <span class="multigol-standing-metrics__value">{{ st.position }}°</span>
+                      </div>
+                    }
+                    <div class="multigol-standing-metrics__cell">
+                      <span class="multigol-standing-metrics__label">Punti</span>
+                      <span class="multigol-standing-metrics__value">{{ st.points }}</span>
+                    </div>
+                    <div class="multigol-standing-metrics__cell">
+                      <span class="multigol-standing-metrics__label">Gare</span>
+                      <span class="multigol-standing-metrics__value">{{ st.playedGames }}</span>
+                    </div>
+                    <div class="multigol-standing-metrics__cell">
+                      <span class="multigol-standing-metrics__label">Gol fatti</span>
+                      <span class="multigol-standing-metrics__value">{{ st.goalsFor }}</span>
+                    </div>
+                    <div class="multigol-standing-metrics__cell">
+                      <span class="multigol-standing-metrics__label">Gol subiti</span>
+                      <span class="multigol-standing-metrics__value">{{ st.goalsAgainst }}</span>
+                    </div>
+                    <div class="multigol-standing-metrics__cell">
+                      <span class="multigol-standing-metrics__label">Diff. reti</span>
+                      <span class="multigol-standing-metrics__value">{{
+                        standingGoalDiff(st)
+                      }}</span>
+                    </div>
+                  </div>
+                } @else {
+                  <p class="multigol-standing-metrics__fallback">
+                    @if (formVenueFilter(data.homeTeam.id) === 'all') {
+                      {{ statLineBody(data.stats.homeStanding, data.homeTeam.name) }}
+                    } @else {
+                      Nessun dato
+                      {{ formVenueFilterEmptyLabel(data.homeTeam.id) }} nelle ultime gare in API.
+                    }
+                  </p>
+                }
+              </dd>
+            </div>
+            <div class="multigol-compare-card__row multigol-compare-card__row--form">
+              <dt>Forma gol</dt>
+              <dd>
+                <ng-container
+                  *ngTemplateOutlet="
+                    multigolFormGoals;
+                    context: {
+                      team: data.homeTeam,
+                      detail: data.stats.homeFormGoalsDetail,
+                      line: data.stats.homeFormGoals,
+                    }
+                  "
+                ></ng-container>
+              </dd>
+            </div>
+            @if (showBandEmpirica(slice)) {
+              <div class="multigol-compare-card__row">
+                <dt>Freq. empirica 1–6{{ compareVenueScopeSuffix(data.homeTeam.id) }}</dt>
+                <dd>{{ bandEmpiricaDisplay(slice) }}</dd>
+              </div>
+            }
+            }
+          </dl>
+        </article>
+
+        <article class="vs-card multigol-compare-card">
+          <header class="multigol-compare-card__head">
+            <p class="multigol-compare-card__head-title">Fuori casa</p>
+            <div class="multigol-compare-card__head-main">
+              @if (data.awayTeam.crest) {
+                <img
+                  class="multigol-compare-card__crest"
+                  [src]="data.awayTeam.crest"
+                  alt=""
+                  loading="lazy"
+                  (error)="onCrestError($event)"
+                />
+              } @else {
+                <span
+                  class="multigol-compare-card__crest multigol-compare-card__crest--ph"
+                  aria-hidden="true"
+                ></span>
+              }
+              <h3 class="multigol-compare-card__name">{{ data.awayTeam.name }}</h3>
+            </div>
+          </header>
+          <dl class="multigol-compare-card__stats">
+            @if (venueStatSlice(data, false); as slice) {
+              <div class="multigol-compare-card__filter">
+                <ng-container
+                  *ngTemplateOutlet="
+                    compareVenueToggle;
+                    context: { teamId: data.awayTeam.id, teamName: data.awayTeam.name }
+                  "
+                ></ng-container>
+              </div>
+            @if (data.pick) {
+              <div class="multigol-compare-card__row-pair">
+                <div class="multigol-compare-card__row">
+                  <dt>Gol attesi{{ compareVenueScopeSuffix(data.awayTeam.id) }}</dt>
+                  <dd>{{ slice.lambda | number: '1.2-2' }}</dd>
+                </div>
+                <div class="multigol-compare-card__row multigol-compare-card__row--highlight">
+                  <dt>Prob. multigol 1–6</dt>
+                  <dd>{{ (slice.pMultigol1to6 * 100) | number: '1.1-1' }}%</dd>
+                </div>
+              </div>
+            }
+            <div class="multigol-compare-card__row multigol-compare-card__row--standing">
+              <dt>Classifica{{ compareVenueScopeSuffix(data.awayTeam.id) }}</dt>
+              <dd>
+                @if (slice.standingDetail; as st) {
+                  <div class="multigol-standing-metrics">
+                    @if (st.position != null) {
+                      <div class="multigol-standing-metrics__cell multigol-standing-metrics__cell--position">
+                        <span class="multigol-standing-metrics__label">Posto</span>
+                        <span class="multigol-standing-metrics__value">{{ st.position }}°</span>
+                      </div>
+                    }
+                    <div class="multigol-standing-metrics__cell">
+                      <span class="multigol-standing-metrics__label">Punti</span>
+                      <span class="multigol-standing-metrics__value">{{ st.points }}</span>
+                    </div>
+                    <div class="multigol-standing-metrics__cell">
+                      <span class="multigol-standing-metrics__label">Gare</span>
+                      <span class="multigol-standing-metrics__value">{{ st.playedGames }}</span>
+                    </div>
+                    <div class="multigol-standing-metrics__cell">
+                      <span class="multigol-standing-metrics__label">Gol fatti</span>
+                      <span class="multigol-standing-metrics__value">{{ st.goalsFor }}</span>
+                    </div>
+                    <div class="multigol-standing-metrics__cell">
+                      <span class="multigol-standing-metrics__label">Gol subiti</span>
+                      <span class="multigol-standing-metrics__value">{{ st.goalsAgainst }}</span>
+                    </div>
+                    <div class="multigol-standing-metrics__cell">
+                      <span class="multigol-standing-metrics__label">Diff. reti</span>
+                      <span class="multigol-standing-metrics__value">{{
+                        standingGoalDiff(st)
+                      }}</span>
+                    </div>
+                  </div>
+                } @else {
+                  <p class="multigol-standing-metrics__fallback">
+                    @if (formVenueFilter(data.awayTeam.id) === 'all') {
+                      {{ statLineBody(data.stats.awayStanding, data.awayTeam.name) }}
+                    } @else {
+                      Nessun dato
+                      {{ formVenueFilterEmptyLabel(data.awayTeam.id) }} nelle ultime gare in API.
+                    }
+                  </p>
+                }
+              </dd>
+            </div>
+            <div class="multigol-compare-card__row multigol-compare-card__row--form">
+              <dt>Forma gol</dt>
+              <dd>
+                <ng-container
+                  *ngTemplateOutlet="
+                    multigolFormGoals;
+                    context: {
+                      team: data.awayTeam,
+                      detail: data.stats.awayFormGoalsDetail,
+                      line: data.stats.awayFormGoals,
+                    }
+                  "
+                ></ng-container>
+              </dd>
+            </div>
+            @if (showBandEmpirica(slice)) {
+              <div class="multigol-compare-card__row">
+                <dt>Freq. empirica 1–6{{ compareVenueScopeSuffix(data.awayTeam.id) }}</dt>
+                <dd>{{ bandEmpiricaDisplay(slice) }}</dd>
+              </div>
+            }
+            }
+          </dl>
+        </article>
+      </div>
+
+      <section class="multigol-stats-h2h">
+        <div class="vs-card--flush multigol-stats-h2h__panel">
+          <div class="table-header">
+            <h2 class="vs-heading-section">Testa a testa</h2>
+          </div>
+          <div class="dashboard-card-body multigol-stats-h2h__body">
+        @if (h2hEntries(data.stats.h2hMatchesDetail)) {
+          <div
+            class="multigol-form-goals__venue-toggle"
+            role="group"
+            aria-label="Filtra incontri testa a testa"
+          >
+            <button
+              type="button"
+              class="multigol-form-goals__venue-btn"
+              [class.multigol-form-goals__venue-btn--active]="h2hVenueFilter === 'all'"
+              (click)="setH2hVenueFilter('all')"
+            >
+              Completo
+            </button>
+            <button
+              type="button"
+              class="multigol-form-goals__venue-btn"
+              [class.multigol-form-goals__venue-btn--active]="h2hVenueFilter === 'home'"
+              (click)="setH2hVenueFilter('home')"
+            >
+              Casa
+            </button>
+            <button
+              type="button"
+              class="multigol-form-goals__venue-btn"
+              [class.multigol-form-goals__venue-btn--active]="h2hVenueFilter === 'away'"
+              (click)="setH2hVenueFilter('away')"
+            >
+              Trasferta
+            </button>
+          </div>
+        }
+        @if (filteredH2hEntries(data.stats.h2hMatchesDetail); as h2hList) {
+          @if (h2hList.length) {
+            <ul class="multigol-form-goals multigol-stats-h2h__list">
+              @for (m of h2hList; track m.matchId; let last = $last) {
+                <li class="multigol-form-goals__item">
+                  <div class="multigol-form-goals__meta">
+                    <span class="multigol-form-goals__date">{{ formatFormDate(m.utcDate) }}</span>
+                    <span class="multigol-form-goals__venue">{{ h2hFixtureVenueLabel(m) }}</span>
+                  </div>
+                  <div class="multigol-form-goals__matchup">
+                    <div class="multigol-form-goals__side multigol-form-goals__side--home">
+                      <span class="multigol-form-goals__team-name" [attr.title]="m.homeTeamName">{{
+                        m.homeTeamName
+                      }}</span>
+                      <img
+                        class="multigol-form-goals__crest"
+                        [src]="m.homeTeamCrest"
+                        alt=""
+                        width="28"
+                        height="28"
+                        loading="lazy"
+                        (error)="onCrestError($event)"
+                      />
+                    </div>
+                    <span class="multigol-form-goals__score" aria-label="Risultato">
+                      <span>{{ m.scoreHome }}</span>
+                      <span class="multigol-form-goals__sep">-</span>
+                      <span>{{ m.scoreAway }}</span>
+                    </span>
+                    <div class="multigol-form-goals__side multigol-form-goals__side--away">
+                      <img
+                        class="multigol-form-goals__crest"
+                        [src]="m.awayTeamCrest"
+                        alt=""
+                        width="28"
+                        height="28"
+                        loading="lazy"
+                        (error)="onCrestError($event)"
+                      />
+                      <span class="multigol-form-goals__team-name" [attr.title]="m.awayTeamName">{{
+                        m.awayTeamName
+                      }}</span>
+                    </div>
+                  </div>
+                </li>
+                @if (!last) {
+                  <li class="multigol-form-goals__divider" aria-hidden="true"></li>
+                }
+              }
+            </ul>
+            @if (
+              data.stats.h2hMultigolHomePct != null && data.stats.h2hMultigolAwayPct != null
+            ) {
+              <p class="multigol-stats-h2h__rates">
+                Multigol 1–6 negli scontri diretti: gol squadra in casa del match
+                {{ data.stats.h2hMultigolHomePct }}%, gol squadra ospite
+                {{ data.stats.h2hMultigolAwayPct }}%.
+              </p>
+            }
+          } @else {
+            <p class="multigol-form-goals__empty">
+              Nessun incontro {{ h2hVenueFilterEmptyLabel() }} negli scontri diretti recenti.
+            </p>
+          }
+        } @else {
+          <p class="multigol-stats-h2h__text">{{ data.stats.h2hSummary }}</p>
+        }
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <ng-template #compareVenueToggle let-teamId="teamId" let-teamName="teamName">
+      <div
+        class="multigol-form-goals__venue-toggle"
+        role="group"
+        [attr.aria-label]="'Filtro statistiche ' + teamName"
+      >
+        <button
+          type="button"
+          class="multigol-form-goals__venue-btn"
+          [class.multigol-form-goals__venue-btn--active]="formVenueFilter(teamId) === 'all'"
+          (click)="setFormVenueFilter(teamId, 'all')"
+        >
+          Completo
+        </button>
+        <button
+          type="button"
+          class="multigol-form-goals__venue-btn"
+          [class.multigol-form-goals__venue-btn--active]="formVenueFilter(teamId) === 'home'"
+          (click)="setFormVenueFilter(teamId, 'home')"
+        >
+          Casa
+        </button>
+        <button
+          type="button"
+          class="multigol-form-goals__venue-btn"
+          [class.multigol-form-goals__venue-btn--active]="formVenueFilter(teamId) === 'away'"
+          (click)="setFormVenueFilter(teamId, 'away')"
+        >
+          Trasferta
+        </button>
+      </div>
+    </ng-template>
+
+    <ng-template
+      #multigolFormGoals
+      let-team="team"
+      let-detail="detail"
+      let-line="line"
+    >
+      @if (filteredFormGoalsEntries(detail, team.id); as entries) {
+        @if (entries.length) {
+        <ul class="multigol-form-goals">
+          @for (g of entries; track g.matchId; let last = $last) {
+            <li class="multigol-form-goals__item">
+              <div class="multigol-form-goals__meta">
+                <span class="multigol-form-goals__date">{{ formatFormDate(g.utcDate) }}</span>
+                <span class="multigol-form-goals__venue">{{ formVenueLabel(g.venue) }}</span>
+              </div>
+              @if (formMatchRow(team, g); as row) {
+                <div class="multigol-form-goals__matchup">
+                  <div class="multigol-form-goals__side multigol-form-goals__side--home">
+                    <span class="multigol-form-goals__team-name" [attr.title]="row.home.name">{{
+                      row.home.name
+                    }}</span>
+                    @if (row.home.crestUrl) {
+                      <img
+                        class="multigol-form-goals__crest"
+                        [src]="row.home.crestUrl"
+                        alt=""
+                        width="28"
+                        height="28"
+                        loading="lazy"
+                        (error)="onCrestError($event)"
+                      />
+                    }
+                  </div>
+                  <span class="multigol-form-goals__score" aria-label="Risultato">
+                    <span [class.multigol-form-goals__gf]="row.home.isSubject">{{
+                      row.scoreHome
+                    }}</span>
+                    <span class="multigol-form-goals__sep">-</span>
+                    <span [class.multigol-form-goals__gf]="row.away.isSubject">{{
+                      row.scoreAway
+                    }}</span>
+                  </span>
+                  <div class="multigol-form-goals__side multigol-form-goals__side--away">
+                    @if (row.away.crestUrl) {
+                      <img
+                        class="multigol-form-goals__crest"
+                        [src]="row.away.crestUrl"
+                        alt=""
+                        width="28"
+                        height="28"
+                        loading="lazy"
+                        (error)="onCrestError($event)"
+                      />
+                    }
+                    <span class="multigol-form-goals__team-name" [attr.title]="row.away.name">{{
+                      row.away.name
+                    }}</span>
+                  </div>
+                </div>
+              }
+            </li>
+            @if (!last) {
+              <li class="multigol-form-goals__divider" aria-hidden="true"></li>
+            }
+          }
+        </ul>
+        } @else {
+          <p class="multigol-form-goals__empty">
+            Nessun incontro {{ formVenueFilterEmptyLabel(team.id) }} tra le ultime uscite.
+          </p>
+        }
+      } @else {
+        <p class="multigol-form-goals__fallback">{{ statLineBody(line, team.name) }}</p>
+      }
+    </ng-template>
+  }
+</div>

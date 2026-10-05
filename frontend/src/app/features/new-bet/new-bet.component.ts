@@ -15,7 +15,7 @@ import {
   takeUntil,
 } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/services/api.service';
@@ -36,6 +36,7 @@ import {
 } from '../../core/utils/event-form.helpers';
 import { isScorerOutcomeLabel } from '../../core/utils/outcome-option.util';
 import { MatchTeamsFieldComponent } from '../../shared/match-teams-field/match-teams-field.component';
+import { NewBetDialogPrefill } from './new-bet-dialog.service';
 import { OutcomeFieldComponent } from '../../shared/outcome-field/outcome-field.component';
 
 function roundMoney(value: number): number {
@@ -65,6 +66,9 @@ export class NewBetComponent implements OnInit, OnDestroy {
   private readonly dialogRef = inject(MatDialogRef<NewBetComponent>);
   private readonly snackBar = inject(MatSnackBar);
   private readonly betChange = inject(BetChangeService);
+  private readonly prefill = inject<NewBetDialogPrefill | null>(MAT_DIALOG_DATA, {
+    optional: true,
+  });
   private readonly destroy$ = new Subject<void>();
   private stakeSyncLock = false;
 
@@ -97,6 +101,7 @@ export class NewBetComponent implements OnInit, OnDestroy {
     this.outcomeOptionsService.load().subscribe((options) => {
       this.outcomeOptions = options;
       syncEventGroupsScorerValidators(this.events, this.outcomeOptions);
+      this.applyPrefill();
     });
 
     this.events.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
@@ -106,6 +111,18 @@ export class NewBetComponent implements OnInit, OnDestroy {
 
   get events(): FormArray {
     return this.form.controls.events;
+  }
+
+  private applyPrefill(): void {
+    if (!this.prefill?.eventName) {
+      return;
+    }
+    this.events.at(0).patchValue({ eventName: this.prefill.eventName });
+    if (this.prefill.outcomeLabel) {
+      (this.events.at(0).get('picks') as FormArray)
+        .at(0)
+        ?.patchValue({ outcome: this.prefill.outcomeLabel });
+    }
   }
 
   get flattenedPickCount(): number {

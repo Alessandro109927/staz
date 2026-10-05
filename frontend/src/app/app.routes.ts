@@ -68,6 +68,20 @@ export const routes: Routes = [
           import('./features/scalata/scalata.component').then((m) => m.ScalataComponent),
       },
       {
+        path: 'multigol-scout/:id',
+        loadComponent: () =>
+          import('./features/multigol-scout/multigol-scout-match.component').then(
+            (m) => m.MultigolScoutMatchComponent,
+          ),
+      },
+      {
+        path: 'multigol-scout',
+        loadComponent: () =>
+          import('./features/multigol-scout/multigol-scout.component').then(
+            (m) => m.MultigolScoutComponent,
+          ),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings.component').then((m) => m.SettingsComponent),

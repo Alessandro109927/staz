@@ -21,15 +21,11 @@
 }
 
 .vs-grid-kpi {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: $space-4;
   margin-bottom: $space-6;
   align-items: stretch;
-
-  @include down($bp-lg) {
-    grid-template-columns: 1fr;
-  }
 }
 
 .vs-grid-2 {

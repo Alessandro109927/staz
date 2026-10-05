@@ -9,6 +9,7 @@ import { ScalataModule } from './scalata/scalata.module';
 import { StakingRulesModule } from './staking-rules/staking-rules.module';
 import { TeamsModule } from './teams/teams.module';
 import { OutcomeOptionsModule } from './outcome-options/outcome-options.module';
+import { MultigolScoutModule } from './multigol-scout/multigol-scout.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { OutcomeOptionsModule } from './outcome-options/outcome-options.module';
     ScalataModule,
     TeamsModule,
     OutcomeOptionsModule,
+    MultigolScoutModule,
     DatabaseModule,
   ],
 })
