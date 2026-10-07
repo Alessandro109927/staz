@@ -10,12 +10,19 @@ export type FdMatch = {
   utcDate: string;
   status: string;
   matchday: number | null;
+  /** Testo round API-Football (es. "Regular Season - 7") se utile in UI */
+  roundLabel?: string | null;
   homeTeam: FdTeamRef;
   awayTeam: FdTeamRef;
   score: {
     fullTime: { home: number | null; away: number | null };
   };
-  competition?: { id?: number; code?: string; name: string };
+  competition?: {
+    id?: number;
+    code?: string;
+    name: string;
+    season?: number;
+  };
 };
 
 export type FdMatchesResponse = { matches: FdMatch[] };

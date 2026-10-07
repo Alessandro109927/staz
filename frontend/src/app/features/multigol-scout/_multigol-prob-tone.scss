@@ -1,0 +1,30 @@
+@use "../../../styles/variables" as *;
+
+@each $name, $fg, $bg in
+  (strong, $color-success, $color-success-light),
+  (good, #0d9488, #ccfbf1),
+  (mid, $color-tertiary, $color-tertiary-light),
+  (low, #ea580c, #ffedd5),
+  (weak, $color-danger, $color-danger-light)
+{
+  .multigol-prob-tone--#{$name} {
+    color: $fg;
+  }
+
+  .multigol-prob-block-tone--#{$name} {
+    background: $bg;
+  }
+
+  .multigol-compare-card__row.multigol-prob-block-tone--#{$name} {
+    background: $bg;
+
+    dt,
+    dd {
+      color: $fg;
+    }
+
+    dt {
+      border-bottom-color: color-mix(in srgb, $fg 18%, $color-neutral-200);
+    }
+  }
+}

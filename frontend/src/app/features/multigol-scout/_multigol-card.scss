@@ -1,9 +1,40 @@
+@use '../../../styles/colors' as c;
 @use '../../../styles/variables' as *;
+@use './multigol-prob-tone';
 
 .multigol-card {
+  display: flex;
+  flex-direction: column;
   padding: 0;
   overflow: hidden;
   min-height: 100%;
+  transition: background 0.15s ease;
+
+  &--won {
+    background: color-mix(in srgb, c.$vs-profit 20%, $color-neutral-50);
+
+    .multigol-card__link:hover {
+      background: color-mix(in srgb, c.$vs-profit 16%, #fff);
+    }
+
+    .multigol-card__result {
+      background: color-mix(in srgb, c.$vs-profit 14%, #fff);
+      border-top-color: rgba(c.$vs-profit, 0.16);
+    }
+  }
+
+  &--lost {
+    background: color-mix(in srgb, c.$vs-loss 20%, $color-neutral-50);
+
+    .multigol-card__link:hover {
+      background: color-mix(in srgb, c.$vs-loss 16%, #fff);
+    }
+
+    .multigol-card__result {
+      background: color-mix(in srgb, c.$vs-loss 14%, #fff);
+      border-top-color: rgba(c.$vs-loss, 0.16);
+    }
+  }
 
   &__link,
   &__body {
@@ -17,6 +48,9 @@
   }
 
   &__link {
+    flex: 1 1 auto;
+    min-height: 0;
+
     &:hover {
       background: $color-neutral-100;
 
@@ -26,13 +60,44 @@
     }
   }
 
+  &__result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    padding: $space-3 $space-4;
+    border-top: 1px solid $color-neutral-200;
+    background: $color-neutral-50;
+    text-align: center;
+  }
+
+  &__result-label {
+    display: block;
+    width: 100%;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    text-align: center;
+  }
+
   &__meta {
     display: flex;
     align-items: center;
     gap: $space-2;
-    font-size: $font-size-xs;
-    color: $color-neutral-600;
+    font-size: $font-size-sm;
     line-height: 1.35;
+  }
+
+  &__round {
+    display: block;
+    margin-top: $space-2;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-600;
+    line-height: 1.3;
   }
 
   &__meta-flag {
@@ -114,12 +179,35 @@
 
   &__prob-block {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: $space-2;
     margin-top: $space-4;
     padding: $space-3 $space-4;
     border-radius: $radius-md;
-    background: $color-success-light;
+    background: $color-neutral-100;
+    transition: background 0.2s ease;
+  }
+
+  &__prob-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: $space-3;
+
+    &--empirical,
+    &--detail {
+      padding-top: $space-2;
+      border-top: 1px solid rgb(255 255 255 / 55%);
+    }
+  }
+
+  &__prob-kind {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-neutral-600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   &__prob-value {
@@ -127,13 +215,26 @@
     font-weight: $font-weight-bold;
     line-height: 1;
     letter-spacing: -0.02em;
-    color: $color-success;
     font-variant-numeric: tabular-nums;
+
+    &--secondary {
+      font-size: 1.35rem;
+    }
+
+    &--synthesis {
+      font-size: 2rem;
+    }
+
+    &--muted {
+      font-size: 1.35rem;
+      color: $color-neutral-400;
+    }
   }
 
   &__pick-label {
     display: block;
     margin-top: $space-2;
+    margin-bottom: $space-1;
     text-align: center;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
@@ -168,6 +269,15 @@
       gap: $space-5;
     }
 
+    .multigol-card__league {
+      display: block;
+      margin-bottom: $space-1;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-semibold;
+      color: $color-neutral-600;
+      line-height: 1.3;
+    }
+
     .multigol-card__meta {
       font-size: $font-size-sm;
     }
@@ -178,12 +288,16 @@
 
     .multigol-card__prob-block {
       margin-top: 0;
-      min-width: 8.5rem;
+      min-width: 10rem;
       padding: $space-4 $space-5;
     }
 
     .multigol-card__prob-value {
       font-size: 2.5rem;
+
+      &--secondary {
+        font-size: 1.75rem;
+      }
     }
 
     .multigol-card__pick-label {

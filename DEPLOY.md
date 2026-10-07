@@ -66,9 +66,8 @@ Imposta almeno:
 | `DB_PASSWORD` | Password forte per PostgreSQL |
 | `JWT_SECRET` | Stringa casuale lunga (es. `openssl rand -hex 32`) |
 | `LEGACY_OWNER_PASSWORD` | Solo al **primo** deploy se devi migrare dati esistenti |
-| `FOOTBALL_DATA_ORG_KEY` | Token API [football-data.org](https://www.football-data.org/client/register) — **richiesto** per Scout Multigol |
-| `BZZOIRO_SPORTS_API_KEY` | Opzionale, ricerca squadre |
-| `OPENAI_API_KEY` | Opzionale, spiegazioni AI nel dettaglio scout |
+| `API_FOOTBALL_KEY` | Chiave [API-Football / API-Sports](https://dashboard.api-football.com/) — **richiesto** per Scout Multigol |
+| `BZZOIRO_SPORTS_API_KEY` | Loghi e ricerca squadre in Nuova Scommessa |
 
 Dopo il primo avvio con dati migrati, svuota `LEGACY_OWNER_PASSWORD` nel file.
 

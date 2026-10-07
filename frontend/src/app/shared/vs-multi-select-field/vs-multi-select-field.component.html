@@ -1,0 +1,55 @@
+<label class="vs-field vs-select-field">
+  @if (label) {
+    <span class="vs-field__label">{{ label }}</span>
+  }
+
+  <div class="vs-select" #anchor>
+    <button
+      type="button"
+      class="vs-select__trigger"
+      [attr.aria-expanded]="panelOpen"
+      aria-haspopup="listbox"
+      (click)="togglePanel($event)"
+    >
+      {{ displayLabel }}
+    </button>
+    <span class="vs-select__chevron" aria-hidden="true">
+      <mat-icon>{{ panelOpen ? 'expand_less' : 'expand_more' }}</mat-icon>
+    </span>
+  </div>
+
+  @if (panelOpen) {
+    <ul class="vs-dropdown-panel vs-dropdown-panel--fixed vs-multi-select-panel" role="listbox" [ngStyle]="panelStyle">
+      @if (control.value.length > 0) {
+        <li class="vs-multi-select-panel__action">
+          <button type="button" class="vs-multi-select-panel__clear" (mousedown)="$event.preventDefault()" (click)="clearSelection($event)">
+            Azzera selezione
+          </button>
+        </li>
+      }
+      @for (option of options; track option.value) {
+        <li>
+          <button
+            type="button"
+            class="vs-dropdown-option vs-dropdown-option--multi"
+            role="option"
+            [class.vs-dropdown-option--selected]="isSelected(option.value)"
+            [attr.aria-selected]="isSelected(option.value)"
+            (mousedown)="$event.preventDefault()"
+            (click)="toggleOption(option, $event)"
+          >
+            <mat-icon class="vs-multi-select-option__check" aria-hidden="true">{{
+              isSelected(option.value) ? 'check_box' : 'check_box_outline_blank'
+            }}</mat-icon>
+            <span class="vs-multi-select-option__text">
+              <span class="vs-dropdown-option__label">{{ option.label }}</span>
+              @if (option.description) {
+                <span class="vs-dropdown-option__desc">{{ option.description }}</span>
+              }
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</label>

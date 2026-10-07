@@ -8,9 +8,19 @@
     ></button>
   }
 
-  <aside class="shell-sidenav" [class.shell-sidenav--open]="navOpen">
+  <div
+    class="shell-sidebar-rail"
+    [class.shell-sidebar-rail--collapsed]="sidebarCollapsed"
+  >
+    <aside
+      class="shell-sidenav"
+      [class.shell-sidenav--open]="navOpen"
+      [class.shell-sidenav--collapsed]="sidebarCollapsed"
+    >
     <div class="brand">
-      <span class="brand__name">STAZ</span>
+      <div class="brand__title">
+        <span class="brand__name">STAZ</span>
+      </div>
       <button
         type="button"
         class="shell-sidenav__close"
@@ -22,46 +32,96 @@
     </div>
 
     <nav class="nav-list">
-      <a routerLink="/dashboard" routerLinkActive="active" (click)="closeNav()">
+      <a
+        routerLink="/dashboard"
+        routerLinkActive="active"
+        (click)="closeNav()"
+        matTooltip="Dashboard"
+        [matTooltipDisabled]="!sidebarCollapsed"
+        matTooltipPosition="right"
+      >
         <mat-icon>dashboard</mat-icon>
-        <span>Dashboard</span>
+        <span class="nav-label">Dashboard</span>
       </a>
-      <a routerLink="/history" routerLinkActive="active" (click)="closeNav()">
+      <a
+        routerLink="/history"
+        routerLinkActive="active"
+        (click)="closeNav()"
+        matTooltip="Storico Scommesse"
+        [matTooltipDisabled]="!sidebarCollapsed"
+        matTooltipPosition="right"
+      >
         <mat-icon>history</mat-icon>
-        <span>Storico Scommesse</span>
+        <span class="nav-label">Storico Scommesse</span>
       </a>
-      <a routerLink="/monthly-report" routerLinkActive="active" (click)="closeNav()">
+      <a
+        routerLink="/monthly-report"
+        routerLinkActive="active"
+        (click)="closeNav()"
+        matTooltip="Report mensile"
+        [matTooltipDisabled]="!sidebarCollapsed"
+        matTooltipPosition="right"
+      >
         <mat-icon>calendar_month</mat-icon>
-        <span>Report mensile</span>
+        <span class="nav-label">Report mensile</span>
       </a>
-      <a routerLink="/scalata" routerLinkActive="active" (click)="closeNav()">
+      <a
+        routerLink="/scalata"
+        routerLinkActive="active"
+        (click)="closeNav()"
+        matTooltip="Scalata"
+        [matTooltipDisabled]="!sidebarCollapsed"
+        matTooltipPosition="right"
+      >
         <mat-icon>tools_ladder</mat-icon>
-        <span>Scalata</span>
+        <span class="nav-label">Scalata</span>
       </a>
-      <a routerLink="/multigol-scout" routerLinkActive="active" (click)="closeNav()">
+      <a
+        routerLink="/multigol-scout"
+        routerLinkActive="active"
+        (click)="closeNav()"
+        matTooltip="Scout Multigol"
+        [matTooltipDisabled]="!sidebarCollapsed"
+        matTooltipPosition="right"
+      >
         <mat-icon>filter_center_focus</mat-icon>
-        <span>Scout Multigol</span>
+        <span class="nav-label">Scout Multigol</span>
       </a>
-      <a routerLink="/settings" routerLinkActive="active" (click)="closeNav()">
+      <a
+        routerLink="/settings"
+        routerLinkActive="active"
+        (click)="closeNav()"
+        matTooltip="Impostazioni"
+        [matTooltipDisabled]="!sidebarCollapsed"
+        matTooltipPosition="right"
+      >
         <mat-icon>settings</mat-icon>
-        <span>Impostazioni</span>
+        <span class="nav-label">Impostazioni</span>
       </a>
     </nav>
 
     <div class="sidebar-cta">
       <button
         type="button"
-        class="vs-btn-primary vs-btn-primary--block"
+        class="vs-btn-primary vs-btn-primary--block sidebar-cta__btn"
         (click)="openNewBet()"
+        matTooltip="Nuova Scommessa"
+        [matTooltipDisabled]="!sidebarCollapsed"
+        matTooltipPosition="right"
       >
         <mat-icon>add</mat-icon>
-        <span>Nuova Scommessa</span>
+        <span class="nav-label">Nuova Scommessa</span>
       </button>
     </div>
 
     <div class="sidebar-footer">
       @if (user) {
-        <div class="sidebar-user">
+        <div
+          class="sidebar-user"
+          [matTooltip]="user.email"
+          [matTooltipDisabled]="!sidebarCollapsed"
+          matTooltipPosition="right"
+        >
           <mat-icon>person</mat-icon>
           <div class="sidebar-user__info">
             <span class="sidebar-user__name">{{ user.firstName }} {{ user.lastName }}</span>
@@ -69,12 +129,29 @@
           </div>
         </div>
       }
-      <button type="button" class="sidebar-logout" (click)="logout()">
+      <button
+        type="button"
+        class="sidebar-logout"
+        (click)="logout()"
+        matTooltip="Esci"
+        [matTooltipDisabled]="!sidebarCollapsed"
+        matTooltipPosition="right"
+      >
         <mat-icon>logout</mat-icon>
-        <span>Esci</span>
+        <span class="nav-label">Esci</span>
       </button>
     </div>
-  </aside>
+    </aside>
+
+    <button
+      type="button"
+      class="shell-sidebar-rail__edge-toggle"
+      [attr.aria-label]="sidebarCollapsed ? 'Espandi menu' : 'Comprimi menu'"
+      (click)="toggleSidebarCollapse()"
+    >
+      <mat-icon>{{ sidebarCollapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+    </button>
+  </div>
 
   <div class="shell-main">
     <header class="shell-header">
@@ -86,6 +163,20 @@
       >
         <mat-icon>menu</mat-icon>
       </button>
+
+      @if (apiUsage(); as usage) {
+        @if (usage.configured) {
+          <div class="header-api-usage" [attr.title]="apiUsageTitle(usage)">
+            <span class="header-api-usage__label">API-Football</span>
+            <span class="header-api-usage__value">{{ usage.sessionCalls }} chiamate</span>
+            @if (usage.dailyCurrent != null && usage.dailyLimit != null) {
+              <span class="header-api-usage__quota">
+                {{ usage.dailyCurrent }}/{{ usage.dailyLimit }} oggi
+              </span>
+            }
+          </div>
+        }
+      }
 
       @if (capital) {
         <div class="header-balance">

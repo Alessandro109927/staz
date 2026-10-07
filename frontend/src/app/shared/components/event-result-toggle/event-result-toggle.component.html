@@ -1,0 +1,22 @@
+<div class="event-result-toggle" role="group" aria-label="Esito partita">
+  <button
+    type="button"
+    class="event-result-toggle__btn event-result-toggle__btn--won"
+    [class.is-active]="resultStatus === 'WON'"
+    [disabled]="disabled"
+    aria-label="Segna come vinta"
+    (click)="onToggle('WON', $event)"
+  >
+    <mat-icon>check</mat-icon>
+  </button>
+  <button
+    type="button"
+    class="event-result-toggle__btn event-result-toggle__btn--lost"
+    [class.is-active]="resultStatus === 'LOST'"
+    [disabled]="disabled"
+    aria-label="Segna come persa"
+    (click)="onToggle('LOST', $event)"
+  >
+    <mat-icon>close</mat-icon>
+  </button>
+</div>

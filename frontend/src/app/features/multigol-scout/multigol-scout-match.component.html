@@ -40,6 +40,9 @@
             }
             <span class="multigol-card__when">{{ formatKickoff(data.utcDate) }}</span>
           </span>
+          @if (formatMatchday(data); as giornata) {
+            <span class="multigol-detail-hero__round vs-text-muted">{{ giornata }}</span>
+          }
           <span class="multigol-detail-hero__league vs-text-muted">{{ data.leagueName }}</span>
         </div>
 
@@ -65,8 +68,45 @@
 
           @if (data.pick) {
             <div class="multigol-detail-hero__pick">
-              <div class="multigol-card__prob-block">
-                <span class="multigol-card__prob-value">{{ pickProbabilityPercent(data) }}%</span>
+              <div
+                class="multigol-card__prob-block"
+                [ngClass]="probBlockToneClass(pickSynthesisPercent(data))"
+                [attr.title]="pickSynthesisHint(data)"
+              >
+                <div class="multigol-card__prob-row multigol-card__prob-row--synthesis">
+                  <span class="multigol-card__prob-kind">Sintesi · esito</span>
+                  <span
+                    class="multigol-card__prob-value multigol-card__prob-value--synthesis"
+                    [ngClass]="probToneClass(pickSynthesisPercent(data))"
+                    >{{ pickSynthesisPercent(data) | number: '1.1-1' }}%</span
+                  >
+                </div>
+                <div class="multigol-card__prob-row multigol-card__prob-row--detail">
+                  <span class="multigol-card__prob-kind"
+                    >Poisson · gol {{ pickSideTeamName(data) }}{{ pickVenueScopeSuffix(data) }}</span
+                  >
+                  <span
+                    class="multigol-card__prob-value"
+                    [ngClass]="probToneClass(pickPoissonPercentNumber(data))"
+                    [attr.title]="probToneHint(pickPoissonPercentNumber(data))"
+                    >{{ pickPoissonPercent(data) }}%</span
+                  >
+                </div>
+                <div class="multigol-card__prob-row multigol-card__prob-row--empirical">
+                  <span class="multigol-card__prob-kind"
+                    >Empirica · gol {{ pickSideTeamName(data) }}{{ pickVenueScopeSuffix(data) }}</span
+                  >
+                  @if (pickEmpiricalLabel(data); as emp) {
+                    <span
+                      class="multigol-card__prob-value multigol-card__prob-value--secondary"
+                      [ngClass]="probToneClass(pickEmpiricalPercentNumber(data))"
+                      [attr.title]="probToneHint(pickEmpiricalPercentNumber(data))"
+                      >{{ emp }}</span
+                    >
+                  } @else {
+                    <span class="multigol-card__prob-value multigol-card__prob-value--muted">—</span>
+                  }
+                </div>
               </div>
               <span class="multigol-card__pick-label">{{ data.pick.outcomeLabel }}</span>
             </div>
@@ -91,6 +131,113 @@
         </div>
       </div>
     </div>
+
+    <section class="multigol-detail-model vs-card">
+      <h2 class="vs-heading-section">Modello e probabilità</h2>
+      <div class="multigol-standing-metrics multigol-detail-model__grid">
+        <div class="multigol-standing-metrics__cell">
+          <span class="multigol-standing-metrics__label"
+            >Gol attesi · modello classifica · {{ data.homeTeam.name }}</span
+          >
+          <span class="multigol-standing-metrics__value">{{ data.lambdaHome | number: '1.2-2' }}</span>
+        </div>
+        <div class="multigol-standing-metrics__cell">
+          <span class="multigol-standing-metrics__label"
+            >Gol attesi · modello classifica · {{ data.awayTeam.name }}</span
+          >
+          <span class="multigol-standing-metrics__value">{{ data.lambdaAway | number: '1.2-2' }}</span>
+        </div>
+        <div class="multigol-standing-metrics__cell">
+          <span class="multigol-standing-metrics__label"
+            >Poisson · gol {{ data.homeTeam.name }} 1–6 · modello classifica</span
+          >
+          <span class="multigol-standing-metrics__value">{{ (data.pHome1to6 * 100) | number: '1.1-1' }}%</span>
+        </div>
+        <div class="multigol-standing-metrics__cell">
+          <span class="multigol-standing-metrics__label"
+            >Poisson · gol {{ data.awayTeam.name }} 1–6 · modello classifica</span
+          >
+          <span class="multigol-standing-metrics__value">{{ (data.pAway1to6 * 100) | number: '1.1-1' }}%</span>
+        </div>
+        @if (data.pick) {
+          <div class="multigol-standing-metrics__cell">
+            <span class="multigol-standing-metrics__label">Esito consigliato (scout)</span>
+            <span class="multigol-standing-metrics__value multigol-detail-model__pick">{{
+              data.pick.outcomeLabel
+            }}</span>
+          </div>
+          <div class="multigol-standing-metrics__cell">
+            <span class="multigol-standing-metrics__label"
+              >Poisson · gol {{ pickSideTeamName(data) }} 1–6{{ pickVenueScopeSuffix(data) }}</span
+            >
+            <span
+              class="multigol-standing-metrics__value"
+              [ngClass]="probToneClass(pickPoissonPercentNumber(data))"
+              [attr.title]="probToneHint(pickPoissonPercentNumber(data))"
+              >{{ pickPoissonPercent(data) }}%</span
+            >
+          </div>
+          <div class="multigol-standing-metrics__cell">
+            <span class="multigol-standing-metrics__label"
+              >Media gol segnati · forma campionato{{ pickVenueScopeSuffix(data) }} ·
+              {{ pickSideTeamName(data) }}</span
+            >
+            <span class="multigol-standing-metrics__value">{{ data.pick.lambdaSide | number: '1.2-2' }}</span>
+          </div>
+          <div class="multigol-standing-metrics__cell">
+            <span class="multigol-standing-metrics__label"
+              >Frequenza empirica · gol 1–6{{ pickVenueScopeSuffix(data) }} ·
+              {{ pickSideTeamName(data) }}</span
+            >
+            <span
+              class="multigol-standing-metrics__value"
+              [ngClass]="probToneClass(pickEmpiricalPercentNumber(data))"
+              [attr.title]="probToneHint(pickEmpiricalPercentNumber(data))"
+              >{{ pickEmpiricalPercentOnly(data) ?? '—'
+              }}{{ pickEmpiricalPercentOnly(data) ? '%' : '' }}</span
+            >
+          </div>
+          <div class="multigol-standing-metrics__cell">
+            <span class="multigol-standing-metrics__label"
+              >Gare forma campionato usate per l’empirica · {{ pickSideTeamName(data) }}</span
+            >
+            <span class="multigol-standing-metrics__value">{{
+              empiricalSampleLabel(data)
+            }}</span>
+          </div>
+        }
+        <div class="multigol-standing-metrics__cell">
+          <span class="multigol-standing-metrics__label"
+            >Empirica · gol 1–6 in casa · {{ data.homeTeam.name }} (forma campionato)</span
+          >
+          <span class="multigol-standing-metrics__value">{{
+            bandRateDisplay(data.stats.homeBandRate)
+          }}</span>
+        </div>
+        <div class="multigol-standing-metrics__cell">
+          <span class="multigol-standing-metrics__label"
+            >Empirica · gol 1–6 in trasferta · {{ data.awayTeam.name }} (forma campionato)</span
+          >
+          <span class="multigol-standing-metrics__value">{{
+            bandRateDisplay(data.stats.awayBandRate)
+          }}</span>
+        </div>
+        @if (data.stats.h2hMultigolHomePct != null && data.stats.h2hMultigolAwayPct != null) {
+          <div class="multigol-standing-metrics__cell">
+            <span class="multigol-standing-metrics__label"
+              >Head-to-head · gol {{ data.homeTeam.name }} 1–6 (tutte le competizioni)</span
+            >
+            <span class="multigol-standing-metrics__value">{{ data.stats.h2hMultigolHomePct }}%</span>
+          </div>
+          <div class="multigol-standing-metrics__cell">
+            <span class="multigol-standing-metrics__label"
+              >Head-to-head · gol {{ data.awayTeam.name }} 1–6 (tutte le competizioni)</span
+            >
+            <span class="multigol-standing-metrics__value">{{ data.stats.h2hMultigolAwayPct }}%</span>
+          </div>
+        }
+      </div>
+    </section>
 
     <section class="multigol-detail__stats">
 
@@ -126,18 +273,34 @@
                   "
                 ></ng-container>
               </div>
-            @if (data.pick) {
-              <div class="multigol-compare-card__row-pair">
-                <div class="multigol-compare-card__row">
-                  <dt>Gol attesi{{ compareVenueScopeSuffix(data.homeTeam.id) }}</dt>
-                  <dd>{{ slice.lambda | number: '1.2-2' }}</dd>
-                </div>
-                <div class="multigol-compare-card__row multigol-compare-card__row--highlight">
-                  <dt>Prob. multigol 1–6</dt>
-                  <dd>{{ (slice.pMultigol1to6 * 100) | number: '1.1-1' }}%</dd>
-                </div>
+            <div class="multigol-compare-card__metrics">
+              <div class="multigol-compare-card__row">
+                <dt>λ gol {{ data.homeTeam.name }}{{ compareVenueScopeSuffix(data.homeTeam.id) }}</dt>
+                <dd>{{ slice.lambda | number: '1.2-2' }}</dd>
               </div>
-            }
+              <div
+                class="multigol-compare-card__row multigol-compare-card__row--highlight"
+                [ngClass]="probBlockToneClass(venuePoissonPercentNumber(slice))"
+                [attr.title]="probToneHint(venuePoissonPercentNumber(slice))"
+              >
+                <dt>Poisson gol {{ data.homeTeam.name }} 1–6{{ compareVenueScopeSuffix(data.homeTeam.id) }}</dt>
+                <dd>{{ venuePoissonPercent(slice) }}%</dd>
+              </div>
+              <div
+                class="multigol-compare-card__row multigol-compare-card__row--highlight"
+                [ngClass]="
+                  probBlockToneClass(
+                    venueEmpiricalPercentNumber(slice, data.stats.homeBandRate)
+                  )
+                "
+                [attr.title]="
+                  probToneHint(venueEmpiricalPercentNumber(slice, data.stats.homeBandRate))
+                "
+              >
+                <dt>Freq. empirica gol {{ data.homeTeam.name }} 1–6{{ compareVenueScopeSuffix(data.homeTeam.id) }}</dt>
+                <dd>{{ venueEmpiricaDisplay(slice, data.stats.homeBandRate) }}</dd>
+              </div>
+            </div>
             <div class="multigol-compare-card__row multigol-compare-card__row--standing">
               <dt>Classifica{{ compareVenueScopeSuffix(data.homeTeam.id) }}</dt>
               <dd>
@@ -184,9 +347,47 @@
                 }
               </dd>
             </div>
+            @if (compareSeasonStatsVisible(data.homeTeam.id, data.stats.apiFootballHome)) {
+              <div class="multigol-compare-card__row multigol-compare-card__row--apifootball">
+                <dt>
+                  Stagione{{
+                    data.stats.apiFootballHome?.season ? ' ' + data.stats.apiFootballHome?.season : ''
+                  }}{{ compareVenueScopeSuffix(data.homeTeam.id) }}
+                </dt>
+                <dd>
+                  @if (
+                    compareSeasonRows(
+                      data.homeTeam.id,
+                      data.stats.homeFormGoalsDetail,
+                      data.stats.apiFootballHome
+                    );
+                    as afRows
+                  ) {
+                    @if (afRows.length) {
+                      <div class="multigol-standing-metrics">
+                        @for (row of afRows; track row.label) {
+                          <div class="multigol-standing-metrics__cell">
+                            <span class="multigol-standing-metrics__label">{{ row.label }}</span>
+                            <span class="multigol-standing-metrics__value">{{ row.value }}</span>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="multigol-standing-metrics__fallback">
+                        Nessuna gara
+                        {{ formVenueFilterEmptyLabel(data.homeTeam.id) }} nel campione forma gol.
+                      </p>
+                    }
+                  }
+                </dd>
+              </div>
+            }
             <div class="multigol-compare-card__row multigol-compare-card__row--form">
-              <dt>Forma gol</dt>
+              <dt>Forma gol · {{ data.leagueName }}</dt>
               <dd>
+                <p class="vs-text-muted" style="margin: 0 0 0.5rem; font-size: 0.75rem">
+                  Solo gare di campionato nella stagione in corso
+                </p>
                 <ng-container
                   *ngTemplateOutlet="
                     multigolFormGoals;
@@ -199,12 +400,6 @@
                 ></ng-container>
               </dd>
             </div>
-            @if (showBandEmpirica(slice)) {
-              <div class="multigol-compare-card__row">
-                <dt>Freq. empirica 1–6{{ compareVenueScopeSuffix(data.homeTeam.id) }}</dt>
-                <dd>{{ bandEmpiricaDisplay(slice) }}</dd>
-              </div>
-            }
             }
           </dl>
         </article>
@@ -240,18 +435,34 @@
                   "
                 ></ng-container>
               </div>
-            @if (data.pick) {
-              <div class="multigol-compare-card__row-pair">
-                <div class="multigol-compare-card__row">
-                  <dt>Gol attesi{{ compareVenueScopeSuffix(data.awayTeam.id) }}</dt>
-                  <dd>{{ slice.lambda | number: '1.2-2' }}</dd>
-                </div>
-                <div class="multigol-compare-card__row multigol-compare-card__row--highlight">
-                  <dt>Prob. multigol 1–6</dt>
-                  <dd>{{ (slice.pMultigol1to6 * 100) | number: '1.1-1' }}%</dd>
-                </div>
+            <div class="multigol-compare-card__metrics">
+              <div class="multigol-compare-card__row">
+                <dt>λ gol {{ data.awayTeam.name }}{{ compareVenueScopeSuffix(data.awayTeam.id) }}</dt>
+                <dd>{{ slice.lambda | number: '1.2-2' }}</dd>
               </div>
-            }
+              <div
+                class="multigol-compare-card__row multigol-compare-card__row--highlight"
+                [ngClass]="probBlockToneClass(venuePoissonPercentNumber(slice))"
+                [attr.title]="probToneHint(venuePoissonPercentNumber(slice))"
+              >
+                <dt>Poisson gol {{ data.awayTeam.name }} 1–6{{ compareVenueScopeSuffix(data.awayTeam.id) }}</dt>
+                <dd>{{ venuePoissonPercent(slice) }}%</dd>
+              </div>
+              <div
+                class="multigol-compare-card__row multigol-compare-card__row--highlight"
+                [ngClass]="
+                  probBlockToneClass(
+                    venueEmpiricalPercentNumber(slice, data.stats.awayBandRate)
+                  )
+                "
+                [attr.title]="
+                  probToneHint(venueEmpiricalPercentNumber(slice, data.stats.awayBandRate))
+                "
+              >
+                <dt>Freq. empirica gol {{ data.awayTeam.name }} 1–6{{ compareVenueScopeSuffix(data.awayTeam.id) }}</dt>
+                <dd>{{ venueEmpiricaDisplay(slice, data.stats.awayBandRate) }}</dd>
+              </div>
+            </div>
             <div class="multigol-compare-card__row multigol-compare-card__row--standing">
               <dt>Classifica{{ compareVenueScopeSuffix(data.awayTeam.id) }}</dt>
               <dd>
@@ -298,9 +509,47 @@
                 }
               </dd>
             </div>
+            @if (compareSeasonStatsVisible(data.awayTeam.id, data.stats.apiFootballAway)) {
+              <div class="multigol-compare-card__row multigol-compare-card__row--apifootball">
+                <dt>
+                  Stagione{{
+                    data.stats.apiFootballAway?.season ? ' ' + data.stats.apiFootballAway?.season : ''
+                  }}{{ compareVenueScopeSuffix(data.awayTeam.id) }}
+                </dt>
+                <dd>
+                  @if (
+                    compareSeasonRows(
+                      data.awayTeam.id,
+                      data.stats.awayFormGoalsDetail,
+                      data.stats.apiFootballAway
+                    );
+                    as afRows
+                  ) {
+                    @if (afRows.length) {
+                      <div class="multigol-standing-metrics">
+                        @for (row of afRows; track row.label) {
+                          <div class="multigol-standing-metrics__cell">
+                            <span class="multigol-standing-metrics__label">{{ row.label }}</span>
+                            <span class="multigol-standing-metrics__value">{{ row.value }}</span>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="multigol-standing-metrics__fallback">
+                        Nessuna gara
+                        {{ formVenueFilterEmptyLabel(data.awayTeam.id) }} nel campione forma gol.
+                      </p>
+                    }
+                  }
+                </dd>
+              </div>
+            }
             <div class="multigol-compare-card__row multigol-compare-card__row--form">
-              <dt>Forma gol</dt>
+              <dt>Forma gol · {{ data.leagueName }}</dt>
               <dd>
+                <p class="vs-text-muted" style="margin: 0 0 0.5rem; font-size: 0.75rem">
+                  Solo gare di campionato nella stagione in corso
+                </p>
                 <ng-container
                   *ngTemplateOutlet="
                     multigolFormGoals;
@@ -313,21 +562,46 @@
                 ></ng-container>
               </dd>
             </div>
-            @if (showBandEmpirica(slice)) {
-              <div class="multigol-compare-card__row">
-                <dt>Freq. empirica 1–6{{ compareVenueScopeSuffix(data.awayTeam.id) }}</dt>
-                <dd>{{ bandEmpiricaDisplay(slice) }}</dd>
-              </div>
-            }
             }
           </dl>
         </article>
       </div>
 
+      @if (fixtureCompareRows(data); as fxRows) {
+        @if (fxRows.length) {
+          <section class="multigol-fixture-compare vs-card">
+            <h2 class="vs-heading-section">Statistiche partita (API-Football)</h2>
+            @if (data.stats.apiFootballFixture?.venue) {
+              <p class="vs-text-muted multigol-fixture-compare__venue">
+                {{ data.stats.apiFootballFixture?.venue }}
+              </p>
+            }
+            <div class="multigol-fixture-compare__row vs-text-muted">
+              <span>{{ data.homeTeam.name }}</span>
+              <span></span>
+              <span>{{ data.awayTeam.name }}</span>
+            </div>
+            @for (row of fxRows; track row.label) {
+              <div class="multigol-fixture-compare__row">
+                <span>{{ row.home }}</span>
+                <span class="multigol-fixture-compare__label">{{ row.label }}</span>
+                <span>{{ row.away }}</span>
+              </div>
+            }
+          </section>
+        }
+      }
+
       <section class="multigol-stats-h2h">
         <div class="vs-card--flush multigol-stats-h2h__panel">
           <div class="table-header">
             <h2 class="vs-heading-section">Testa a testa</h2>
+            <p class="vs-text-muted" style="margin: 0.25rem 0 0; font-size: 0.75rem">
+              Tutte le competizioni · storico fino a {{ h2hMatchLimit() }} incontri
+            </p>
+            @if (data.stats.h2hSummary) {
+              <p class="vs-text-muted multigol-stats-h2h__summary">{{ data.stats.h2hSummary }}</p>
+            }
           </div>
           <div class="dashboard-card-body multigol-stats-h2h__body">
         @if (h2hEntries(data.stats.h2hMatchesDetail)) {

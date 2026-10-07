@@ -237,6 +237,52 @@ export interface MultigolScoutCompetition {
   areaCode: string | null;
 }
 
+export interface MultigolScoutSnapshotMeta {
+  from: string;
+  to: string;
+  builtAt: string | null;
+  lastIncrementalAt: string | null;
+  scanInProgress: boolean;
+  itemCount: number;
+}
+
+export type MultigolScoutPickResultValue = 'WON' | 'LOST';
+
+export type MultigolScoutMetricKey = 'synthesis' | 'poisson' | 'empirical';
+
+export interface MultigolScoutBandStats {
+  hits: number;
+  total: number;
+  sumPercent: number;
+}
+
+export interface MultigolScoutCalibrationBandSummary {
+  id: string;
+  label: string;
+  min: number;
+  max: number;
+  synthesis: MultigolScoutBandStats;
+  poisson: MultigolScoutBandStats;
+  empirical: MultigolScoutBandStats;
+}
+
+export interface MultigolScoutCalibrationSummary {
+  bands: MultigolScoutCalibrationBandSummary[];
+  labeledPickCount: number;
+  opportunityCount: number;
+  updatedAt: string | null;
+}
+
+export interface MultigolScoutSnapshotResponse {
+  from: string;
+  to: string;
+  items: MultigolOpportunity[];
+  meta: MultigolScoutSnapshotMeta;
+  competitions: MultigolScoutCompetition[];
+  pickResults: Record<number, MultigolScoutPickResultValue>;
+  calibration: MultigolScoutCalibrationSummary;
+}
+
 export interface MultigolOpportunity {
   matchId: number;
   leagueCode: string;
@@ -244,11 +290,19 @@ export interface MultigolOpportunity {
   areaName: string | null;
   areaCode: string | null;
   utcDate: string;
+  matchday: number | null;
+  roundLabel: string | null;
   eventName: string;
   homeTeam: { id: number; name: string; crest: string | null };
   awayTeam: { id: number; name: string; crest: string | null };
   outcomeLabel: string;
   probabilityPercent: number;
+  empiricalProbabilityPercent: number | null;
+  empiricalSampleHits: number;
+  empiricalSampleMatches: number;
+  synthesisPercent: number;
+  xgLambdaSide?: number | null;
+  xgSampleMatches?: number;
   teaser: string;
 }
 
@@ -265,6 +319,54 @@ export interface MultigolStandingSnapshot {
   goalsFor: number;
   goalsAgainst: number;
   playedGames: number;
+}
+
+export interface ApiFootballUsage {
+  configured: boolean;
+  sessionCalls: number;
+  dailyCurrent: number | null;
+  dailyLimit: number | null;
+}
+
+export interface MultigolApiFootballSeasonStats {
+  form: string | null;
+  played: number | null;
+  wins: number | null;
+  draws: number | null;
+  loses: number | null;
+  avgGoalsFor: number | null;
+  avgGoalsAgainst: number | null;
+  avgGoalsForHome: number | null;
+  avgGoalsAgainstHome: number | null;
+  avgGoalsForAway: number | null;
+  avgGoalsAgainstAway: number | null;
+  cleanSheets: number | null;
+  failedToScore: number | null;
+  yellowCardsAvg: number | null;
+  redCardsAvg: number | null;
+  formation: string | null;
+  penaltiesScored: number | null;
+  penaltiesMissed: number | null;
+  season: number | null;
+  leagueId: number | null;
+}
+
+export interface MultigolApiFootballMatchSideStats {
+  possessionPct: number | null;
+  shotsTotal: number | null;
+  shotsOnTarget: number | null;
+  corners: number | null;
+  fouls: number | null;
+  yellowCards: number | null;
+  redCards: number | null;
+  expectedGoals: number | null;
+}
+
+export interface MultigolApiFootballMatchStats {
+  fixtureId: number;
+  home: MultigolApiFootballMatchSideStats;
+  away: MultigolApiFootballMatchSideStats;
+  venue: string | null;
 }
 
 export interface MultigolVenueStatSlice {
@@ -303,6 +405,14 @@ export interface MultigolFormGoalEntry {
   goalsConceded: number;
   venue: 'home' | 'away';
   utcDate: string;
+  homeTeamId?: number;
+  awayTeamId?: number;
+  homeTeamName?: string;
+  awayTeamName?: string;
+  homeTeamCrest?: string | null;
+  awayTeamCrest?: string | null;
+  scoreHome?: number;
+  scoreAway?: number;
 }
 
 export interface MultigolAnalysis {
@@ -312,6 +422,8 @@ export interface MultigolAnalysis {
   areaName: string | null;
   areaCode: string | null;
   utcDate: string;
+  matchday: number | null;
+  roundLabel: string | null;
   eventName: string;
   homeTeam: { id: number; name: string; crest: string | null };
   awayTeam: { id: number; name: string; crest: string | null };
@@ -319,6 +431,12 @@ export interface MultigolAnalysis {
     outcomeLabel: string;
     probability: number;
     lambdaSide: number;
+    goalsLambdaSide?: number;
+    xgLambdaSide?: number | null;
+    xgSampleMatches?: number;
+    empiricalProbability: number | null;
+    empiricalHits: number;
+    empiricalMatches: number;
   } | null;
   pHome1to6: number;
   pAway1to6: number;
@@ -341,6 +459,9 @@ export interface MultigolAnalysis {
     awayBandRate: number | null;
     homeVenueStats?: MultigolTeamVenueStats;
     awayVenueStats?: MultigolTeamVenueStats;
+    apiFootballHome?: MultigolApiFootballSeasonStats | null;
+    apiFootballAway?: MultigolApiFootballSeasonStats | null;
+    apiFootballFixture?: MultigolApiFootballMatchStats | null;
   };
   analysis: string;
   explanation: string;

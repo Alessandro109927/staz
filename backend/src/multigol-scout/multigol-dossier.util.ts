@@ -1,8 +1,13 @@
 import type { FdHead2HeadResponse, FdMatch, FdStandingRow } from './football-data.types';
+import type {
+  MultigolApiFootballMatchStats,
+  MultigolApiFootballSeasonStats,
+} from './api-football.types';
 import {
   estimateLambdasFromSeason,
   probabilityGoalsBetween,
 } from './multigol.poisson';
+import { blendSideLambda } from './multigol-xg.util';
 import {
   MIN_BAND_PROBABILITY,
   MIN_LAMBDA_SIDE,
@@ -10,10 +15,31 @@ import {
   OUTCOME_HOME_1_6,
 } from './multigol-scout.constants';
 
-export type MultigolPick = {
+type MultigolPickCore = {
   outcomeLabel: typeof OUTCOME_HOME_1_6 | typeof OUTCOME_AWAY_1_6;
   probability: number;
   lambdaSide: number;
+};
+
+/** P(gol squadra 1–6) Poisson per l’esito del pick — mai gol totali partita. */
+export function poissonProbabilityForPick(
+  pick: MultigolPickCore,
+  pHome1to6: number,
+  pAway1to6: number,
+): number {
+  return pick.outcomeLabel === OUTCOME_HOME_1_6 ? pHome1to6 : pAway1to6;
+}
+
+export type MultigolPick = MultigolPickCore & {
+  /** Frequenza gol 1–6 della squadra del pick (solo sui sui gol, non somma partita). */
+  empiricalProbability: number | null;
+  empiricalHits: number;
+  empiricalMatches: number;
+  /** Media xG per venue (casa/trasferta) usata nel λ del pick. */
+  xgLambdaSide: number | null;
+  xgSampleMatches: number;
+  /** λ da soli gol reali in forma (prima del mix xG). */
+  goalsLambdaSide: number;
 };
 
 export type StandingSnapshot = {
@@ -62,6 +88,14 @@ export type FormGoalEntry = {
   goalsConceded: number;
   venue: 'home' | 'away';
   utcDate: string;
+  homeTeamId: number;
+  awayTeamId: number;
+  homeTeamName: string;
+  awayTeamName: string;
+  homeTeamCrest: string | null;
+  awayTeamCrest: string | null;
+  scoreHome: number;
+  scoreAway: number;
 };
 
 export type MatchDossier = {
@@ -69,6 +103,8 @@ export type MatchDossier = {
   leagueCode: string;
   leagueName: string;
   utcDate: string;
+  matchday: number | null;
+  roundLabel: string | null;
   eventName: string;
   homeTeam: { id: number; name: string; crest: string | null };
   awayTeam: { id: number; name: string; crest: string | null };
@@ -94,6 +130,9 @@ export type MatchDossier = {
     awayBandRate: number | null;
     homeVenueStats: TeamVenueStats;
     awayVenueStats: TeamVenueStats;
+    apiFootballHome?: MultigolApiFootballSeasonStats | null;
+    apiFootballAway?: MultigolApiFootballSeasonStats | null;
+    apiFootballFixture?: MultigolApiFootballMatchStats | null;
   };
 };
 
@@ -101,12 +140,9 @@ function teamName(t: { shortName?: string; name: string }): string {
   return t.shortName?.trim() || t.name;
 }
 
-function teamCrestUrl(team: { id: number; crest?: string }): string {
+function teamCrestUrl(team: { id: number; crest?: string }): string | null {
   const url = team.crest?.trim();
-  if (url) {
-    return url;
-  }
-  return `https://crests.football-data.org/${team.id}.png`;
+  return url || null;
 }
 
 function seasonRates(row: FdStandingRow | undefined): { att: number; def: number } {
@@ -170,15 +206,12 @@ function bandSliceFields(
   };
 }
 
-function formGoalsEntries(teamId: number, matches: FdMatch[], max = 6): FormGoalEntry[] {
+function formGoalsEntries(teamId: number, matches: FdMatch[]): FormGoalEntry[] {
   const sorted = [...matches].sort(
     (a, b) => new Date(b.utcDate).getTime() - new Date(a.utcDate).getTime(),
   );
   const out: FormGoalEntry[] = [];
   for (const m of sorted) {
-    if (out.length >= max) {
-      break;
-    }
     const h = m.score?.fullTime?.home;
     const a = m.score?.fullTime?.away;
     if (h == null || a == null) {
@@ -194,23 +227,33 @@ function formGoalsEntries(teamId: number, matches: FdMatch[], max = 6): FormGoal
       matchId: m.id,
       opponentId: opponent.id,
       opponentName: teamName(opponent),
-      opponentCrest: teamCrestUrl(opponent),
+      opponentCrest: teamCrestUrl(opponent) ?? '',
       goalsScored: isHome ? h : a,
       goalsConceded: isHome ? a : h,
       venue: isHome ? 'home' : 'away',
       utcDate: m.utcDate,
+      homeTeamId: m.homeTeam.id,
+      awayTeamId: m.awayTeam.id,
+      homeTeamName: teamName(m.homeTeam),
+      awayTeamName: teamName(m.awayTeam),
+      homeTeamCrest: teamCrestUrl(m.homeTeam),
+      awayTeamCrest: teamCrestUrl(m.awayTeam),
+      scoreHome: h,
+      scoreAway: a,
     });
   }
   return out;
 }
 
 function formGoalsLine(teamId: number, matches: FdMatch[], label: string): string {
-  const entries = formGoalsEntries(teamId, matches, 6);
+  const entries = formGoalsEntries(teamId, matches).slice(0, 8);
   if (!entries.length) {
     return `${label}: nessun dato recente.`;
   }
-  const parts = entries.map((e) => String(e.goalsScored));
-  return `${label}: gol segnati nelle ultime uscite [${parts.join(', ')}].`;
+  const parts = entries.map(
+    (e) => `${e.homeTeamName} ${e.scoreHome}-${e.scoreAway} ${e.awayTeamName}`,
+  );
+  return `${label}: ultime gare — ${parts.join('; ')}.`;
 }
 
 function aggregateStandingFromMatches(
@@ -396,9 +439,9 @@ function h2hMatchEntries(
       matchId: m.id,
       utcDate: m.utcDate,
       homeTeamName: teamName(m.homeTeam),
-      homeTeamCrest: teamCrestUrl(m.homeTeam),
+      homeTeamCrest: teamCrestUrl(m.homeTeam) ?? '',
       awayTeamName: teamName(m.awayTeam),
-      awayTeamCrest: teamCrestUrl(m.awayTeam),
+      awayTeamCrest: teamCrestUrl(m.awayTeam) ?? '',
       scoreHome: h,
       scoreAway: a,
       fixtureHomeAtHome: m.homeTeam.id === fixtureHomeTeamId,
@@ -425,7 +468,86 @@ function h2hLine(h2h: FdHead2HeadResponse, homeName: string, awayName: string): 
     rates != null
       ? ` Multigol 1-6 casa in ${rates.homePct}% dei match, ospite in ${rates.awayPct}%.`
       : '';
-  return `H2H (${n} match): risultati ${scores.slice(0, 5).join(', ')}.${rateTxt}`;
+  return `H2H (${n} match, storico completo): risultati ${scores.slice(0, 8).join(', ')}${scores.length > 8 ? '…' : ''}.${rateTxt}`;
+}
+
+export function enrichPickWithEmpirical(
+  pick: MultigolPickCore,
+  homeTeamId: number,
+  awayTeamId: number,
+  homeForm: FdMatch[],
+  awayForm: FdMatch[],
+  pHome1to6: number,
+  pAway1to6: number,
+  xgLambdaSide: number | null = null,
+  xgSampleMatches = 0,
+): MultigolPick {
+  return attachEmpiricalToPick(
+    pick,
+    homeTeamId,
+    awayTeamId,
+    homeForm,
+    awayForm,
+    pHome1to6,
+    pAway1to6,
+    xgLambdaSide,
+    xgSampleMatches,
+  )!;
+}
+
+function pickVenueScope(
+  outcomeLabel: string,
+): 'home' | 'away' | null {
+  if (outcomeLabel === OUTCOME_HOME_1_6) {
+    return 'home';
+  }
+  if (outcomeLabel === OUTCOME_AWAY_1_6) {
+    return 'away';
+  }
+  return null;
+}
+
+function attachEmpiricalToPick(
+  pick: MultigolPickCore | null,
+  homeTeamId: number,
+  awayTeamId: number,
+  homeForm: FdMatch[],
+  awayForm: FdMatch[],
+  pHome1to6: number,
+  pAway1to6: number,
+  xgLambdaSide: number | null = null,
+  xgSampleMatches = 0,
+): MultigolPick | null {
+  if (!pick) {
+    return null;
+  }
+  const isHome = pick.outcomeLabel === OUTCOME_HOME_1_6;
+  const teamId = isHome ? homeTeamId : awayTeamId;
+  const form = isHome ? homeForm : awayForm;
+  const venue = pickVenueScope(pick.outcomeLabel);
+  const { hits, matches: n } = bandCount(teamId, form, venue ?? undefined);
+  const goalsLambdaSide =
+    venue != null ? lambdaFromMatches(teamId, form, venue) : pick.lambdaSide;
+  const lambdaSide = blendSideLambda(
+    goalsLambdaSide,
+    xgLambdaSide,
+    xgSampleMatches,
+  );
+  const probability =
+    venue != null
+      ? probabilityGoalsBetween(lambdaSide, 1, 6)
+      : poissonProbabilityForPick(pick, pHome1to6, pAway1to6);
+  return {
+    ...pick,
+    lambdaSide,
+    goalsLambdaSide,
+    probability,
+    empiricalProbability: n > 0 ? hits / n : null,
+    empiricalHits: hits,
+    empiricalMatches: n,
+    xgLambdaSide,
+    xgSampleMatches,
+  };
 }
 
 export function pickMultigol(
@@ -433,8 +555,8 @@ export function pickMultigol(
   pAway: number,
   lambdaHome: number,
   lambdaAway: number,
-): MultigolPick | null {
-  const candidates: MultigolPick[] = [];
+): MultigolPickCore | null {
+  const candidates: MultigolPickCore[] = [];
   if (pHome >= MIN_BAND_PROBABILITY && lambdaHome >= MIN_LAMBDA_SIDE) {
     candidates.push({
       outcomeLabel: OUTCOME_HOME_1_6,
@@ -478,16 +600,25 @@ export function buildDossier(input: {
 
   const pHome1to6 = probabilityGoalsBetween(lambdaHome, 1, 6);
   const pAway1to6 = probabilityGoalsBetween(lambdaAway, 1, 6);
-  const pick = pickMultigol(pHome1to6, pAway1to6, lambdaHome, lambdaAway);
-
   const homeForm = input.homeForm ?? [];
   const awayForm = input.awayForm ?? [];
+  const pick = attachEmpiricalToPick(
+    pickMultigol(pHome1to6, pAway1to6, lambdaHome, lambdaAway),
+    input.match.homeTeam.id,
+    input.match.awayTeam.id,
+    homeForm,
+    awayForm,
+    pHome1to6,
+    pAway1to6,
+  );
 
   return {
     matchId: input.match.id,
     leagueCode: input.leagueCode,
     leagueName: input.leagueName,
     utcDate: input.match.utcDate,
+    matchday: input.match.matchday ?? null,
+    roundLabel: input.match.roundLabel ?? null,
     eventName: `${homeName} - ${awayName}`,
     homeTeam: {
       id: input.match.homeTeam.id,
@@ -511,8 +642,8 @@ export function buildDossier(input: {
       awayStandingDetail: standingSnapshot(input.awayRow),
       homeFormGoals: formGoalsLine(input.match.homeTeam.id, homeForm, homeName),
       awayFormGoals: formGoalsLine(input.match.awayTeam.id, awayForm, awayName),
-      homeFormGoalsDetail: formGoalsEntries(input.match.homeTeam.id, homeForm, 6),
-      awayFormGoalsDetail: formGoalsEntries(input.match.awayTeam.id, awayForm, 6),
+      homeFormGoalsDetail: formGoalsEntries(input.match.homeTeam.id, homeForm),
+      awayFormGoalsDetail: formGoalsEntries(input.match.awayTeam.id, awayForm),
       h2hSummary: input.h2h
         ? h2hLine(input.h2h, homeName, awayName)
         : 'H2H: non caricato (elenco rapido).',
@@ -539,21 +670,109 @@ export function buildDossier(input: {
   };
 }
 
+/** Aggiorna forma gol (e freq. empirica collegata) dopo fetch ultime gare. */
+export function patchFormStats(
+  d: MatchDossier,
+  homeForm: FdMatch[],
+  awayForm: FdMatch[],
+  xgLambdaSide: number | null = null,
+  xgSampleMatches = 0,
+): MatchDossier {
+  const homeName = d.homeTeam.name;
+  const awayName = d.awayTeam.name;
+  const pick = d.pick
+    ? attachEmpiricalToPick(
+        {
+          outcomeLabel: d.pick.outcomeLabel,
+          probability: d.pick.probability,
+          lambdaSide: d.pick.lambdaSide,
+        },
+        d.homeTeam.id,
+        d.awayTeam.id,
+        homeForm,
+        awayForm,
+        d.pHome1to6,
+        d.pAway1to6,
+        xgLambdaSide,
+        xgSampleMatches,
+      )
+    : null;
+  return {
+    ...d,
+    pick,
+    stats: {
+      ...d.stats,
+      homeFormGoals: formGoalsLine(d.homeTeam.id, homeForm, homeName),
+      awayFormGoals: formGoalsLine(d.awayTeam.id, awayForm, awayName),
+      homeFormGoalsDetail: formGoalsEntries(d.homeTeam.id, homeForm),
+      awayFormGoalsDetail: formGoalsEntries(d.awayTeam.id, awayForm),
+      homeBandRate: bandRate(d.homeTeam.id, homeForm, 'home'),
+      awayBandRate: bandRate(d.awayTeam.id, awayForm, 'away'),
+      homeVenueStats: {
+        ...buildTeamVenueStats(
+          d.homeTeam.id,
+          homeForm,
+          undefined,
+          d.lambdaHome,
+          d.pHome1to6,
+        ),
+        all: {
+          ...buildTeamVenueStats(
+            d.homeTeam.id,
+            homeForm,
+            undefined,
+            d.lambdaHome,
+            d.pHome1to6,
+          ).all,
+          standingDetail:
+            d.stats.homeVenueStats?.all.standingDetail ??
+            d.stats.homeStandingDetail,
+        },
+      },
+      awayVenueStats: {
+        ...buildTeamVenueStats(
+          d.awayTeam.id,
+          awayForm,
+          undefined,
+          d.lambdaAway,
+          d.pAway1to6,
+        ),
+        all: {
+          ...buildTeamVenueStats(
+            d.awayTeam.id,
+            awayForm,
+            undefined,
+            d.lambdaAway,
+            d.pAway1to6,
+          ).all,
+          standingDetail:
+            d.stats.awayVenueStats?.all.standingDetail ??
+            d.stats.awayStandingDetail,
+        },
+      },
+    },
+  };
+}
+
 export function deterministicExplanation(d: MatchDossier): string {
   if (!d.pick) {
     return 'Nessun multigol 1-6 con probabilità sufficiente sui dati disponibili.';
   }
   const isHome = d.pick.outcomeLabel === OUTCOME_HOME_1_6;
   const side = isHome ? d.homeTeam.name : d.awayTeam.name;
-  const lambda = isHome ? d.lambdaHome : d.lambdaAway;
+  const lambda = d.pick.lambdaSide;
   const p = d.pick.probability;
   const band = isHome ? d.stats.homeBandRate : d.stats.awayBandRate;
   const bandTxt =
     band != null
       ? ` Storicamente ${side} resta nella fascia 1-6 gol nel ${Math.round(band * 100)}% delle ultime partite (${isHome ? 'casa' : 'trasferta'}).`
       : '';
+  const xgTxt =
+    d.pick.xgLambdaSide != null && d.pick.xgSampleMatches >= 3
+      ? ` Media xG ${isHome ? 'in casa' : 'in trasferta'} ≈ ${d.pick.xgLambdaSide.toFixed(2)} (${d.pick.xgSampleMatches} gare).`
+      : '';
   return (
     `Per ${d.eventName} (${d.leagueName}), il modello stima ${(p * 100).toFixed(1)}% di probabilità per "${d.pick.outcomeLabel}": ` +
-    `gol attesi ${side} ≈ ${lambda.toFixed(2)}.${bandTxt} ${d.stats.homeStanding} ${d.stats.awayStanding} ${d.stats.h2hSummary}`
+    `gol attesi ${side} ≈ ${lambda.toFixed(2)} (mix gol reali + xG).${xgTxt}${bandTxt} ${d.stats.homeStanding} ${d.stats.awayStanding} ${d.stats.h2hSummary}`
   );
 }

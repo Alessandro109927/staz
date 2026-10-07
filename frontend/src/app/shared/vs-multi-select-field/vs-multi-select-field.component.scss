@@ -1,0 +1,58 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.vs-select-field {
+  position: relative;
+}
+
+.vs-dropdown-panel--fixed {
+  z-index: 1300;
+}
+
+.vs-multi-select-panel {
+  max-height: min(20rem, 60vh);
+  overflow-y: auto;
+
+  &__action {
+    list-style: none;
+    padding: 0.25rem 0.5rem 0.5rem;
+    border-bottom: 1px solid var(--vs-border, #e2e8f0);
+  }
+
+  &__clear {
+    width: 100%;
+    padding: 0.35rem 0.5rem;
+    border: none;
+    border-radius: 0.25rem;
+    background: transparent;
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--vs-primary, #2563eb);
+    cursor: pointer;
+    text-align: left;
+  }
+}
+
+.vs-dropdown-option--multi {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.vs-multi-select-option__check {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 1.25rem;
+  margin-top: 0.05rem;
+}
+
+.vs-multi-select-option__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}

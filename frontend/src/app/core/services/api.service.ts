@@ -22,6 +22,7 @@ import {
   MultigolOpportunity,
   MultigolOpportunitiesResponse,
   MultigolScoutCompetition,
+  MultigolScoutSnapshotResponse,
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -256,6 +257,30 @@ export class ApiService {
     });
   }
 
+  getMultigolSnapshot(): Observable<MultigolScoutSnapshotResponse> {
+    return this.http.get<MultigolScoutSnapshotResponse>(
+      `${this.baseUrl}/multigol-scout/snapshot`,
+    );
+  }
+
+  refreshMultigolSnapshot(options?: {
+    mode?: 'full' | 'incremental';
+    async?: boolean;
+  }): Observable<{ started: boolean; mode: string }> {
+    let params = new HttpParams();
+    if (options?.mode === 'incremental') {
+      params = params.set('mode', 'incremental');
+    }
+    if (options?.async !== false) {
+      params = params.set('async', '1');
+    }
+    return this.http.post<{ started: boolean; mode: string }>(
+      `${this.baseUrl}/multigol-scout/snapshot/refresh`,
+      null,
+      { params },
+    );
+  }
+
   getMultigolCompetitions(): Observable<MultigolScoutCompetition[]> {
     return this.http.get<MultigolScoutCompetition[]>(
       `${this.baseUrl}/multigol-scout/competitions`,
@@ -294,7 +319,17 @@ export class ApiService {
     );
   }
 
-  getMultigolAnalysis(matchId: number): Observable<MultigolAnalysis> {
-    return this.http.get<MultigolAnalysis>(`${this.baseUrl}/multigol-scout/matches/${matchId}`);
+  getMultigolAnalysis(
+    matchId: number,
+    options?: { refresh?: boolean },
+  ): Observable<MultigolAnalysis> {
+    let params = new HttpParams();
+    if (options?.refresh) {
+      params = params.set('refresh', '1');
+    }
+    return this.http.get<MultigolAnalysis>(
+      `${this.baseUrl}/multigol-scout/matches/${matchId}`,
+      { params },
+    );
   }
 }

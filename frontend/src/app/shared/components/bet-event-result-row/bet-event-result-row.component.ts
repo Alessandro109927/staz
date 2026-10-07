@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BetEvent, EventResultStatus } from '../../../core/models';
 import { ApiService } from '../../../core/services/api.service';
+import { EventResultToggleComponent } from '../event-result-toggle/event-result-toggle.component';
 
 @Component({
   selector: 'app-bet-event-result-row',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatSnackBarModule],
+  imports: [CommonModule, MatSnackBarModule, EventResultToggleComponent],
   templateUrl: './bet-event-result-row.component.html',
   styleUrl: './bet-event-result-row.component.scss',
 })

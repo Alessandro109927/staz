@@ -24,6 +24,154 @@
   }
 }
 
+.multigol-calibration {
+  padding: $space-4 $space-5;
+
+  &__summary {
+    cursor: pointer;
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-base;
+    color: $color-neutral-900;
+  }
+
+  &__summary-meta {
+    font-weight: $font-weight-normal;
+    color: $color-neutral-600;
+    font-size: $font-size-sm;
+  }
+
+  &__intro {
+    margin: $space-3 0 $space-5;
+    max-width: 46rem;
+    line-height: 1.45;
+    font-size: $font-size-sm;
+  }
+
+  &__band {
+    margin-top: $space-3;
+    padding: $space-3 $space-4;
+    border: 1px solid $color-neutral-200;
+    border-radius: $radius-lg;
+    background: $color-neutral-50;
+  }
+
+  &__band-summary {
+    cursor: pointer;
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-sm;
+    color: $color-neutral-900;
+  }
+
+  &__band[open] > &__grid {
+    margin-top: $space-4;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: $space-4;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__metric {
+    padding: $space-4;
+    border-radius: $radius-lg;
+    border: 1px solid $color-neutral-200;
+    background: $color-neutral-50;
+  }
+
+  &__metric-label {
+    margin: 0 0 $space-2;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $color-neutral-800;
+  }
+
+  &__sample {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    font-variant-numeric: tabular-nums;
+    color: $color-neutral-900;
+  }
+
+  &__divider {
+    margin: $space-3 0;
+    border: 0;
+    border-top: 1px solid $color-neutral-200;
+  }
+
+  &__rates {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+  }
+
+  &__rate-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $color-neutral-800;
+
+    strong {
+      font-size: $font-size-base;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  &__rate-key-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  &__rate-key {
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    font-size: $font-size-xs;
+    letter-spacing: 0.04em;
+    color: $color-neutral-600;
+  }
+
+  &__info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: $color-neutral-400;
+    cursor: help;
+    line-height: 1;
+
+    mat-icon {
+      width: 0.875rem;
+      height: 0.875rem;
+      font-size: 0.875rem;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: $color-neutral-800;
+    }
+  }
+
+  &__empty {
+    margin: 0;
+    font-size: $font-size-sm;
+    line-height: 1.4;
+  }
+}
+
 .multigol-error {
   padding: $space-4;
   color: $color-danger;
@@ -51,12 +199,16 @@
     &--nations {
       flex: 1 1 16rem;
     }
+
+    &--leagues {
+      flex: 1 1 100%;
+    }
   }
 
   &__label {
     margin: 0 0 $space-1;
     font-weight: $font-weight-semibold;
-    font-size: $font-size-sm;
+    font-size: $font-size-md;
   }
 
   &__count {
@@ -79,6 +231,82 @@
     color: $color-primary;
     cursor: pointer;
     text-decoration: underline;
+  }
+}
+
+.multigol-catalog {
+  padding: $space-4 $space-5;
+
+  &__summary {
+    cursor: pointer;
+    font-weight: $font-weight-semibold;
+  }
+
+  &__hint {
+    margin: $space-3 0;
+    font-size: $font-size-sm;
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 16rem;
+    overflow: auto;
+    display: grid;
+    gap: $space-1;
+    font-size: $font-size-sm;
+  }
+
+  &__id {
+    display: inline-block;
+    min-width: 3rem;
+    font-weight: $font-weight-bold;
+    color: $color-neutral-600;
+  }
+
+  &__area {
+    color: $color-neutral-600;
+    margin-right: $space-2;
+  }
+}
+
+.multigol-league-search {
+  width: 100%;
+  max-width: 24rem;
+  margin-bottom: $space-3;
+  padding: $space-2 $space-3;
+  border: 1px solid $color-neutral-200;
+  border-radius: $radius-md;
+  font: inherit;
+}
+
+.multigol-leagues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  max-height: 10rem;
+  overflow: auto;
+
+  &__more {
+    margin: 0;
+    font-size: $font-size-sm;
+    width: 100%;
+  }
+}
+
+.multigol-league-chip {
+  padding: $space-1 $space-3;
+  border: 1px solid $color-neutral-200;
+  border-radius: $radius-full;
+  background: $color-neutral-50;
+  font-size: $font-size-xs;
+  font-family: inherit;
+  cursor: pointer;
+
+  &.is-active {
+    border-color: $color-primary;
+    background: $color-primary-light;
   }
 }
 
@@ -137,19 +365,44 @@
 
 .multigol-list-toolbar {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: $space-4;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: $space-3;
 
+  &__controls {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: $space-3;
+    align-items: end;
+    width: 100%;
+  }
+
+  &__outcome,
+  &__date,
+  &__min-prob,
   &__sort {
-    flex: 0 0 min(100%, 14rem);
-    margin-left: auto;
+    min-width: 0;
+  }
+
+  @media (max-width: 52rem) {
+    &__controls {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: $space-1;
+      scrollbar-width: thin;
+
+      > * {
+        flex: 0 0 11.5rem;
+      }
+    }
   }
 }
 
 .multigol-count {
-  margin: 0;
+  margin: 1rem 0 0 0;
+  align-self: flex-end;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold !important;
 }
 
 .multigol-list {

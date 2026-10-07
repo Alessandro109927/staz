@@ -3,18 +3,121 @@
     <div>
       <h1 class="vs-heading-page">Scout Multigol</h1>
       <p class="vs-text-muted">
-        La scansione completa può richiedere diversi minuti per il limite API.
+       
+        @if (snapshotBuiltAt) {
+          Dati in cache server · ultima scansione completa
+          {{ snapshotBuiltAt | date: 'short' }}.
+        } @else if (!loading && !allItems.length) {
+          Nessuno snapshot: usa <strong>Aggiorna</strong> per la prima scansione (solo server).
+        }
       </p>
     </div>
-    <button type="button" class="vs-btn-primary" (click)="reload()" [disabled]="loading">
+    <button
+      type="button"
+      class="vs-btn-primary"
+      (click)="reload()"
+      [disabled]="serverScanInProgress"
+    >
       <mat-icon>refresh</mat-icon>
       Aggiorna
     </button>
   </header>
 
+  @if (pickResults.calibration(); as cal) {
+    <details class="vs-card multigol-calibration">
+      <summary class="multigol-calibration__summary">
+        Affidabilità algoritmo
+        <span class="multigol-calibration__summary-meta">
+          · {{ cal.labeledPickCount }} esiti su {{ cal.opportunityCount }} partite
+        </span>
+      </summary>
+      <p class="vs-text-muted multigol-calibration__intro">
+        Esiti segnati da te (presa/persa sulle card). Per ogni fascia di probabilità del modello
+        confrontiamo quanto azzecca davvero rispetto a quanto prometteva.
+      </p>
+
+      @for (section of calibrationSections; track section.id; let first = $first) {
+        <details class="multigol-calibration__band" [open]="first">
+          <summary class="multigol-calibration__band-summary">
+            Fascia {{ section.bandLabel }}
+          </summary>
+          <div class="multigol-calibration__grid">
+            @for (row of section.metrics; track row.label) {
+              <div class="multigol-calibration__metric">
+                <p class="multigol-calibration__metric-label">{{ row.label }}</p>
+                @if (row.total > 0) {
+                  <p class="multigol-calibration__sample">{{ row.sampleLabel }} azzeccate</p>
+                  <div class="multigol-calibration__divider" role="presentation"></div>
+                  <div class="multigol-calibration__rates">
+                    <p class="multigol-calibration__rate-line">
+                      <span class="multigol-calibration__rate-key-wrap">
+                        <span class="multigol-calibration__rate-key">Reale</span>
+                        <button
+                          type="button"
+                          class="multigol-calibration__info"
+                          [matTooltip]="
+                            'Quota di prese sulle partite segnate in fascia (campione ' +
+                            row.sampleLabel +
+                            ').'
+                          "
+                          matTooltipPosition="above"
+                          aria-label="Cosa significa Reale"
+                          (click)="$event.preventDefault()"
+                        >
+                          <mat-icon aria-hidden="true">info</mat-icon>
+                        </button>
+                      </span>
+                      <strong>{{ formatCalibrationPercent(row.observedPercent) }}</strong>
+                    </p>
+                    <p class="multigol-calibration__rate-line">
+                      <span class="multigol-calibration__rate-key-wrap">
+                        <span class="multigol-calibration__rate-key">Attesa</span>
+                        <button
+                          type="button"
+                          class="multigol-calibration__info"
+                          [matTooltip]="
+                            'Media delle probabilità ' +
+                            row.label +
+                            ' che il modello aveva in quella fascia (non l’esito singolo).'
+                          "
+                          matTooltipPosition="above"
+                          aria-label="Cosa significa Attesa"
+                          (click)="$event.preventDefault()"
+                        >
+                          <mat-icon aria-hidden="true">info</mat-icon>
+                        </button>
+                      </span>
+                      <strong>{{ formatCalibrationPercent(row.expectedPercent) }}</strong>
+                    </p>
+                  </div>
+                } @else {
+                  <div class="multigol-calibration__divider" role="presentation"></div>
+                  <p class="vs-text-muted multigol-calibration__empty">
+                    Nessuna pick segnata in fascia.
+                  </p>
+                }
+              </div>
+            }
+          </div>
+        </details>
+      }
+    </details>
+  }
+
   @if (loading) {
     <div class="multigol-progress vs-card">
-      <p class="multigol-progress__label">{{ progressLabel || 'Avvio scansione…' }}</p>
+      <p class="multigol-progress__label">Caricamento snapshot…</p>
+    </div>
+  }
+
+  @if (serverScanInProgress && !loading) {
+    <div class="multigol-progress vs-card">
+      <p class="multigol-progress__label">{{ progressLabel }}</p>
+      @if (allItems.length) {
+        <p class="vs-text-muted multigol-progress__hint">
+          {{ allItems.length }} partite già disponibili — l’elenco si aggiorna sotto.
+        </p>
+      }
     </div>
   }
 
@@ -22,7 +125,30 @@
     <div class="vs-card multigol-error">{{ error }}</div>
   }
 
-  @if (allItems.length || nationOptions.length) {
+  @if (competitions.length) {
+    <details class="vs-card multigol-catalog">
+      <summary class="multigol-catalog__summary">
+        Campionati disponibili ({{ competitions.length }})
+      </summary>
+      <p class="vs-text-muted multigol-catalog__hint">
+        Codice route / id API-Football · paese · nome. La scansione usa solo i campionati abilitati
+        in <code>MULTIGOL_SCOUT_LEAGUE_CODES</code>.
+      </p>
+      <ul class="multigol-catalog__list">
+        @for (c of competitions; track c.key) {
+          <li>
+            <span class="multigol-catalog__id">{{ c.code ?? c.id }}</span>
+            @if (c.areaName) {
+              <span class="multigol-catalog__area">{{ c.areaName }}</span>
+            }
+            <span class="multigol-catalog__name">{{ c.name }}</span>
+          </li>
+        }
+      </ul>
+    </details>
+  }
+
+  @if (competitions.length || allItems.length || nationOptions.length) {
     <div class="multigol-filters vs-card">
       <div class="multigol-filters__block multigol-filters__block--nations">
         <p class="multigol-filters__label">
@@ -32,9 +158,6 @@
               ({{ nationOptions.length }} paesi · {{ totalLeagues }} campionati)
             </span>
           }
-        </p>
-        <p class="vs-text-muted multigol-filters__hint">
-          Selezione multipla — nessuna selezione = tutte. Più campionati possono essere nello stesso paese.
         </p>
         <div class="multigol-nations">
           @for (nation of nationOptions; track nation.key) {
@@ -73,31 +196,85 @@
           </button>
         }
       </div>
+      @if (competitions.length > 1) {
+        <div class="multigol-filters__block multigol-filters__block--leagues">
+          <p class="multigol-filters__label">
+            Campionato
+            <span class="multigol-filters__count">({{ competitions.length }} in elenco)</span>
+          </p>
+          <div class="multigol-leagues">
+            @for (c of leagueOptions; track c.key) {
+              <button
+                type="button"
+                class="multigol-league-chip"
+                [class.is-active]="isLeagueActive(c.key)"
+                [attr.title]="competitionLabel(c)"
+                (click)="toggleLeague(c.key)"
+              >
+                {{ c.name }}
+              </button>
+            }
+          </div>
+          @if (selectedLeagueKeys.size) {
+            <button type="button" class="multigol-filters__clear" (click)="clearLeagues()">
+              Azzera campionati
+            </button>
+          }
+        </div>
+      }
     </div>
   }
 
-  @if (allItems.length && !loading && !error) {
+  @if (allItems.length && !error) {
     <div class="multigol-list-toolbar">
-      <p class="vs-text-muted multigol-count">
-        {{ displayItems.length }} partite
-        @if (selectedNationKeys.size && displayItems.length !== allItems.length) {
-          (su {{ allItems.length }} totali)
-        }
-      </p>
-      <div class="multigol-list-toolbar__sort">
+      <div class="multigol-list-toolbar__controls">
+        <app-vs-multi-select-field
+          class="multigol-list-toolbar__outcome"
+          label="Esito multigol"
+          placeholder="Casa e ospite"
+          [control]="outcomeFilterControl"
+          [options]="outcomeFilterOptions"
+        />
+        <app-vs-multi-select-field
+          class="multigol-list-toolbar__date"
+          label="Data partita"
+          placeholder="Tutte le date"
+          [control]="dateFilterControl"
+          [options]="dateFilterOptions"
+        />
         <app-vs-select-field
+          class="multigol-list-toolbar__min-prob"
+          label="Sintesi min."
+          [control]="minSynthesisControl"
+          [options]="minSynthesisOptions"
+        />
+        <app-vs-select-field
+          class="multigol-list-toolbar__sort"
           label="Ordina per"
           [control]="sortControl"
           [options]="sortOptions"
         />
       </div>
+      <p class="vs-text-muted multigol-count">
+        {{ displayItems.length }} partite
+        @if (loading && totalLeagues) {
+          · {{ loadedLeagues }}/{{ totalLeagues }} campionati
+        }
+        @if (hasActiveFilters && displayItems.length !== allItems.length) {
+          (su {{ allItems.length }} totali)
+        }
+      </p>
     </div>
   }
 
   @if (displayItems.length) {
     <ul class="multigol-list">
-      @for (item of displayItems; track item.matchId) {
-        <li class="vs-card multigol-card">
+      @for (item of displayItems; track item.matchId + ':' + pickResultRevision()) {
+        <li
+          class="vs-card multigol-card"
+          [class.multigol-card--won]="pickResultFor(item.matchId) === 'WON'"
+          [class.multigol-card--lost]="pickResultFor(item.matchId) === 'LOST'"
+        >
           <a [routerLink]="['/multigol-scout', item.matchId]" class="multigol-card__link">
             <span class="multigol-card__meta" [attr.title]="item.leagueName">
               @if (nationFlag(item.areaCode, item.areaName ?? ''); as flag) {
@@ -119,6 +296,9 @@
               }
               <span class="multigol-card__when">{{ formatKickoff(item.utcDate) }}</span>
             </span>
+            @if (formatMatchday(item); as giornata) {
+              <span class="multigol-card__round">{{ giornata }}</span>
+            }
             <div class="multigol-card__match">
               <div class="multigol-card__club">
                 @if (item.homeTeam.crest) {
@@ -154,15 +334,51 @@
                 }}</span>
               </div>
             </div>
-            <div class="multigol-card__prob-block">
-              <span class="multigol-card__prob-value">{{ item.probabilityPercent }}%</span>
+            <div
+              class="multigol-card__prob-block"
+              [ngClass]="probBlockToneClass(synthesisPercent(item))"
+              [attr.title]="synthesisHint(item)"
+            >
+              <div class="multigol-card__prob-row multigol-card__prob-row--synthesis">
+                <span class="multigol-card__prob-kind">Sintesi</span>
+                <span
+                  class="multigol-card__prob-value multigol-card__prob-value--synthesis"
+                  [ngClass]="probToneClass(synthesisPercent(item))"
+                  >{{ formatPoissonPercent(synthesisPercent(item)) }}%</span
+                >
+              </div>
+              <div class="multigol-card__prob-row multigol-card__prob-row--detail">
+                <span class="multigol-card__prob-kind">Poisson</span>
+                <span
+                  class="multigol-card__prob-value"
+                  [ngClass]="probToneClass(item.probabilityPercent)"
+                  [attr.title]="probToneHint(item.probabilityPercent)"
+                  >{{ formatPoissonPercent(item.probabilityPercent) }}%</span
+                >
+              </div>
+              <div class="multigol-card__prob-row multigol-card__prob-row--empirical">
+                <span class="multigol-card__prob-kind">Empirica</span>
+                @if (formatEmpiricalPercent(item); as emp) {
+                  <span
+                    class="multigol-card__prob-value multigol-card__prob-value--secondary"
+                    [ngClass]="probToneClass(item.empiricalProbabilityPercent)"
+                    [attr.title]="probToneHint(item.empiricalProbabilityPercent)"
+                    >{{ emp }}</span
+                  >
+                } @else {
+                  <span class="multigol-card__prob-value multigol-card__prob-value--muted">—</span>
+                }
+              </div>
             </div>
             <span class="multigol-card__pick-label">{{ item.outcomeLabel }}</span>
-            <span class="multigol-card__cta">
-              Vai al dettaglio
-              <mat-icon aria-hidden="true">arrow_forward</mat-icon>
-            </span>
           </a>
+          <div class="multigol-card__result">
+            <span class="multigol-card__result-label">Esito reale</span>
+            <app-event-result-toggle
+              [resultStatus]="pickResultFor(item.matchId)"
+              (resultToggle)="togglePickResult(item.matchId, $event)"
+            />
+          </div>
         </li>
       }
     </ul>
@@ -170,7 +386,14 @@
     <div class="vs-card">
       <p>Nessuna partita corrisponde ai filtri selezionati.</p>
     </div>
-  } @else if (!loading && !error) {
+  } @else if (!loading && !error && !serverScanInProgress && !snapshotBuiltAt) {
+    <div class="vs-card">
+      <p>
+        Nessuno snapshot salvato. Clicca <strong>Aggiorna</strong> per la prima scansione
+        (solo sul server, può richiedere diversi minuti).
+      </p>
+    </div>
+  } @else if (!loading && !error && !serverScanInProgress) {
     <div class="vs-card">
       <p>Nessuna partita supera la soglia multigol 1-6 nel periodo.</p>
     </div>
