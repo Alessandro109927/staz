@@ -387,6 +387,7 @@ export interface MultigolTeamVenueStats {
 export interface MultigolH2hMatchEntry {
   matchId: number;
   utcDate: string;
+  competitionName?: string | null;
   homeTeamName: string;
   homeTeamCrest: string;
   awayTeamName: string;

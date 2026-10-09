@@ -1,6 +1,7 @@
 <div
   class="bet-event-group"
-  [class.bet-event-group--slip]="variant === 'slip'"
+  [class.bet-event-group--slip]="variant === 'slip' || variant === 'history'"
+  [class.bet-event-group--history]="variant === 'history'"
 >
   <app-match-teams-display [eventName]="eventName" [compact]="true" />
 
@@ -8,7 +9,13 @@
     @for (pick of picks; track pick.id) {
       <li>
         <app-bet-event-result-row
-          [layout]="variant === 'slip' ? 'slip-pick' : 'default'"
+          [layout]="
+            variant === 'history'
+              ? 'history-slip'
+              : variant === 'slip'
+                ? 'slip-pick'
+                : 'default'
+          "
           [betId]="betId"
           [event]="pick"
           [showEventName]="false"

@@ -12,6 +12,11 @@
   padding: 0;
 }
 
+:host(.history-pagination) {
+  width: auto;
+  flex: 0 0 auto;
+}
+
 .vs-table-pagination {
   display: flex;
   justify-content: flex-end;

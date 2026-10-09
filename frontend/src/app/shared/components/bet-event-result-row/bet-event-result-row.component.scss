@@ -24,8 +24,27 @@
   &--slip-pick {
     grid-template-columns: auto minmax(0, 1fr);
     gap: $space-3;
-    padding: $space-1 0;
-    padding-left: $space-1;
+    padding: $space-1 $space-3;
+    padding-left: calc(#{$space-3} - 2px);
+    border-left: 2px solid transparent;
+  }
+
+  &--history-slip {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: $space-2 $space-3;
+    padding: $space-2 $space-3;
+    padding-left: calc(#{$space-3} - 2px);
+    border-radius: 0 0.5rem 0.5rem 0;
+    background: rgba(49, 89, 136, 0.08);
+    border-left: 4px solid transparent;
+  }
+
+  &--won {
+    border-left-color: $color-success;
+  }
+
+  &--lost {
+    border-left-color: $color-danger;
   }
 
   &--saving {
@@ -73,6 +92,14 @@
   font-weight: $font-weight-normal;
   color: $color-neutral-600;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.event-result-row__odds-at {
+  justify-self: end;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: #006c49;
   white-space: nowrap;
 }
 

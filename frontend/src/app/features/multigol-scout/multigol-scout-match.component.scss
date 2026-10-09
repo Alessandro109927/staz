@@ -1,22 +1,232 @@
+@use "../../../styles/colors" as c;
 @use "../../../styles/variables" as *;
+@use "../../../styles/mixins" as *;
 @use "./multigol-card";
 
-.multigol-detail-model__grid {
-  margin-top: $space-3;
+.multigol-predictive {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  padding: $space-6;
+  border-radius: 1.25rem;
+  background: c.$staz-white;
+  border: none;
+  box-shadow: 0 4px 18px rgba(c.$staz-ink, 0.07);
+}
 
-  .multigol-standing-metrics__label {
-    text-transform: none;
+.multigol-predictive__title {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin: 0;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: c.$staz-ink;
+
+  mat-icon {
+    width: 1.35rem;
+    height: 1.35rem;
+    font-size: 1.35rem;
+    color: c.$staz-blue;
   }
 }
 
-.multigol-detail-model__pick {
-  color: $color-success;
+.multigol-predictive__subtitle {
+  margin: $space-2 0 0;
+  max-width: 42rem;
+  font-size: $font-size-sm;
+  line-height: 1.45;
+  color: c.$staz-text-muted;
 }
 
-.multigol-stats-h2h__summary {
-  margin-top: $space-2;
-  line-height: 1.5;
+.multigol-predictive__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-4;
+
+  @include down($bp-lg) {
+    grid-template-columns: 1fr;
+  }
 }
+
+.multigol-predictive-card {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  padding: $space-5;
+  border-radius: 1rem;
+  background: #eff4ff;
+  min-width: 0;
+}
+
+.multigol-predictive-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-3;
+}
+
+.multigol-predictive-card__title {
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: c.$staz-text-muted;
+  line-height: 1.35;
+}
+
+.multigol-predictive-card__icon {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 1.5rem;
+  color: c.$staz-muted;
+}
+
+.multigol-predictive-card__compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-4;
+}
+
+.multigol-predictive-card__side {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  min-width: 0;
+
+  &--right {
+    text-align: right;
+    align-items: flex-end;
+  }
+}
+
+.multigol-predictive-card__side-label {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: c.$staz-text-muted;
+  line-height: 1.35;
+}
+
+.multigol-predictive-card__value-row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: $space-1;
+  margin: 0;
+}
+
+.multigol-predictive-card__value {
+  font-size: clamp(1.5rem, 2.4vw, 1.8rem);
+  font-weight: $font-weight-bold;
+  line-height: 1.1;
+  color: c.$staz-ink;
+  font-variant-numeric: tabular-nums;
+
+  &--accent {
+    color: c.$staz-green;
+  }
+}
+
+.multigol-predictive-card__unit {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: c.$staz-text-muted;
+}
+
+.multigol-predictive-card--avg-goals {
+  .multigol-predictive-card__side--right .multigol-predictive-card__value-row {
+    justify-content: flex-end;
+  }
+}
+
+.multigol-predictive-card__bar {
+  height: 0.35rem;
+  border-radius: $radius-full;
+  background: rgba(c.$staz-blue, 0.15);
+  overflow: hidden;
+
+  &--split {
+    display: flex;
+    height: 0.45rem;
+    background: transparent;
+    gap: 2px;
+
+    &::before,
+    &::after {
+      content: '';
+      display: block;
+      height: 100%;
+      border-radius: $radius-full;
+    }
+
+    &::before {
+      flex: 0 0 var(--share-home, 50%);
+      background: c.$staz-slate;
+    }
+
+    &::after {
+      flex: 1 1 auto;
+      background: linear-gradient(
+        90deg,
+        c.$staz-green 0%,
+        rgba(c.$staz-blue, 0.55) 100%
+      );
+    }
+  }
+
+  &--empirical {
+    height: 0.5rem;
+    background: rgba(c.$staz-green, 0.15);
+  }
+}
+
+.multigol-predictive-card__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: c.$staz-green;
+}
+
+.multigol-predictive-card__foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-3;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: c.$staz-text-muted;
+  line-height: 1.35;
+
+  &--single {
+    justify-content: center;
+    text-align: center;
+  }
+
+  &--h2h {
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: $space-1;
+    padding-top: $space-4;
+    border-top: 1px solid rgba(c.$staz-ink, 0.08);
+    text-align: center;
+  }
+}
+
+.multigol-predictive-card__foot-label {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: c.$staz-text-muted;
+}
+
+.multigol-predictive-card__foot-highlight {
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+}
+
+.multigol-predictive-card__foot-muted {
+  color: c.$staz-text-muted;
+}
+
 
 .multigol-detail {
   display: flex;
@@ -36,17 +246,450 @@
   }
 }
 
+.multigol-detail-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+  width: 100%;
+}
+
+.multigol-detail-topbar__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-3;
+  flex-shrink: 0;
+}
+
+.multigol-detail-topbar__sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-4;
+  border-radius: $radius-full;
+  background: #eff4ff;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: c.$staz-blue;
+  white-space: nowrap;
+
+  mat-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    font-size: 1.125rem;
+  }
+}
+
+.multigol-detail-topbar__share-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-4;
+  border: 0;
+  border-radius: $radius-full;
+  background: c.$staz-white;
+  box-shadow: 0 2px 10px rgba(c.$staz-ink, 0.08);
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: c.$staz-ink;
+  white-space: nowrap;
+  cursor: pointer;
+
+  mat-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    font-size: 1.125rem;
+  }
+
+  &:hover {
+    box-shadow: 0 4px 14px rgba(c.$staz-ink, 0.1);
+  }
+}
+
 .multigol-back {
   display: inline-flex;
   align-items: center;
-  gap: $space-1;
-  color: $color-neutral-600;
+  gap: $space-2;
+  color: c.$staz-ink;
   text-decoration: none;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  flex-shrink: 0;
+
+  mat-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 1.25rem;
+  }
 
   &:hover {
-    color: $color-neutral-900;
+    color: c.$staz-blue;
+  }
+}
+
+.multigol-detail-hero-card {
+  border-radius: 1.25rem;
+  background: c.$staz-white;
+  border: none;
+  box-shadow: 0 4px 18px rgba(c.$staz-ink, 0.07);
+  padding: $space-6 $space-8;
+
+  @include down($bp-md) {
+    padding: $space-5;
+  }
+}
+
+.multigol-detail-hero-card__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: $space-6;
+  align-items: stretch;
+
+  @include down($bp-lg) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.multigol-detail-hero-card__match {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  min-width: 0;
+}
+
+.multigol-detail-hero-card__meta {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  flex-wrap: wrap;
+}
+
+.multigol-detail-hero-card__league-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  flex-shrink: 0;
+  padding: $space-2 $space-4;
+  border-radius: $radius-full;
+  background: #eff4ff;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: c.$staz-ink;
+}
+
+.multigol-detail-hero-card__league-flag {
+  display: block;
+  width: 1.25rem;
+  height: auto;
+  border-radius: 2px;
+  object-fit: cover;
+  flex-shrink: 0;
+
+  &--emoji {
+    width: auto;
+    font-size: 1.125rem;
+    line-height: 1;
+  }
+}
+
+.multigol-detail-hero-card__schedule {
+  flex: 1 1 auto;
+  margin: 0;
+  min-width: 12rem;
+  text-align: center;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: c.$staz-text-muted;
+  line-height: 1.4;
+}
+
+.multigol-detail-hero-card__schedule-sep {
+  margin: 0 $space-2;
+  font-weight: $font-weight-medium;
+}
+
+.multigol-detail-hero-card__phase {
+  flex-shrink: 0;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-4;
+  border-radius: $radius-full;
+  background: rgba(c.$staz-green, 0.12);
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  color: c.$staz-green;
+  white-space: nowrap;
+
+  &::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: $radius-full;
+    background: c.$staz-green;
+  }
+}
+
+.multigol-detail-hero-card__teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: $space-5;
+  align-items: center;
+  padding: $space-2 0 $space-1;
+}
+
+.multigol-detail-hero-card__team {
+  display: flex;
+  min-width: 0;
+
+  &--home {
+    justify-content: flex-start;
+  }
+
+  &--away {
+    justify-content: flex-end;
+  }
+}
+
+.multigol-detail-hero-card__team-row {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-4;
+  min-width: 0;
+}
+
+.multigol-detail-hero-card__team-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $space-1;
+  min-width: 0;
+  padding-top: $space-1;
+}
+
+.multigol-detail-hero-card__team--away .multigol-detail-hero-card__team-identity {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.multigol-detail-hero-card__crest-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 4rem;
+  height: 4rem;
+}
+
+.multigol-detail-hero-card__crest {
+  width: 4rem;
+  height: 4rem;
+  object-fit: contain;
+}
+
+.multigol-detail-hero-card__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.75rem;
+  background: rgba(c.$staz-ink, 0.06);
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: c.$staz-text-muted;
+}
+
+.multigol-detail-hero-card__team-name {
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: $font-weight-bold;
+  line-height: 1.15;
+  color: c.$staz-ink;
+}
+
+.multigol-detail-hero-card__team-rank {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: c.$staz-text-muted;
+}
+
+.multigol-detail-hero-card__divider {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid rgba(c.$staz-ink, 0.08);
+}
+
+.multigol-detail-hero-card__vs {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: c.$staz-chrome-muted;
+  text-transform: lowercase;
+}
+
+.multigol-detail-hero-card__signals {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.multigol-detail-hero-card__signal {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: c.$staz-green;
+  line-height: 1.4;
+
+  mat-icon {
+    flex-shrink: 0;
+    width: 1.375rem;
+    height: 1.375rem;
+    font-size: 1.375rem;
+    color: c.$staz-green;
+  }
+
+  strong {
+    font-weight: $font-weight-bold;
+  }
+}
+
+.multigol-detail-hero-card__signal-value {
+  color: c.$staz-ink;
+  font-weight: $font-weight-semibold;
+}
+
+.multigol-detail-esito {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  padding: $space-5 $space-5 $space-6;
+  border-radius: 1rem;
+  background: c.$staz-bg;
+  border: 1px solid rgba(c.$staz-blue, 0.12);
+  box-shadow: 0 2px 12px rgba(c.$staz-ink, 0.04);
+  min-width: 0;
+}
+
+.multigol-detail-esito__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+}
+
+.multigol-detail-esito__title {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: c.$staz-ink;
+
+  mat-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 1.5rem;
+    color: c.$staz-green;
+  }
+}
+
+.multigol-detail-esito__top-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  background: c.$staz-green;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  color: c.$staz-white;
+  white-space: nowrap;
+
+  mat-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    font-size: 0.875rem;
+  }
+}
+
+.multigol-detail-esito__metric-card--market {
+  padding: $space-5 $space-4;
+}
+
+.multigol-detail-esito__market-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.2vw, 1.5rem);
+  font-weight: $font-weight-bold;
+  line-height: 1.25;
+  color: c.$staz-ink;
+  text-align: center;
+}
+
+.multigol-detail-esito__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: $space-3;
+
+  @include down($bp-md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.multigol-detail-esito__metric-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  min-width: 0;
+  padding: $space-4 $space-2;
+  border-radius: 0.875rem;
+  background: c.$staz-white;
+  border: 1px solid rgba(c.$staz-ink, 0.08);
+  text-align: center;
+}
+
+.multigol-detail-esito__metric-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: c.$staz-text-muted;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.multigol-detail-esito__metric-value {
+  font-size: clamp(1.35rem, 2vw, 1.65rem);
+  font-weight: $font-weight-bold;
+  line-height: 1.1;
+  color: c.$staz-ink;
+  font-variant-numeric: tabular-nums;
+
+  &--muted {
+    color: c.$staz-chrome-muted;
+  }
+}
+
+.multigol-detail-esito__metric-sub {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: c.$staz-text-muted;
+  line-height: 1.35;
+
+  &--tone {
+    font-weight: $font-weight-bold;
   }
 }
 
@@ -71,6 +714,340 @@
   @media (max-width: 720px) {
     grid-template-columns: 1fr;
   }
+}
+
+.multigol-team-panel {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  padding: $space-5;
+  border-radius: 1.25rem;
+  background: c.$staz-white;
+  box-shadow: 0 4px 18px rgba(c.$staz-ink, 0.07);
+  min-width: 0;
+}
+
+.multigol-team-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-3;
+  flex-wrap: wrap;
+}
+
+.multigol-team-panel__identity {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  min-width: 0;
+}
+
+.multigol-team-panel__crest-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.75rem;
+  background: #eff4ff;
+  flex-shrink: 0;
+}
+
+.multigol-team-panel__crest {
+  width: 2.75rem;
+  height: 2.75rem;
+  object-fit: contain;
+}
+
+.multigol-team-panel__avatar {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: c.$staz-blue;
+}
+
+.multigol-team-panel__name {
+  margin: 0;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: c.$staz-ink;
+  line-height: 1.2;
+}
+
+.multigol-team-panel__season {
+  margin: $space-1 0 0;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: c.$staz-text-muted;
+}
+
+.multigol-team-panel__head .multigol-form-goals__venue-toggle {
+  margin: 0;
+  padding: $space-1;
+  border-radius: $radius-full;
+  background: #eff4ff;
+}
+
+.multigol-team-panel__head .multigol-form-goals__venue-btn {
+  border: 0;
+  background: transparent;
+  color: c.$staz-text-muted;
+  font-size: $font-size-xs;
+  text-transform: none;
+  letter-spacing: 0;
+
+  &--active {
+    background: c.$staz-white;
+    color: c.$staz-ink;
+    box-shadow: 0 1px 4px rgba(c.$staz-ink, 0.08);
+  }
+}
+
+.multigol-team-panel__hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-3;
+}
+
+.multigol-team-panel__hero-box {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-4;
+  border-radius: 1rem;
+  background: c.$staz-white;
+  border: 1px solid rgba(c.$staz-ink, 0.08);
+  min-width: 0;
+
+  &--poisson {
+    border-color: rgba(c.$staz-green, 0.15);
+  }
+}
+
+.multigol-team-panel__hero-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: c.$staz-text-muted;
+}
+
+.multigol-team-panel__hero-value {
+  font-size: clamp(1.5rem, 2.4vw, 1.85rem);
+  font-weight: $font-weight-bold;
+  line-height: 1.1;
+  color: c.$staz-ink;
+}
+
+.multigol-team-panel__hero-hint {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+
+  &--up {
+    color: c.$staz-green;
+  }
+}
+
+.multigol-team-panel__hero-sub {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: c.$staz-text-muted;
+  line-height: 1.35;
+}
+
+.multigol-team-panel__block-title {
+  margin: 0 0 $space-3;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: c.$staz-text-muted;
+}
+
+.multigol-team-panel__chips {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: $space-2;
+
+  @include down($bp-md) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @include down($bp-sm) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.multigol-team-panel__chip {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  padding: $space-2;
+  border-radius: 0.65rem;
+  background: c.$staz-bg;
+  text-align: center;
+
+  span {
+    font-size: 0.65rem;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: c.$staz-text-muted;
+  }
+
+  strong {
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+    color: c.$staz-ink;
+  }
+
+  &--diff {
+    background: c.$staz-bg;
+
+    strong {
+      color: c.$staz-green;
+    }
+  }
+}
+
+@mixin multigol-team-panel-tile {
+  padding: $space-3 $space-4;
+  border-radius: 0.75rem;
+  background: rgba(c.$staz-blue, 0.04);
+}
+
+.multigol-team-panel__indicators {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-2;
+
+  @include down($bp-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.multigol-team-panel__indicator-box {
+  @include multigol-team-panel-tile;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-3;
+  font-size: $font-size-sm;
+  color: c.$staz-text-muted;
+  min-width: 0;
+
+  strong {
+    font-weight: $font-weight-bold;
+    color: c.$staz-ink;
+    text-align: right;
+    flex-shrink: 0;
+  }
+}
+
+.multigol-team-panel__indicator-accent {
+  color: c.$staz-green !important;
+}
+
+.multigol-team-panel__form-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.multigol-team-panel__form-item {
+  @include multigol-team-panel-tile;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $space-3 $space-4;
+  font-size: $font-size-sm;
+}
+
+.multigol-team-panel__form-date {
+  font-weight: $font-weight-medium;
+  color: c.$staz-text-muted;
+  white-space: nowrap;
+}
+
+.multigol-team-panel__form-matchup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: $space-2 $space-3;
+  min-width: 0;
+  color: c.$staz-ink;
+  line-height: 1.35;
+
+  &--empty {
+    display: flex;
+    justify-content: center;
+    font-weight: $font-weight-bold;
+    color: c.$staz-ink;
+  }
+}
+
+.multigol-team-panel__form-team {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &--home {
+    text-align: right;
+  }
+
+  &--away {
+    text-align: left;
+  }
+
+  &--subject {
+    font-weight: $font-weight-bold;
+  }
+}
+
+.multigol-team-panel__form-score {
+  flex-shrink: 0;
+  padding: $space-1 $space-3;
+  border-radius: 10px;
+  background: c.$staz-white;
+  font-weight: $font-weight-semibold;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.multigol-team-panel__form-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+
+  &--win {
+    color: c.$staz-green;
+    background: rgba(c.$staz-green, 0.14);
+  }
+
+  &--draw {
+    color: c.$staz-text-muted;
+    background: rgba(c.$staz-chrome-muted, 0.35);
+  }
+
+  &--loss {
+    color: #b33;
+    background: rgba(#c94a4a, 0.16);
+  }
+}
+
+.multigol-team-panel__fallback {
+  margin: 0;
+  font-size: $font-size-sm;
+  line-height: 1.45;
+  color: c.$staz-text-muted;
 }
 
 .multigol-compare-card {
@@ -435,31 +1412,269 @@
   }
 }
 
-.multigol-stats-h2h {
+.multigol-h2h {
   width: 100%;
-  margin-top: 2.5rem;
+  margin-top: $space-6;
+}
 
-  &__body {
-    gap: $space-4;
+.multigol-h2h__card {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  padding: $space-6;
+  border-radius: 1.25rem;
+  background: c.$staz-white;
+  border: none;
+  box-shadow: 0 4px 18px rgba(c.$staz-ink, 0.07);
+}
+
+.multigol-h2h__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  flex-wrap: wrap;
+}
+
+.multigol-h2h__head-text {
+  min-width: min(100%, 20rem);
+}
+
+.multigol-h2h__title {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin: 0;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: c.$staz-ink;
+
+  mat-icon {
+    width: 1.35rem;
+    height: 1.35rem;
+    font-size: 1.35rem;
+    color: c.$staz-green;
+  }
+}
+
+.multigol-h2h__subtitle {
+  margin: $space-2 0 0;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  line-height: 1.45;
+  color: c.$staz-text-muted;
+}
+
+.multigol-h2h__badges {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $space-2;
+  flex-shrink: 0;
+}
+
+.multigol-h2h__badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: $space-1;
+  padding: $space-2 $space-4;
+  border-radius: 999px;
+  background: rgba(c.$staz-blue, 0.08);
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: c.$staz-text-muted;
+  white-space: nowrap;
+
+  strong {
+    font-weight: $font-weight-bold;
+    color: c.$staz-ink;
   }
 
-  &__list {
-    margin-top: 0;
+  &--accent strong {
+    color: c.$staz-green;
   }
+}
 
-  &__rates {
-    margin: 0;
+.multigol-h2h__filters {
+  align-self: flex-start;
+}
+
+.multigol-h2h__table-wrap {
+  overflow-x: auto;
+  margin: 0 (-$space-2);
+  padding: 0 $space-2;
+}
+
+.multigol-h2h__table {
+  width: 100%;
+  min-width: 44rem;
+  border-collapse: collapse;
+  font-size: $font-size-sm;
+
+  thead th {
+    padding: 0 $space-3 $space-3;
     font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    line-height: 1.5;
-    color: $color-neutral-600;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-align: left;
+    color: c.$staz-text-muted;
+    white-space: nowrap;
   }
 
-  &__text {
-    margin: 0;
-    font-size: $font-size-base;
-    font-weight: $font-weight-medium;
-    line-height: 1.6;
-    color: $color-neutral-800;
+  tbody td {
+    padding: $space-3;
+    vertical-align: middle;
+    color: c.$staz-ink;
+  }
+
+  tbody tr + tr td {
+    padding-top: $space-4;
+  }
+}
+
+.multigol-h2h__cell-date {
+  font-weight: $font-weight-bold;
+  white-space: nowrap;
+}
+
+.multigol-h2h__cell-muted {
+  color: c.$staz-text-muted;
+}
+
+.multigol-h2h__cell-fixture {
+  font-weight: $font-weight-bold;
+}
+
+.multigol-h2h__score-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.5rem;
+  padding: $space-1 $space-3;
+  border-radius: 999px;
+  background: rgba(c.$staz-blue, 0.08);
+  font-weight: $font-weight-bold;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.multigol-h2h__multigol {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  font-weight: $font-weight-semibold;
+  line-height: 1.35;
+
+  mat-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  &--hit {
+    color: c.$staz-green;
+
+    mat-icon {
+      color: c.$staz-green;
+    }
+  }
+
+  &--miss {
+    color: #b33;
+
+    mat-icon {
+      color: #c94a4a;
+    }
+  }
+}
+
+.multigol-h2h__outcome {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-1 $space-3;
+  border-radius: 999px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+
+  &--won {
+    color: c.$staz-green;
+    background: rgba(c.$staz-green, 0.14);
+  }
+
+  &--lost {
+    color: #b33;
+    background: rgba(#c94a4a, 0.14);
+  }
+}
+
+.multigol-h2h__empty {
+  padding: $space-5 $space-3 !important;
+  text-align: center;
+  color: c.$staz-text-muted;
+  line-height: 1.5;
+}
+
+.multigol-h2h__footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $space-4;
+  padding-top: $space-2;
+}
+
+.multigol-h2h__verdict {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-3;
+  margin: 0;
+  font-size: $font-size-sm;
+  line-height: 1.55;
+  color: c.$staz-ink;
+
+  mat-icon {
+    width: 1.35rem;
+    height: 1.35rem;
+    font-size: 1.35rem;
+    color: c.$staz-green;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  strong {
+    font-weight: $font-weight-bold;
+  }
+}
+
+.multigol-h2h__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  padding: $space-3 $space-5;
+  border: 0;
+  border-radius: 999px;
+  background: c.$staz-green;
+  color: c.$staz-white;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(c.$staz-green, 0.28);
+  transition: filter 0.15s ease;
+
+  mat-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 1.25rem;
+  }
+
+  &:hover {
+    filter: brightness(1.05);
   }
 }

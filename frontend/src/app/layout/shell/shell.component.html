@@ -51,7 +51,7 @@
         [matTooltipDisabled]="!sidebarCollapsed"
         matTooltipPosition="right"
       >
-        <mat-icon>history</mat-icon>
+        <mat-icon>description</mat-icon>
         <span class="nav-label">Storico Scommesse</span>
       </a>
       <a
@@ -73,7 +73,7 @@
         [matTooltipDisabled]="!sidebarCollapsed"
         matTooltipPosition="right"
       >
-        <mat-icon>tools_ladder</mat-icon>
+        <mat-icon>trending_up</mat-icon>
         <span class="nav-label">Scalata</span>
       </a>
       <a
@@ -84,7 +84,7 @@
         [matTooltipDisabled]="!sidebarCollapsed"
         matTooltipPosition="right"
       >
-        <mat-icon>filter_center_focus</mat-icon>
+        <mat-icon>sports_soccer</mat-icon>
         <span class="nav-label">Scout Multigol</span>
       </a>
       <a
@@ -109,7 +109,7 @@
         [matTooltipDisabled]="!sidebarCollapsed"
         matTooltipPosition="right"
       >
-        <mat-icon>add</mat-icon>
+        <mat-icon>add_circle</mat-icon>
         <span class="nav-label">Nuova Scommessa</span>
       </button>
     </div>
@@ -117,29 +117,31 @@
     <div class="sidebar-footer">
       @if (user) {
         <div
-          class="sidebar-user"
+          class="sidebar-profile"
           [matTooltip]="user.email"
           [matTooltipDisabled]="!sidebarCollapsed"
           matTooltipPosition="right"
         >
-          <mat-icon>person</mat-icon>
-          <div class="sidebar-user__info">
-            <span class="sidebar-user__name">{{ user.firstName }} {{ user.lastName }}</span>
-            <span class="sidebar-user__username">{{ user.email }}</span>
+          <div class="sidebar-profile__avatar" aria-hidden="true">
+            <mat-icon>person</mat-icon>
           </div>
+          <div class="sidebar-profile__info">
+            <span class="sidebar-profile__name">{{ user.firstName }} {{ user.lastName }}</span>
+            <span class="sidebar-profile__email">{{ user.email }}</span>
+          </div>
+          <button
+            type="button"
+            class="sidebar-profile__logout"
+            (click)="logout()"
+            aria-label="Esci"
+            matTooltip="Esci"
+            [matTooltipDisabled]="!sidebarCollapsed"
+            matTooltipPosition="right"
+          >
+            <mat-icon>logout</mat-icon>
+          </button>
         </div>
       }
-      <button
-        type="button"
-        class="sidebar-logout"
-        (click)="logout()"
-        matTooltip="Esci"
-        [matTooltipDisabled]="!sidebarCollapsed"
-        matTooltipPosition="right"
-      >
-        <mat-icon>logout</mat-icon>
-        <span class="nav-label">Esci</span>
-      </button>
     </div>
     </aside>
 
@@ -155,47 +157,73 @@
 
   <div class="shell-main">
     <header class="shell-header">
-      <button
-        type="button"
-        class="shell-menu-btn"
-        aria-label="Apri menu"
-        (click)="toggleNav()"
-      >
-        <mat-icon>menu</mat-icon>
-      </button>
+      <div class="shell-header__start">
+        <button
+          type="button"
+          class="shell-menu-btn"
+          aria-label="Apri menu"
+          (click)="toggleNav()"
+        >
+          <mat-icon>menu</mat-icon>
+        </button>
 
-      @if (apiUsage(); as usage) {
-        @if (usage.configured) {
-          <div class="header-api-usage" [attr.title]="apiUsageTitle(usage)">
-            <span class="header-api-usage__label">API-Football</span>
-            <span class="header-api-usage__value">{{ usage.sessionCalls }} chiamate</span>
-            @if (usage.dailyCurrent != null && usage.dailyLimit != null) {
-              <span class="header-api-usage__quota">
-                {{ usage.dailyCurrent }}/{{ usage.dailyLimit }} oggi
-              </span>
-            }
+        @if (apiUsage(); as usage) {
+          @if (usage.configured) {
+            <div class="header-api-badge" [attr.title]="apiUsageTitle(usage)">
+              <span class="header-api-badge__dot" aria-hidden="true"></span>
+              <p class="header-api-badge__text">
+                <span class="header-api-badge__service">API — FOOTBALL</span>
+                {{ usage.sessionCalls }} chiamate
+                @if (usage.dailyCurrent != null && usage.dailyLimit != null) {
+                  <strong class="header-api-badge__quota">
+                    {{ usage.dailyCurrent }}/{{ usage.dailyLimit }} oggi
+                  </strong>
+                }
+              </p>
+            </div>
+          }
+        }
+      </div>
+
+      <div class="shell-header__end">
+        @if (capital) {
+          <div class="header-performance">
+            <span class="header-performance__label">Performance</span>
+            <span
+              class="header-performance__value"
+              [class.header-performance__value--negative]="profit < 0"
+            >
+              {{ profit >= 0 ? '+' : '' }}€ {{ profit | number: '1.2-2' }}
+            </span>
+            <span
+              class="header-performance__roi"
+              [class.header-performance__roi--negative]="roi < 0"
+            >
+              {{ roi >= 0 ? '+' : '' }}{{ roi | number: '1.1-1' }}% ROI
+            </span>
           </div>
         }
-      }
 
-      @if (capital) {
-        <div class="header-balance">
-          <div
-            class="header-balance__value"
-            [class.header-balance__value--positive]="profit >= 0"
-            [class.header-balance__value--negative]="profit < 0"
+        <button
+          type="button"
+          class="header-icon-btn"
+          aria-label="Notifiche"
+          matTooltip="Notifiche (in arrivo)"
+        >
+          <mat-icon>notifications_none</mat-icon>
+        </button>
+
+        @if (user) {
+          <a
+            class="header-user-avatar"
+            routerLink="/settings"
+            [attr.aria-label]="user.firstName + ' ' + user.lastName"
+            [matTooltip]="user.email"
           >
-            {{ profit >= 0 ? '+' : '' }}€ {{ profit | number: '1.2-2' }}
-          </div>
-          <div
-            class="header-balance__roi"
-            [class.header-balance__roi--positive]="roi >= 0"
-            [class.header-balance__roi--negative]="roi < 0"
-          >
-            {{ roi >= 0 ? '+' : '' }}{{ roi | number: '1.1-1' }}% ROI
-          </div>
-        </div>
-      }
+            <mat-icon>person</mat-icon>
+          </a>
+        }
+      </div>
     </header>
 
     <main class="content">

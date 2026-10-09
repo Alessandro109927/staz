@@ -23,6 +23,7 @@ import {
 import { areaFlagView, type AreaFlagView } from './area-flag.util';
 import {
   formatMultigolEmpiricalPercent,
+  formatMultigolCardKickoff,
   formatMultigolKickoff,
   formatMultigolMatchdayLabel,
   formatMultigolProbabilityPercent,
@@ -37,11 +38,8 @@ import {
   MultigolScoutListFiltersService,
   type MultigolScoutSortMode,
 } from './multigol-scout-list-filters.service';
-import {
-  calibrationBandSections,
-  formatCalibrationPercent,
-  type MultigolCalibrationBandSectionView,
-} from './multigol-calibration-format.util';
+
+import { MultigolCalibrationPanelComponent } from './multigol-calibration-panel.component';
 import type { MultigolScoutCalibrationSummary } from '../../core/models';
 import {
   MultigolScoutPickResultService,
@@ -66,6 +64,7 @@ type MultigolNationOption = {
     VsSelectFieldComponent,
     VsMultiSelectFieldComponent,
     EventResultToggleComponent,
+    MultigolCalibrationPanelComponent,
   ],
   templateUrl: './multigol-scout.component.html',
   styleUrl: './multigol-scout.component.scss',
@@ -94,16 +93,17 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
     { value: 'Multigol Ospite 1-6', label: 'Multigol Ospite 1–6' },
   ];
   readonly minSynthesisOptions: VsSelectOption[] = [
-    { value: '0', label: 'Tutte' },
-    { value: '50', label: 'Sintesi ≥ 50%' },
-    { value: '58', label: 'Sintesi ≥ 58%' },
-    { value: '68', label: 'Sintesi ≥ 68%' },
-    { value: '78', label: 'Sintesi ≥ 78%' },
+    { value: '0', label: 'Tutte le probabilità' },
+    { value: '50', label: '> 50,0%' },
+    { value: '58', label: '> 58,0%' },
+    { value: '68', label: '> 68,0%' },
+    { value: '78', label: '> 78,0%' },
+    { value: '90', label: '> 90,0% (Alta affidabilità)' },
   ];
-  sortControl = new FormControl<MultigolScoutSortMode>('date', { nonNullable: true });
+  sortControl = new FormControl<MultigolScoutSortMode>('probability', { nonNullable: true });
   readonly sortOptions: VsSelectOption[] = [
+    { value: 'probability', label: 'Probabilità sintesi' },
     { value: 'date', label: 'Data partita' },
-    { value: 'probability', label: 'Probabilità' },
   ];
   progressLabel = '';
   loadedLeagues = 0;
@@ -262,6 +262,22 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
     return formatMultigolKickoff(utcDate);
   }
 
+  formatCardKickoff(utcDate: string): string {
+    return formatMultigolCardKickoff(utcDate);
+  }
+
+  leagueBadgeInitials(item: MultigolOpportunity): string {
+    const name = item.leagueName?.trim() ?? '';
+    if (!name) {
+      return '—';
+    }
+    const words = name.split(/\s+/).filter(Boolean);
+    if (words.length >= 2) {
+      return `${words[0].charAt(0)}${words[1].charAt(0)}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  }
+
   formatMatchday(item: MultigolOpportunity): string | null {
     return formatMultigolMatchdayLabel(item.matchday, item.roundLabel);
   }
@@ -324,6 +340,36 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
     this.persistChipFilters();
   }
 
+  selectAllMonitored(): void {
+    this.selectedNationKeys = new Set(this.nationOptions.map((n) => n.key));
+    this.selectedLeagueKeys = new Set();
+    this.persistChipFilters();
+  }
+
+  clearMonitoredNationsAndLeagues(): void {
+    this.selectedNationKeys = new Set();
+    this.selectedLeagueKeys = new Set();
+    this.persistChipFilters();
+  }
+
+  isMonitoredTuttiActive(): boolean {
+    return this.selectedNationKeys.size === 0 && this.selectedLeagueKeys.size === 0;
+  }
+
+  nationMatchCount(nationKey: string): number {
+    return this.allItems.filter((item) => this.itemNationKey(item) === nationKey).length;
+  }
+
+  resetMonitoredFilters(): void {
+    this.clearNations();
+    this.clearLeagues();
+    this.outcomeFilterControl.setValue([]);
+    this.dateFilterControl.setValue([]);
+    this.minSynthesisControl.setValue('0');
+    this.sortControl.setValue('probability');
+    this.persistChipFilters();
+  }
+
   isLeagueActive(key: string): boolean {
     return this.selectedLeagueKeys.has(key);
   }
@@ -347,13 +393,28 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
     return this.pickResults.revision();
   }
 
-  get calibrationSections(): MultigolCalibrationBandSectionView[] {
-    const cal = this.pickResults.calibration() ?? this.calibration;
-    return calibrationBandSections(cal?.bands);
+  get calibrationMeta(): MultigolScoutCalibrationSummary | null {
+    return this.pickResults.calibration() ?? this.calibration;
   }
 
-  formatCalibrationPercent(value: number | null): string {
-    return formatCalibrationPercent(value);
+  isTopPick(item: MultigolOpportunity): boolean {
+    return this.synthesisPercent(item) >= 90;
+  }
+
+  teamInitial(name: string): string {
+    const trimmed = name.trim();
+    return trimmed ? trimmed.charAt(0).toUpperCase() : '?';
+  }
+
+  pickStatusLabel(matchId: number): string {
+    const result = this.pickResultFor(matchId);
+    if (result === 'WON') {
+      return 'Presa';
+    }
+    if (result === 'LOST') {
+      return 'Persa';
+    }
+    return 'In Corso';
   }
 
   pickResultFor(matchId: number): EventResultStatus {
@@ -381,7 +442,7 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
     return `n:${areaName.trim().toLowerCase()}`;
   }
 
-  private itemLeagueKey(item: MultigolOpportunity): string {
+  itemLeagueKey(item: MultigolOpportunity): string {
     const code = item.leagueCode;
     const byKey = this.competitions.find((c) => c.key === code);
     if (byKey) {

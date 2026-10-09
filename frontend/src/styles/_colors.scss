@@ -1,71 +1,87 @@
-// ─── Palette (solo bianco e nero) ───────────────────────────
-$vs-black: #000000;
-$vs-white: #ffffff;
+// ─── Palette STAZ (restyling) ───────────────────────────────
+$staz-white: #ffffff;
+$staz-bg: #f8f9ff;
+$staz-text-muted: #5b5e68;
+$staz-chrome-muted: #c3c6d2;
+$staz-ink: #0b1c30;
+$staz-green: #006c49;
+$staz-slate: #213145;
+$staz-blue: #315988;
 
-// ─── Testo ──────────────────────────────────────────────────
-$vs-text: $vs-black;
-$vs-text-muted: rgba($vs-black, 0.55);
-$vs-text-subtle: rgba($vs-black, 0.38);
-$vs-text-inverse: $vs-white;
+/** @deprecated Usare `$staz-text-muted` (testo) o `$staz-chrome-muted` (UI). */
+$staz-muted: $staz-text-muted;
 
-// ─── Superfici ──────────────────────────────────────────────
-$vs-bg: $vs-white;
-$vs-bg-muted: $vs-white;
-$vs-surface: $vs-white;
-$vs-surface-inverse: $vs-black;
+// ─── Alias legacy ($vs-*) ───────────────────────────────────
+$vs-black: $staz-ink;
+$vs-white: $staz-white;
 
-// ─── Bordi e ombre (derivati dal nero) ──────────────────────
-$vs-border: rgba($vs-black, 0.12);
-$vs-border-strong: $vs-black;
-$vs-border-muted: rgba($vs-black, 0.08);
+$vs-text: $staz-ink;
+$vs-text-muted: $staz-text-muted;
+$vs-text-subtle: rgba($staz-text-muted, 0.82);
+$vs-text-inverse: $staz-white;
 
-$vs-shadow: rgba($vs-black, 0.08);
-$vs-shadow-strong: rgba($vs-black, 0.14);
-$vs-focus-ring: rgba($vs-black, 0.16);
-$vs-overlay: rgba($vs-black, 0.45);
+$vs-bg: $staz-bg;
+$vs-bg-muted: $staz-bg;
+$vs-surface: $staz-white;
+$vs-surface-inverse: $staz-ink;
 
-// ─── Stati / accenti (sempre B/N) ───────────────────────────
-$vs-primary: $vs-black;
-$vs-primary-hover: $vs-black;
-$vs-on-primary: $vs-white;
+$vs-border: rgba($staz-ink, 0.1);
+$vs-border-strong: $staz-slate;
+$vs-border-muted: rgba($staz-ink, 0.06);
 
-$vs-button-disabled-bg: rgba($vs-black, 0.18);
-$vs-button-disabled-label: rgba($vs-white, 0.92);
-$vs-button-disabled-outline: rgba($vs-black, 0.22);
-$vs-button-disabled-text: rgba($vs-black, 0.38);
+$vs-shadow: rgba($staz-ink, 0.08);
+$vs-shadow-strong: rgba($staz-ink, 0.14);
+$vs-focus-ring: rgba($staz-blue, 0.35);
+$vs-overlay: rgba($staz-ink, 0.55);
 
-$vs-accent-soft: rgba($vs-black, 0.06);
-$vs-accent-medium: rgba($vs-black, 0.1);
-$vs-accent-strong: rgba($vs-black, 0.14);
+$vs-primary: $staz-blue;
+$vs-primary-hover: #284a73;
+$vs-on-primary: $staz-white;
 
-$vs-inverse-accent-soft: rgba($vs-white, 0.12);
-$vs-inverse-accent-medium: rgba($vs-white, 0.18);
-$vs-inverse-accent-strong: rgba($vs-white, 0.35);
+$vs-button-disabled-bg: rgba($staz-ink, 0.12);
+$vs-button-disabled-label: rgba($staz-white, 0.92);
+$vs-button-disabled-outline: rgba($staz-ink, 0.18);
+$vs-button-disabled-text: rgba($staz-ink, 0.38);
+
+$vs-accent-soft: rgba($staz-blue, 0.08);
+$vs-accent-medium: rgba($staz-blue, 0.14);
+$vs-accent-strong: rgba($staz-blue, 0.22);
+
+$vs-inverse-accent-soft: rgba($staz-white, 0.08);
+$vs-inverse-accent-medium: rgba($staz-white, 0.12);
+$vs-inverse-accent-strong: rgba($staz-white, 0.2);
+
+// Sidebar / nav (dark shell)
+$vs-nav-bg: $staz-ink;
+$vs-nav-surface: $staz-slate;
+$vs-nav-active: $staz-blue;
+$vs-nav-icon: $staz-chrome-muted;
+$vs-nav-border: rgba($staz-white, 0.08);
 
 // ─── Profitto / vincite ─────────────────────────────────────
-$vs-profit: #42c48e;
-$vs-profit-soft: rgba($vs-profit, 0.12);
-$vs-profit-medium: rgba($vs-profit, 0.25);
-$vs-profit-chart-fill: rgba($vs-profit, 0.14);
-$vs-profit-chart-fill-soft: rgba($vs-profit, 0.06);
+$vs-profit: $staz-green;
+$vs-profit-soft: rgba($staz-green, 0.12);
+$vs-profit-medium: rgba($staz-green, 0.22);
+$vs-profit-chart-fill: rgba($staz-green, 0.14);
+$vs-profit-chart-fill-soft: rgba($staz-green, 0.06);
 
 // ─── Perdite / esiti negativi ───────────────────────────────
-$vs-loss: #e25858;
+$vs-loss: #c94a4a;
 $vs-loss-soft: rgba($vs-loss, 0.12);
-$vs-loss-medium: rgba($vs-loss, 0.25);
+$vs-loss-medium: rgba($vs-loss, 0.22);
 $vs-loss-chart-fill: rgba($vs-loss, 0.14);
 $vs-loss-chart-fill-soft: rgba($vs-loss, 0.06);
 
-// ─── Grafici (tonalità di nero; allineare dashboard-charts.util.ts) ─
-$vs-chart-grid: rgba($vs-black, 0.08);
-$vs-chart-axis: rgba($vs-black, 0.42);
-$vs-chart-fill: rgba($vs-black, 0.14);
-$vs-chart-fill-soft: rgba($vs-black, 0.06);
-$vs-chart-tooltip-bg: $vs-black;
-$vs-chart-point-fill: $vs-white;
+// ─── Grafici ────────────────────────────────────────────────
+$vs-chart-grid: rgba($staz-ink, 0.08);
+$vs-chart-axis: rgba($staz-ink, 0.42);
+$vs-chart-fill: rgba($staz-blue, 0.18);
+$vs-chart-fill-soft: rgba($staz-blue, 0.08);
+$vs-chart-tooltip-bg: $staz-ink;
+$vs-chart-point-fill: $staz-white;
 
-$vs-chart-series-1: $vs-black;
-$vs-chart-series-2: rgba($vs-black, 0.72);
-$vs-chart-series-3: rgba($vs-black, 0.52);
-$vs-chart-series-4: rgba($vs-black, 0.36);
-$vs-chart-series-5: rgba($vs-black, 0.22);
+$vs-chart-series-1: $staz-blue;
+$vs-chart-series-2: $staz-slate;
+$vs-chart-series-3: rgba($staz-blue, 0.72);
+$vs-chart-series-4: rgba($staz-blue, 0.52);
+$vs-chart-series-5: rgba($staz-blue, 0.36);

@@ -69,6 +69,7 @@ export type TeamVenueStats = {
 export type H2hMatchEntry = {
   matchId: number;
   utcDate: string;
+  competitionName: string | null;
   homeTeamName: string;
   homeTeamCrest: string;
   awayTeamName: string;
@@ -438,6 +439,7 @@ function h2hMatchEntries(
     return {
       matchId: m.id,
       utcDate: m.utcDate,
+      competitionName: m.competition?.name?.trim() || null,
       homeTeamName: teamName(m.homeTeam),
       homeTeamCrest: teamCrestUrl(m.homeTeam) ?? '',
       awayTeamName: teamName(m.awayTeam),
@@ -666,6 +668,53 @@ export function buildDossier(input: {
         lambdaAway,
         pAway1to6,
       ),
+    },
+  };
+}
+
+/** Ripristina classifica ufficiale se manca (es. dopo patch forma senza row). */
+export function patchStandingFromRows(
+  d: MatchDossier,
+  homeRow: FdStandingRow | undefined,
+  awayRow: FdStandingRow | undefined,
+): MatchDossier {
+  const homeDetail = homeRow ? standingSnapshot(homeRow) : d.stats.homeStandingDetail;
+  const awayDetail = awayRow ? standingSnapshot(awayRow) : d.stats.awayStandingDetail;
+
+  const withVenueStanding = (
+    bundle: TeamVenueStats | undefined,
+    detail: StandingSnapshot | null,
+  ): TeamVenueStats | undefined => {
+    if (!bundle || !detail) {
+      return bundle;
+    }
+    return {
+      ...bundle,
+      all: {
+        ...bundle.all,
+        standingDetail: detail,
+      },
+    };
+  };
+
+  return {
+    ...d,
+    stats: {
+      ...d.stats,
+      homeStanding: homeRow
+        ? standingLine(d.homeTeam.name, homeRow)
+        : d.stats.homeStanding,
+      awayStanding: awayRow
+        ? standingLine(d.awayTeam.name, awayRow)
+        : d.stats.awayStanding,
+      homeStandingDetail: homeDetail,
+      awayStandingDetail: awayDetail,
+      homeVenueStats:
+        withVenueStanding(d.stats.homeVenueStats, homeDetail) ??
+        d.stats.homeVenueStats,
+      awayVenueStats:
+        withVenueStanding(d.stats.awayVenueStats, awayDetail) ??
+        d.stats.awayVenueStats,
     },
   };
 }

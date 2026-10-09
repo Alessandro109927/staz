@@ -1,4 +1,4 @@
-<div class="vs-page">
+<div class="vs-page dashboard-page">
   @if (!capital) {
     <div class="vs-card empty-state">
       <span class="vs-label">Benvenuto</span>
@@ -12,126 +12,249 @@
       </a>
     </div>
   } @else {
-    <header class="vs-page-header">
-      <div>
-        <h1 class="vs-heading-page">Panoramica Dashboard</h1>
-        <p class="vs-text-muted">Monitora capitale, performance e scommesse attive.</p>
+    <header class="dashboard-overview-header">
+      <div class="dashboard-overview-header__text">
+        <h1 class="dashboard-overview-header__title">Panoramica Dashboard</h1>
+        <p class="dashboard-overview-header__subtitle">
+          Monitora capitale, performance e scommesse attive con modelli quantitativi.
+        </p>
+      </div>
+
+      <div class="dashboard-period-toggle" role="group" aria-label="Periodo grafico">
+        @for (option of periodOptions; track option.label) {
+          <button
+            type="button"
+            class="dashboard-period-toggle__btn"
+            [class.dashboard-period-toggle__btn--active]="selectedPeriod === option.days"
+            (click)="selectPeriod(option.days)"
+          >
+            {{ option.label }}
+          </button>
+        }
       </div>
     </header>
 
-    <!-- KPI row -->
-    <section class="vs-grid-kpi">
-      <div class="vs-card--flush kpi-main">
-        <div class="table-header">
-          <h2 class="vs-heading-section">Capitale Totale</h2>
-        </div>
-        <div class="dashboard-card-body kpi-main__body">
-        <div class="kpi-main__value-row">
-          <p
-            class="kpi-main__value"
-            [class.kpi-main__value--positive]="profit >= 0"
-            [class.kpi-main__value--negative]="profit < 0"
-          >
-            € {{ capital.currentCapital | number: '1.2-2' }}
-          </p>
-          <span
-            class="vs-badge"
-            [class.vs-badge--success]="profit >= 0"
-            [class.vs-badge--danger]="profit < 0"
-          >
-            <mat-icon>{{ profit >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
-            {{ roi >= 0 ? '+' : '' }}{{ roi | number: '1.1-1' }}%
-          </span>
-        </div>
-        @if (capitalChart) {
-          <div class="kpi-main__chart-well">
-            <app-vs-chart [config]="capitalChart" [height]="148" />
-          </div>
-        }
-        </div>
-      </div>
-
-      <div class="kpi-grid">
-        <div class="vs-card--flush kpi-mini">
-          <div class="table-header">
-            <h2 class="vs-heading-section">Capitale Iniziale</h2>
-          </div>
-          <div class="dashboard-card-body kpi-mini__body">
-            <p class="vs-value-md">€ {{ capital.initialCapital | number: '1.2-2' }}</p>
-          @if (initialCapitalChart) {
-            <div class="kpi-mini__chart-well">
-              <app-vs-chart [config]="initialCapitalChart" [height]="96" />
-            </div>
-          }
-          </div>
-        </div>
-
-        <div class="vs-card--flush kpi-mini">
-          <div class="table-header">
-            <h2 class="vs-heading-section">Profitto Totale</h2>
-          </div>
-          <div class="dashboard-card-body kpi-mini__body">
+    <section class="dashboard-hero-card">
+      <div class="dashboard-hero-card__top">
+        <div class="dashboard-hero-card__primary">
+          <span class="dashboard-hero-card__label">Capitale totale disponibile</span>
+          <div class="dashboard-hero-card__value-row">
             <p
-              class="vs-value-md"
-              [class.vs-value-success]="profit >= 0"
-              [class.vs-value-danger]="profit < 0"
+              class="dashboard-hero-card__value"
+              [class.dashboard-hero-card__value--negative]="profit < 0"
+            >
+              € {{ capital.currentCapital | number: '1.2-2' }}
+            </p>
+            <span
+              class="dashboard-hero-card__trend"
+              [class.dashboard-hero-card__trend--negative]="roi < 0"
+            >
+              <mat-icon>{{ roi >= 0 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+              {{ roi >= 0 ? '+' : '' }}{{ roi | number: '1.1-1' }}%
+            </span>
+          </div>
+        </div>
+
+        <div class="dashboard-hero-card__stats">
+          <div class="dashboard-hero-stat">
+            <span class="dashboard-hero-stat__label">Profitto</span>
+            <span
+              class="dashboard-hero-stat__value"
+              [class.dashboard-hero-stat__value--negative]="profit < 0"
             >
               {{ profit >= 0 ? '+' : '' }}€ {{ profit | number: '1.2-2' }}
-            </p>
-          @if (profitChart) {
-            <div class="kpi-mini__chart-well">
-              <app-vs-chart [config]="profitChart" [height]="96" />
-            </div>
-          }
+            </span>
+          </div>
+          <div class="dashboard-hero-stat">
+            <span class="dashboard-hero-stat__label">Picco max</span>
+            <span class="dashboard-hero-stat__value">€ {{ peakMax | number: '1.2-2' }}</span>
+          </div>
+          <div class="dashboard-hero-stat">
+            <span class="dashboard-hero-stat__label">Picco min</span>
+            <span class="dashboard-hero-stat__value dashboard-hero-stat__value--negative">
+              € {{ peakMin | number: '1.2-2' }}
+            </span>
           </div>
         </div>
-
-        <div class="vs-card--flush kpi-mini">
-          <div class="table-header">
-            <h2 class="vs-heading-section">ROI totale</h2>
-          </div>
-          <div class="dashboard-card-body kpi-mini__body">
-            <p
-              class="vs-value-md"
-              [class.vs-value-success]="roi >= 0"
-              [class.vs-value-danger]="roi < 0"
-            >
-              {{ roi >= 0 ? '+' : '' }}{{ roi | number: '1.1-1' }}%
-            </p>
-          @if (totalRoiChart) {
-            <div class="kpi-mini__chart-well">
-              <app-vs-chart [config]="totalRoiChart" [height]="96" />
-            </div>
-          }
-          </div>
-        </div>
-
-        @if (stats) {
-          <div class="vs-card--flush kpi-mini kpi-mini--donut">
-            <div class="table-header">
-              <h2 class="vs-heading-section">Win Rate</h2>
-            </div>
-            <div class="dashboard-card-body kpi-mini__body kpi-mini__body--donut">
-              <app-win-rate-donut
-                [won]="stats.won"
-                [lost]="stats.lost"
-                [pending]="stats.pending"
-                [total]="stats.total"
-              />
-            </div>
-          </div>
-        }
       </div>
+
+      @if (capitalChart) {
+        <div class="dashboard-hero-card__chart">
+          <app-vs-chart [config]="capitalChart" [height]="240" />
+        </div>
+      }
     </section>
 
-    <!-- KPI per fascia quota -->
+    <section class="dashboard-metric-grid" aria-label="Indicatori principali">
+      <article class="dashboard-metric-card">
+        <header class="dashboard-metric-card__head">
+          <span class="dashboard-metric-card__title">Capitale iniziale</span>
+          <span class="dashboard-metric-card__icon" aria-hidden="true">
+            <mat-icon>account_balance_wallet</mat-icon>
+          </span>
+        </header>
+        <p class="dashboard-metric-card__value dashboard-metric-card__value--ink">
+          € {{ startingCapital | number: '1.2-2' }}
+        </p>
+        <p class="dashboard-metric-card__hint">
+          Moltiplicatore {{ capitalMultiplier | number: '1.2-2' }}x raggiunto
+        </p>
+        <div class="dashboard-metric-card__divider"></div>
+        <footer class="dashboard-metric-card__foot">
+          <div class="dashboard-metric-card__foot-row">
+            <span>Rapporto Capitale</span>
+            <app-dashboard-capital-flow
+              [from]="startingCapital"
+              [to]="currentCapital"
+            />
+          </div>
+          <div class="dashboard-split-bar" role="presentation">
+            <span
+              class="dashboard-split-bar__segment dashboard-split-bar__segment--muted"
+              [style.width.%]="capitalPrincipalBarPercent"
+            ></span>
+            <span
+              class="dashboard-split-bar__segment dashboard-split-bar__segment--profit"
+              [style.width.%]="capitalGrowthBarPercent"
+            ></span>
+          </div>
+        </footer>
+      </article>
+
+      <article class="dashboard-metric-card">
+        <header class="dashboard-metric-card__head">
+          <span class="dashboard-metric-card__title">Profitto netto</span>
+          <span class="dashboard-metric-card__icon" aria-hidden="true">
+            <mat-icon>savings</mat-icon>
+          </span>
+        </header>
+        <p
+          class="dashboard-metric-card__value"
+          [class.dashboard-metric-card__value--profit]="profit >= 0"
+          [class.dashboard-metric-card__value--loss]="profit < 0"
+        >
+          {{ profit >= 0 ? '+' : '' }}€ {{ profit | number: '1.2-2' }}
+        </p>
+        <p class="dashboard-metric-card__hint">
+          @if (activeBettingDays > 0) {
+            Media € {{ avgProfitPerActiveDay | number: '1.2-2' }} / giorno attivo
+          } @else {
+            Nessun giorno con scommesse regolate
+          }
+        </p>
+        <div class="dashboard-metric-card__divider"></div>
+        <footer class="dashboard-metric-card__foot">
+          <div class="dashboard-metric-card__foot-row">
+            <span>Rapporto Capitale</span>
+            <app-dashboard-capital-flow
+              [from]="startingCapital"
+              [to]="currentCapital"
+            />
+          </div>
+          <div class="dashboard-split-bar" role="presentation">
+            <span
+              class="dashboard-split-bar__segment dashboard-split-bar__segment--muted"
+              [style.width.%]="capitalPrincipalBarPercent"
+            ></span>
+            <span
+              class="dashboard-split-bar__segment dashboard-split-bar__segment--profit"
+              [style.width.%]="capitalGrowthBarPercent"
+            ></span>
+          </div>
+        </footer>
+      </article>
+
+      <article class="dashboard-metric-card">
+        <header class="dashboard-metric-card__head">
+          <span class="dashboard-metric-card__title">ROI totale</span>
+          <span class="dashboard-metric-card__icon" aria-hidden="true">
+            <mat-icon>speed</mat-icon>
+          </span>
+        </header>
+        <p
+          class="dashboard-metric-card__value"
+          [class.dashboard-metric-card__value--profit]="roi >= 0"
+          [class.dashboard-metric-card__value--loss]="roi < 0"
+        >
+          {{ roi >= 0 ? '+' : '' }}{{ roi | number: '1.1-1' }}%
+        </p>
+        <p class="dashboard-metric-card__hint">
+          Target stagionale: {{ seasonRoiTarget | number: '1.1-1' }}%
+        </p>
+        <div class="dashboard-metric-card__divider"></div>
+        <footer class="dashboard-metric-card__foot">
+          <div class="dashboard-metric-card__foot-row">
+            <span>Avanzamento target</span>
+            <strong>{{ roiTargetProgressPercent | number: '1.1-1' }}% completato</strong>
+          </div>
+          <div class="dashboard-progress-bar" role="presentation">
+            <span
+              class="dashboard-progress-bar__fill"
+              [style.width.%]="roiTargetProgressPercent"
+            ></span>
+          </div>
+        </footer>
+      </article>
+
+      @if (stats) {
+        <article class="dashboard-metric-card dashboard-metric-card--win-rate">
+          <header class="dashboard-metric-card__head">
+            <span class="dashboard-metric-card__title">Win rate complessivo</span>
+          </header>
+          <div class="dashboard-win-rate__headline">
+            <p class="dashboard-metric-card__value dashboard-metric-card__value--ink">
+              {{ winRatePercent | number: '1.1-1' }}%
+            </p>
+            <span class="dashboard-win-rate__meta">
+              ({{ stats.won }} su {{ settledBetsCount || stats.total }})
+            </span>
+          </div>
+          <div class="dashboard-win-bar" role="presentation">
+            <span
+              class="dashboard-win-bar__won"
+              [style.width.%]="settledBetsCount ? winRatePercent : 0"
+            ></span>
+            <span
+              class="dashboard-win-bar__lost"
+              [style.width.%]="settledBetsCount ? winRateLostPercent : 0"
+            ></span>
+          </div>
+          <div class="dashboard-metric-card__divider"></div>
+          <footer class="dashboard-win-rate__stats">
+            <div class="dashboard-win-rate__stat">
+              <span class="dashboard-win-rate__stat-label">
+                <span class="dashboard-win-rate__dot dashboard-win-rate__dot--won"></span>
+                Vinte
+              </span>
+              <strong class="dashboard-win-rate__stat-value dashboard-win-rate__stat-value--won">
+                {{ stats.won }} ({{ winRatePercent | number: '1.0-0' }}%)
+              </strong>
+            </div>
+            <div class="dashboard-win-rate__stat">
+              <span class="dashboard-win-rate__stat-label">
+                <span class="dashboard-win-rate__dot dashboard-win-rate__dot--lost"></span>
+                Perse
+              </span>
+              <strong class="dashboard-win-rate__stat-value dashboard-win-rate__stat-value--lost">
+                {{ stats.lost }} ({{ winRateLostPercent | number: '1.0-0' }}%)
+              </strong>
+            </div>
+            <div class="dashboard-win-rate__stat">
+              <span class="dashboard-win-rate__stat-label">Attive</span>
+              <strong class="dashboard-win-rate__stat-value">{{ stats.pending }}</strong>
+            </div>
+          </footer>
+        </article>
+      }
+    </section>
+
     @if (oddsRangeKpis.length) {
-      <section class="vs-card--flush vs-mt-4 odds-range-section">
+      <section class="odds-range-section dashboard-kpi-card">
         <div class="table-header">
           <h2 class="vs-heading-section">KPI per fascia di quota</h2>
         </div>
 
-        <div class="odds-range-section__donuts dashboard-card-body">
+        <div class="odds-range-section__donuts">
           @for (kpi of oddsRangeKpis; track kpi.key) {
             <app-odds-range-kpi-donut [kpi]="kpi" />
           }
@@ -142,5 +265,59 @@
       </section>
     }
 
+    @if (topProfitBets.length) {
+      <section class="dashboard-recent-bets dashboard-kpi-card">
+        <header class="dashboard-recent-bets__header">
+          <div class="dashboard-recent-bets__title">
+            <span class="dashboard-recent-bets__icon" aria-hidden="true">
+              <mat-icon>emoji_events</mat-icon>
+            </span>
+            <h2 class="dashboard-recent-bets__heading">Top 10 profitti</h2>
+          </div>
+          <a routerLink="/history" class="dashboard-recent-bets__link">
+            Vedi storico completo
+            <svg
+              class="dashboard-recent-bets__link-arrow"
+              width="7"
+              height="12"
+              viewBox="0 0 7 12"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="M1 1L6 6L1 11"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </a>
+        </header>
+
+        <div class="dashboard-recent-bets__track" role="list">
+          @for (bet of topProfitBets; track bet.id) {
+            <article
+              class="dashboard-recent-bet dashboard-recent-bet--won"
+              role="listitem"
+              [attr.title]="bet.eventName"
+            >
+              <span class="dashboard-recent-bet__status">{{ betStatusLabel(bet.status) }}</span>
+              <div class="dashboard-recent-bet__metrics">
+                @if (betProfitAmount(bet); as delta) {
+                  <span class="dashboard-recent-bet__amount">
+                    +€ {{ delta | number: '1.2-2' }}
+                  </span>
+                }
+                <span class="dashboard-recent-bet__odds" aria-label="Quota complessiva">
+                  {{ bet.odds }}
+                </span>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    }
   }
 </div>

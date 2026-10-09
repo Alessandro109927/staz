@@ -140,6 +140,20 @@ export class NewBetComponent implements OnInit, OnDestroy {
     return this.combinedOdds;
   }
 
+  get slipKindLabel(): 'Singola' | 'Multipla' {
+    return this.events.length > 1 ? 'Multipla' : 'Singola';
+  }
+
+  get netWinAmount(): number {
+    const { potentialWin, amountStaked } = this.form.getRawValue();
+    const win = Number(potentialWin);
+    const stake = Number(amountStaked);
+    if (!Number.isFinite(win) || !Number.isFinite(stake)) {
+      return 0;
+    }
+    return roundMoney(win - stake);
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();

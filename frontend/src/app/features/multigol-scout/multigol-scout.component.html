@@ -1,120 +1,50 @@
 <div class="vs-page multigol-page">
   <header class="multigol-header">
-    <div>
-      <h1 class="vs-heading-page">Scout Multigol</h1>
-      <p class="vs-text-muted">
-       
+    <div class="multigol-header__intro">
+      <div class="multigol-header__title-row">
+        <h1 class="multigol-header__title">Scout Multigol</h1>
+        <span class="multigol-live-badge">
+          <span class="multigol-live-badge__dot" aria-hidden="true"></span>
+          Live Modeling
+        </span>
+      </div>
+      <p class="multigol-header__meta">
         @if (snapshotBuiltAt) {
-          Dati in cache server · ultima scansione completa
-          {{ snapshotBuiltAt | date: 'short' }}.
+          Dati in cache server · Ultima scansione completa:
+          {{ snapshotBuiltAt | date: 'dd/MM/yyyy, HH:mm:ss' }}.
         } @else if (!loading && !allItems.length) {
-          Nessuno snapshot: usa <strong>Aggiorna</strong> per la prima scansione (solo server).
+          Nessuno snapshot: usa <strong>Aggiorna dati</strong> per la prima scansione.
+        } @else {
+          Dati in cache server · snapshot in caricamento…
         }
       </p>
     </div>
     <button
       type="button"
-      class="vs-btn-primary"
+      class="multigol-btn-refresh"
       (click)="reload()"
       [disabled]="serverScanInProgress"
     >
       <mat-icon>refresh</mat-icon>
-      Aggiorna
+      Aggiorna dati
     </button>
   </header>
 
-  @if (pickResults.calibration(); as cal) {
-    <details class="vs-card multigol-calibration">
-      <summary class="multigol-calibration__summary">
-        Affidabilità algoritmo
-        <span class="multigol-calibration__summary-meta">
-          · {{ cal.labeledPickCount }} esiti su {{ cal.opportunityCount }} partite
-        </span>
-      </summary>
-      <p class="vs-text-muted multigol-calibration__intro">
-        Esiti segnati da te (presa/persa sulle card). Per ogni fascia di probabilità del modello
-        confrontiamo quanto azzecca davvero rispetto a quanto prometteva.
-      </p>
-
-      @for (section of calibrationSections; track section.id; let first = $first) {
-        <details class="multigol-calibration__band" [open]="first">
-          <summary class="multigol-calibration__band-summary">
-            Fascia {{ section.bandLabel }}
-          </summary>
-          <div class="multigol-calibration__grid">
-            @for (row of section.metrics; track row.label) {
-              <div class="multigol-calibration__metric">
-                <p class="multigol-calibration__metric-label">{{ row.label }}</p>
-                @if (row.total > 0) {
-                  <p class="multigol-calibration__sample">{{ row.sampleLabel }} azzeccate</p>
-                  <div class="multigol-calibration__divider" role="presentation"></div>
-                  <div class="multigol-calibration__rates">
-                    <p class="multigol-calibration__rate-line">
-                      <span class="multigol-calibration__rate-key-wrap">
-                        <span class="multigol-calibration__rate-key">Reale</span>
-                        <button
-                          type="button"
-                          class="multigol-calibration__info"
-                          [matTooltip]="
-                            'Quota di prese sulle partite segnate in fascia (campione ' +
-                            row.sampleLabel +
-                            ').'
-                          "
-                          matTooltipPosition="above"
-                          aria-label="Cosa significa Reale"
-                          (click)="$event.preventDefault()"
-                        >
-                          <mat-icon aria-hidden="true">info</mat-icon>
-                        </button>
-                      </span>
-                      <strong>{{ formatCalibrationPercent(row.observedPercent) }}</strong>
-                    </p>
-                    <p class="multigol-calibration__rate-line">
-                      <span class="multigol-calibration__rate-key-wrap">
-                        <span class="multigol-calibration__rate-key">Attesa</span>
-                        <button
-                          type="button"
-                          class="multigol-calibration__info"
-                          [matTooltip]="
-                            'Media delle probabilità ' +
-                            row.label +
-                            ' che il modello aveva in quella fascia (non l’esito singolo).'
-                          "
-                          matTooltipPosition="above"
-                          aria-label="Cosa significa Attesa"
-                          (click)="$event.preventDefault()"
-                        >
-                          <mat-icon aria-hidden="true">info</mat-icon>
-                        </button>
-                      </span>
-                      <strong>{{ formatCalibrationPercent(row.expectedPercent) }}</strong>
-                    </p>
-                  </div>
-                } @else {
-                  <div class="multigol-calibration__divider" role="presentation"></div>
-                  <p class="vs-text-muted multigol-calibration__empty">
-                    Nessuna pick segnata in fascia.
-                  </p>
-                }
-              </div>
-            }
-          </div>
-        </details>
-      }
-    </details>
+  @if (calibrationMeta; as cal) {
+    <app-multigol-calibration-panel [calibration]="cal" />
   }
 
   @if (loading) {
-    <div class="multigol-progress vs-card">
+    <div class="multigol-progress multigol-panel">
       <p class="multigol-progress__label">Caricamento snapshot…</p>
     </div>
   }
 
   @if (serverScanInProgress && !loading) {
-    <div class="multigol-progress vs-card">
+    <div class="multigol-progress multigol-panel">
       <p class="multigol-progress__label">{{ progressLabel }}</p>
       @if (allItems.length) {
-        <p class="vs-text-muted multigol-progress__hint">
+        <p class="multigol-progress__hint">
           {{ allItems.length }} partite già disponibili — l’elenco si aggiorna sotto.
         </p>
       }
@@ -122,279 +52,295 @@
   }
 
   @if (error) {
-    <div class="vs-card multigol-error">{{ error }}</div>
-  }
-
-  @if (competitions.length) {
-    <details class="vs-card multigol-catalog">
-      <summary class="multigol-catalog__summary">
-        Campionati disponibili ({{ competitions.length }})
-      </summary>
-      <p class="vs-text-muted multigol-catalog__hint">
-        Codice route / id API-Football · paese · nome. La scansione usa solo i campionati abilitati
-        in <code>MULTIGOL_SCOUT_LEAGUE_CODES</code>.
-      </p>
-      <ul class="multigol-catalog__list">
-        @for (c of competitions; track c.key) {
-          <li>
-            <span class="multigol-catalog__id">{{ c.code ?? c.id }}</span>
-            @if (c.areaName) {
-              <span class="multigol-catalog__area">{{ c.areaName }}</span>
-            }
-            <span class="multigol-catalog__name">{{ c.name }}</span>
-          </li>
-        }
-      </ul>
-    </details>
+    <div class="multigol-panel multigol-error">{{ error }}</div>
   }
 
   @if (competitions.length || allItems.length || nationOptions.length) {
-    <div class="multigol-filters vs-card">
-      <div class="multigol-filters__block multigol-filters__block--nations">
-        <p class="multigol-filters__label">
-          Nazione
+    <section class="multigol-panel multigol-monitored">
+      <header class="multigol-monitored__head">
+        <div class="multigol-monitored__title-row">
+          <p class="multigol-monitored__eyebrow">Campionati monitorati</p>
           @if (nationOptions.length && totalLeagues) {
-            <span class="multigol-filters__count">
-              ({{ nationOptions.length }} paesi · {{ totalLeagues }} campionati)
+            <span class="multigol-monitored__scope-badge">
+              {{ nationOptions.length }} nazioni / {{ totalLeagues }} leghe
             </span>
           }
-        </p>
-        <div class="multigol-nations">
-          @for (nation of nationOptions; track nation.key) {
-            <button
-              type="button"
-              class="multigol-nation-chip"
-              [class.is-active]="isNationActive(nation.key)"
-              [attr.title]="nation.areaName"
-              [attr.aria-label]="nation.areaName"
-              (click)="toggleNation(nation.key)"
-            >
-              @if (nationFlag(nation.areaCode, nation.areaName); as flag) {
-                @if (flag.kind === 'emoji') {
-                  <span class="multigol-nation-chip__emoji" aria-hidden="true">{{ flag.value }}</span>
-                } @else {
-                  <img
-                    class="multigol-nation-chip__flag"
-                    [src]="flag.value"
-                    alt=""
-                    width="24"
-                    height="18"
-                    loading="lazy"
-                  />
-                }
-              } @else {
-                <span class="multigol-nation-chip__fallback">{{
-                  nation.areaCode ?? nation.areaName.slice(0, 3)
-                }}</span>
-              }
-            </button>
-          }
         </div>
-        @if (selectedNationKeys.size) {
-          <button type="button" class="multigol-filters__clear" (click)="clearNations()">
-            Azzera nazioni
+        <div class="multigol-monitored__actions">
+          <button type="button" class="multigol-monitored__action--primary" (click)="selectAllMonitored()">
+            Seleziona tutti
+          </button>
+          <button type="button" class="multigol-monitored__action--muted" (click)="resetMonitoredFilters()">
+            Reset
+          </button>
+        </div>
+      </header>
+
+      <div class="multigol-preset-chips">
+        <button
+          type="button"
+          class="multigol-preset-chip"
+          [class.is-active]="isMonitoredTuttiActive()"
+          (click)="clearMonitoredNationsAndLeagues()"
+        >
+          <span class="multigol-preset-chip__label">Tutti</span>
+          <span class="multigol-preset-chip__count">{{ allItems.length }}</span>
+        </button>
+        @for (nation of nationOptions; track nation.key) {
+          <button
+            type="button"
+            class="multigol-preset-chip"
+            [class.is-active]="isNationActive(nation.key)"
+            [attr.title]="nation.areaName"
+            [attr.aria-label]="nation.areaName"
+            (click)="toggleNation(nation.key)"
+          >
+            @if (nationFlag(nation.areaCode, nation.areaName); as flag) {
+              @if (flag.kind === 'emoji') {
+                <span class="multigol-preset-chip__emoji" aria-hidden="true">{{ flag.value }}</span>
+              } @else {
+                <img
+                  class="multigol-preset-chip__flag"
+                  [src]="flag.value"
+                  alt=""
+                  width="18"
+                  height="14"
+                  loading="lazy"
+                />
+              }
+            }
+            <span class="multigol-preset-chip__label">{{ nation.areaName }}</span>
+            <span class="multigol-preset-chip__count">{{ nationMatchCount(nation.key) }}</span>
           </button>
         }
       </div>
-      @if (competitions.length > 1) {
-        <div class="multigol-filters__block multigol-filters__block--leagues">
-          <p class="multigol-filters__label">
-            Campionato
-            <span class="multigol-filters__count">({{ competitions.length }} in elenco)</span>
-          </p>
-          <div class="multigol-leagues">
-            @for (c of leagueOptions; track c.key) {
-              <button
-                type="button"
-                class="multigol-league-chip"
-                [class.is-active]="isLeagueActive(c.key)"
-                [attr.title]="competitionLabel(c)"
-                (click)="toggleLeague(c.key)"
-              >
-                {{ c.name }}
-              </button>
-            }
-          </div>
-          @if (selectedLeagueKeys.size) {
-            <button type="button" class="multigol-filters__clear" (click)="clearLeagues()">
-              Azzera campionati
-            </button>
-          }
-        </div>
-      }
-    </div>
-  }
 
-  @if (allItems.length && !error) {
-    <div class="multigol-list-toolbar">
-      <div class="multigol-list-toolbar__controls">
-        <app-vs-multi-select-field
-          class="multigol-list-toolbar__outcome"
-          label="Esito multigol"
-          placeholder="Casa e ospite"
-          [control]="outcomeFilterControl"
-          [options]="outcomeFilterOptions"
-        />
-        <app-vs-multi-select-field
-          class="multigol-list-toolbar__date"
-          label="Data partita"
-          placeholder="Tutte le date"
-          [control]="dateFilterControl"
-          [options]="dateFilterOptions"
-        />
-        <app-vs-select-field
-          class="multigol-list-toolbar__min-prob"
-          label="Sintesi min."
-          [control]="minSynthesisControl"
-          [options]="minSynthesisOptions"
-        />
-        <app-vs-select-field
-          class="multigol-list-toolbar__sort"
-          label="Ordina per"
-          [control]="sortControl"
-          [options]="sortOptions"
-        />
+      <div class="multigol-list-toolbar">
+        <div class="multigol-list-toolbar__controls">
+          <app-vs-multi-select-field
+            class="multigol-filter-field multigol-list-toolbar__outcome"
+            label="Esito multigol"
+            placeholder="Casa e ospite (tutti)"
+            [control]="outcomeFilterControl"
+            [options]="outcomeFilterOptions"
+          />
+          <app-vs-multi-select-field
+            class="multigol-filter-field multigol-list-toolbar__date"
+            label="Finestra temporale"
+            placeholder="Prossime 48 ore"
+            [control]="dateFilterControl"
+            [options]="dateFilterOptions"
+          />
+          <app-vs-select-field
+            class="multigol-filter-field multigol-list-toolbar__min-prob"
+            label="Sintesi algoritmica minima"
+            [control]="minSynthesisControl"
+            [options]="minSynthesisOptions"
+          />
+          <app-vs-select-field
+            class="multigol-filter-field multigol-list-toolbar__sort"
+            label="Criterio ordinamento"
+            [control]="sortControl"
+            [options]="sortOptions"
+          />
+        </div>
       </div>
-      <p class="vs-text-muted multigol-count">
-        {{ displayItems.length }} partite
-        @if (loading && totalLeagues) {
-          · {{ loadedLeagues }}/{{ totalLeagues }} campionati
-        }
-        @if (hasActiveFilters && displayItems.length !== allItems.length) {
-          (su {{ allItems.length }} totali)
-        }
-      </p>
-    </div>
+    </section>
   }
 
   @if (displayItems.length) {
-    <ul class="multigol-list">
-      @for (item of displayItems; track item.matchId + ':' + pickResultRevision()) {
-        <li
-          class="vs-card multigol-card"
-          [class.multigol-card--won]="pickResultFor(item.matchId) === 'WON'"
-          [class.multigol-card--lost]="pickResultFor(item.matchId) === 'LOST'"
-        >
-          <a [routerLink]="['/multigol-scout', item.matchId]" class="multigol-card__link">
-            <span class="multigol-card__meta" [attr.title]="item.leagueName">
-              @if (nationFlag(item.areaCode, item.areaName ?? ''); as flag) {
-                @if (flag.kind === 'emoji') {
-                  <span class="multigol-card__meta-flag multigol-card__meta-flag--emoji" aria-hidden="true">{{
-                    flag.value
-                  }}</span>
-                } @else {
-                  <img
-                    class="multigol-card__meta-flag"
-                    [src]="flag.value"
-                    alt=""
-                    width="20"
-                    height="15"
-                    loading="lazy"
-                  />
-                }
-                <span class="multigol-card__meta-sep" aria-hidden="true">–</span>
-              }
-              <span class="multigol-card__when">{{ formatKickoff(item.utcDate) }}</span>
-            </span>
-            @if (formatMatchday(item); as giornata) {
-              <span class="multigol-card__round">{{ giornata }}</span>
-            }
-            <div class="multigol-card__match">
-              <div class="multigol-card__club">
-                @if (item.homeTeam.crest) {
-                  <img
-                    class="multigol-card__crest"
-                    [src]="item.homeTeam.crest"
-                    alt=""
-                    loading="lazy"
-                    (error)="onCrestError($event)"
-                  />
-                } @else {
-                  <span class="multigol-card__crest multigol-card__crest--ph" aria-hidden="true"></span>
-                }
-                <span class="multigol-card__name" [attr.title]="item.homeTeam.name">{{
-                  item.homeTeam.name
-                }}</span>
+    <section class="multigol-matches">
+      <header class="multigol-matches__head">
+        <div class="multigol-matches__title-wrap">
+          <h2 class="multigol-matches__title">Partite selezionate</h2>
+          <span class="multigol-matches__badge">{{ displayItems.length }} match top-rating</span>
+        </div>
+        <p class="multigol-matches__meta">
+          Database globale: {{ allItems.length }} partite analizzate
+        </p>
+      </header>
+
+      <ul class="multigol-list">
+        @for (item of displayItems; track item.matchId + ':' + pickResultRevision()) {
+          <li
+            class="multigol-card"
+            [class.multigol-card--won]="pickResultFor(item.matchId) === 'WON'"
+            [class.multigol-card--lost]="pickResultFor(item.matchId) === 'LOST'"
+          >
+            <a [routerLink]="['/multigol-scout', item.matchId]" class="multigol-card__link">
+              <div class="multigol-card__top">
+                <div class="multigol-card__league-block">
+                  <span class="multigol-card__league-badge" aria-hidden="true">
+                    @if (nationFlag(item.areaCode, item.areaName ?? ''); as flag) {
+                      @if (flag.kind === 'emoji') {
+                        <span class="multigol-card__league-flag multigol-card__league-flag--emoji">{{
+                          flag.value
+                        }}</span>
+                      } @else {
+                        <img
+                          class="multigol-card__league-flag"
+                          [src]="flag.value"
+                          alt=""
+                          width="28"
+                          height="21"
+                          loading="lazy"
+                        />
+                      }
+                    } @else {
+                      <span class="multigol-card__league-initials">{{
+                        leagueBadgeInitials(item)
+                      }}</span>
+                    }
+                  </span>
+                  <div class="multigol-card__league-text">
+                    <span class="multigol-card__league">{{ item.leagueName }}</span>
+                    @if (formatMatchday(item); as giornata) {
+                      <span class="multigol-card__round">{{ giornata }}</span>
+                    }
+                  </div>
+                </div>
+                <span class="multigol-card__kickoff-pill">
+                  <mat-icon aria-hidden="true">schedule</mat-icon>
+                  {{ formatCardKickoff(item.utcDate) }}
+                </span>
               </div>
-              <span class="multigol-card__vs" aria-hidden="true">VS</span>
-              <div class="multigol-card__club">
-                @if (item.awayTeam.crest) {
-                  <img
-                    class="multigol-card__crest"
-                    [src]="item.awayTeam.crest"
-                    alt=""
-                    loading="lazy"
-                    (error)="onCrestError($event)"
-                  />
-                } @else {
-                  <span class="multigol-card__crest multigol-card__crest--ph" aria-hidden="true"></span>
-                }
-                <span class="multigol-card__name" [attr.title]="item.awayTeam.name">{{
-                  item.awayTeam.name
-                }}</span>
+
+              <div class="multigol-card__match-box">
+                <div class="multigol-card__club">
+                  @if (item.homeTeam.crest) {
+                    <img
+                      class="multigol-card__crest"
+                      [src]="item.homeTeam.crest"
+                      alt=""
+                      loading="lazy"
+                      (error)="onCrestError($event)"
+                    />
+                  } @else {
+                    <span class="multigol-card__avatar" aria-hidden="true">{{
+                      teamInitial(item.homeTeam.name)
+                    }}</span>
+                  }
+                  <span class="multigol-card__name">{{ item.homeTeam.name }}</span>
+                  <span class="multigol-card__role">Casa</span>
+                </div>
+                <span class="multigol-card__vs" aria-hidden="true">vs</span>
+                <div class="multigol-card__club">
+                  @if (item.awayTeam.crest) {
+                    <img
+                      class="multigol-card__crest"
+                      [src]="item.awayTeam.crest"
+                      alt=""
+                      loading="lazy"
+                      (error)="onCrestError($event)"
+                    />
+                  } @else {
+                    <span class="multigol-card__avatar" aria-hidden="true">{{
+                      teamInitial(item.awayTeam.name)
+                    }}</span>
+                  }
+                  <span class="multigol-card__name">{{ item.awayTeam.name }}</span>
+                  <span class="multigol-card__role">Ospite</span>
+                </div>
               </div>
-            </div>
-            <div
-              class="multigol-card__prob-block"
-              [ngClass]="probBlockToneClass(synthesisPercent(item))"
-              [attr.title]="synthesisHint(item)"
-            >
-              <div class="multigol-card__prob-row multigol-card__prob-row--synthesis">
-                <span class="multigol-card__prob-kind">Sintesi</span>
-                <span
-                  class="multigol-card__prob-value multigol-card__prob-value--synthesis"
-                  [ngClass]="probToneClass(synthesisPercent(item))"
-                  >{{ formatPoissonPercent(synthesisPercent(item)) }}%</span
-                >
-              </div>
-              <div class="multigol-card__prob-row multigol-card__prob-row--detail">
-                <span class="multigol-card__prob-kind">Poisson</span>
-                <span
-                  class="multigol-card__prob-value"
-                  [ngClass]="probToneClass(item.probabilityPercent)"
-                  [attr.title]="probToneHint(item.probabilityPercent)"
-                  >{{ formatPoissonPercent(item.probabilityPercent) }}%</span
-                >
-              </div>
-              <div class="multigol-card__prob-row multigol-card__prob-row--empirical">
-                <span class="multigol-card__prob-kind">Empirica</span>
-                @if (formatEmpiricalPercent(item); as emp) {
+
+              <div class="multigol-card__prediction-box">
+                <div class="multigol-card__prediction-head">
+                  <span class="multigol-card__prediction-label">Pronostico calcolato</span>
+                  @if (isTopPick(item)) {
+                    <span class="multigol-card__top-pick">
+                      <mat-icon aria-hidden="true">bolt</mat-icon>
+                      Top Pick
+                    </span>
+                  }
+                </div>
+                <div class="multigol-card__prediction-main">
+                  <strong class="multigol-card__outcome">{{ item.outcomeLabel }}</strong>
                   <span
-                    class="multigol-card__prob-value multigol-card__prob-value--secondary"
-                    [ngClass]="probToneClass(item.empiricalProbabilityPercent)"
-                    [attr.title]="probToneHint(item.empiricalProbabilityPercent)"
-                    >{{ emp }}</span
+                    class="multigol-card__hero-pct"
+                    [ngClass]="probToneClass(synthesisPercent(item))"
+                    >{{ formatPoissonPercent(synthesisPercent(item)) }}%</span
                   >
-                } @else {
-                  <span class="multigol-card__prob-value multigol-card__prob-value--muted">—</span>
-                }
+                </div>
               </div>
-            </div>
-            <span class="multigol-card__pick-label">{{ item.outcomeLabel }}</span>
-          </a>
-          <div class="multigol-card__result">
-            <span class="multigol-card__result-label">Esito reale</span>
-            <app-event-result-toggle
-              [resultStatus]="pickResultFor(item.matchId)"
-              (resultToggle)="togglePickResult(item.matchId, $event)"
-            />
-          </div>
-        </li>
-      }
-    </ul>
+
+              <div class="multigol-card__prob-strip">
+                <div class="multigol-card__prob-mini">
+                  <span>Sintesi</span>
+                  <strong [ngClass]="probToneClass(synthesisPercent(item))"
+                    >{{ formatPoissonPercent(synthesisPercent(item)) }}%</strong
+                  >
+                </div>
+                <div class="multigol-card__prob-mini">
+                  <span>Poisson</span>
+                  <strong [ngClass]="probToneClass(item.probabilityPercent)"
+                    >{{ formatPoissonPercent(item.probabilityPercent) }}%</strong
+                  >
+                </div>
+                <div class="multigol-card__prob-mini">
+                  <span>Empirica</span>
+                  @if (formatEmpiricalPercent(item); as emp) {
+                    <strong [ngClass]="probToneClass(item.empiricalProbabilityPercent)">{{ emp }}</strong>
+                  } @else {
+                    <strong class="multigol-card__prob-muted">—</strong>
+                  }
+                </div>
+              </div>
+            </a>
+
+            <footer class="multigol-card__footer">
+              <div class="multigol-card__footer-row">
+                <span class="multigol-card__footer-label">Esito:</span>
+                <span
+                  class="multigol-card__status"
+                  [class.multigol-card__status--live]="pickResultFor(item.matchId) == null"
+                  [class.multigol-card__status--won]="pickResultFor(item.matchId) === 'WON'"
+                  [class.multigol-card__status--lost]="pickResultFor(item.matchId) === 'LOST'"
+                >
+                  @if (pickResultFor(item.matchId) === 'WON') {
+                    <mat-icon aria-hidden="true">check</mat-icon>
+                  } @else if (pickResultFor(item.matchId) === 'LOST') {
+                    <mat-icon aria-hidden="true">close</mat-icon>
+                  } @else {
+                    <mat-icon aria-hidden="true">schedule</mat-icon>
+                  }
+                  {{ pickStatusLabel(item.matchId) }}
+                </span>
+                <span class="multigol-card__detail-link">
+                  Vedi analisi dettagliata
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
+                    <path
+                      d="M1 5H11M11 5L7.5 1.5M11 5L7.5 8.5"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="multigol-card__result">
+                <app-event-result-toggle
+                  [resultStatus]="pickResultFor(item.matchId)"
+                  (resultToggle)="togglePickResult(item.matchId, $event)"
+                />
+              </div>
+            </footer>
+          </li>
+        }
+      </ul>
+    </section>
   } @else if (!loading && !error && allItems.length && !displayItems.length) {
-    <div class="vs-card">
+    <div class="multigol-panel">
       <p>Nessuna partita corrisponde ai filtri selezionati.</p>
     </div>
   } @else if (!loading && !error && !serverScanInProgress && !snapshotBuiltAt) {
-    <div class="vs-card">
+    <div class="multigol-panel">
       <p>
-        Nessuno snapshot salvato. Clicca <strong>Aggiorna</strong> per la prima scansione
-        (solo sul server, può richiedere diversi minuti).
+        Nessuno snapshot salvato. Clicca <strong>Aggiorna dati</strong> per la prima scansione.
       </p>
     </div>
   } @else if (!loading && !error && !serverScanInProgress) {
-    <div class="vs-card">
+    <div class="multigol-panel">
       <p>Nessuna partita supera la soglia multigol 1-6 nel periodo.</p>
     </div>
   }

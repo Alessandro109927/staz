@@ -1,28 +1,31 @@
 import { ChartConfiguration } from 'chart.js';
 import {
+  VS_CHART_AXIS,
+  VS_CHART_GRID,
+  VS_INK,
   VS_LOSS,
   VS_LOSS_CHART_FILL_SOFT,
   VS_PROFIT,
   VS_PROFIT_CHART_FILL,
+  VS_PROFIT_CHART_FILL_SOFT,
 } from '../../core/constants/app-colors';
 import { APP_FONT_FAMILY } from '../../core/constants/app-font';
 import { Bet, Capital, profitFromCapital, startingCapitalValue } from '../../core/models';
 import { moneyDifference } from '../../core/utils/money.util';
 
-/** Allineati a `styles/_colors.scss`. */
-const BLACK = '#000000';
 const WHITE = '#ffffff';
-const GRID = 'rgba(0, 0, 0, 0.08)';
-const AXIS = 'rgba(0, 0, 0, 0.42)';
-const FILL = 'rgba(0, 0, 0, 0.14)';
-const FILL_SOFT = 'rgba(0, 0, 0, 0.06)';
+const GRID = VS_CHART_GRID;
+const AXIS = VS_CHART_AXIS;
+const FILL = VS_PROFIT_CHART_FILL;
 const SERIES = [
-  BLACK,
-  'rgba(0, 0, 0, 0.72)',
-  'rgba(0, 0, 0, 0.52)',
-  'rgba(0, 0, 0, 0.36)',
-  'rgba(0, 0, 0, 0.22)',
+  VS_INK,
+  'rgba(11, 28, 48, 0.72)',
+  'rgba(11, 28, 48, 0.52)',
+  'rgba(11, 28, 48, 0.36)',
+  'rgba(11, 28, 48, 0.22)',
 ] as const;
+
+export type CapitalChartPeriodDays = 7 | 30 | 90 | null;
 const FONT = APP_FONT_FAMILY;
 
 interface MonthBucket {
@@ -89,7 +92,7 @@ function baseTooltip(): NonNullable<ChartConfiguration['options']>['plugins'] {
   return {
     legend: { display: false },
     tooltip: {
-      backgroundColor: BLACK,
+      backgroundColor: VS_INK,
       padding: 10,
       cornerRadius: 8,
       titleFont: { size: 11, weight: 'bold' as const, family: FONT },
@@ -149,10 +152,27 @@ function baseChartOptions(
 
 function euro(value: string | number): string {
   const num = Number(value);
-  if (Math.abs(num) >= 1000) {
-    return `€${(num / 1000).toFixed(1)}k`;
+  return `€ ${num.toLocaleString('it-IT', { maximumFractionDigits: 0 })}`;
+}
+
+function periodCutoff(periodDays: CapitalChartPeriodDays): Date | null {
+  if (periodDays == null) {
+    return null;
   }
-  return `€${num.toFixed(0)}`;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - periodDays);
+  cutoff.setHours(0, 0, 0, 0);
+  return cutoff;
+}
+
+export function capitalSeriesPeaks(values: number[]): { peakMax: number; peakMin: number } {
+  if (!values.length) {
+    return { peakMax: 0, peakMin: 0 };
+  }
+  return {
+    peakMax: Math.max(...values),
+    peakMin: Math.min(...values),
+  };
 }
 
 function lineDataset(
@@ -179,26 +199,55 @@ function lineDataset(
 export function buildCapitalEvolutionChart(
   capital: Capital,
   bets: Bet[],
+  periodDays: CapitalChartPeriodDays = null,
 ): ChartConfiguration {
+  const settled = sortedSettledBets(bets);
+  const cutoff = periodCutoff(periodDays);
+  const labels: string[] = [];
+  const data: number[] = [];
   const starting = startingCapitalValue(capital);
-  const labels = [formatShortDate(capital.createdAt)];
-  const data = [starting];
 
-  for (const bet of sortedSettledBets(bets)) {
-    labels.push(formatShortDate(bet.settledAt!));
-    data.push(Number(bet.capitalAfter));
+  if (cutoff) {
+    let capitalAtStart = starting;
+    for (const bet of settled) {
+      if (new Date(bet.settledAt!) < cutoff) {
+        capitalAtStart = Number(bet.capitalAfter);
+      }
+    }
+    labels.push(formatShortDate(cutoff));
+    data.push(capitalAtStart);
+
+    for (const bet of settled) {
+      if (new Date(bet.settledAt!) >= cutoff) {
+        labels.push(formatShortDate(bet.settledAt!));
+        data.push(Number(bet.capitalAfter));
+      }
+    }
+  } else {
+    labels.push(formatShortDate(capital.createdAt));
+    data.push(starting);
+
+    for (const bet of settled) {
+      labels.push(formatShortDate(bet.settledAt!));
+      data.push(Number(bet.capitalAfter));
+    }
   }
 
   const current = Number(capital.currentCapital);
   if (data.at(-1) !== current) {
-    labels.push('Oggi');
+    labels.push(formatShortDate(new Date()));
     data.push(current);
   }
 
   if (data.length === 1) {
-    labels.push('Oggi');
+    labels.push(formatShortDate(new Date()));
     data.push(current);
   }
+
+  const lastIdx = labels.length - 1;
+  labels[lastIdx] = `${labels[lastIdx]} (Oggi)`;
+
+  const pointRadius = data.map((_, index) => (index === data.length - 1 ? 5 : 0));
 
   return {
     type: 'line',
@@ -209,10 +258,14 @@ export function buildCapitalEvolutionChart(
           label: 'Capitale',
           ...lineDataset(
             data,
-            BLACK,
-            `gradient:${FILL}:${FILL_SOFT}`,
+            VS_PROFIT,
+            `gradient:${VS_PROFIT_CHART_FILL}:${VS_PROFIT_CHART_FILL_SOFT}`,
             data.length,
           ),
+          pointRadius,
+          pointHoverRadius: data.map((_, index) => (index === data.length - 1 ? 6 : 4)),
+          pointBackgroundColor: VS_PROFIT,
+          pointBorderColor: WHITE,
         },
       ],
     },
@@ -227,7 +280,7 @@ export function buildCapitalEvolutionChart(
         },
       },
       scales: {
-        x: axisXMinimal(5),
+        x: axisXMinimal(6),
         y: axisYMinimal(euro, 4),
       },
     }),
@@ -419,7 +472,7 @@ export function buildAverageOddsChart(bets: Bet[]): ChartConfiguration {
           label: 'Quota',
           ...lineDataset(
             ordered.map((bet) => Number(bet.odds)),
-            BLACK,
+            VS_INK,
             `gradient:${FILL}:rgba(255,255,255,0)`,
             ordered.length,
           ),
@@ -475,7 +528,7 @@ export function buildBetsTimelineChart(
         {
           data: totals,
           backgroundColor: buckets.map((bucket) =>
-            bucket.key === currentKey ? BLACK : FILL,
+            bucket.key === currentKey ? VS_INK : FILL,
           ),
           borderRadius: 6,
           borderSkipped: false,

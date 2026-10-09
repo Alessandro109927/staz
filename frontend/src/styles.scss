@@ -234,6 +234,8 @@ $theme: mat.define-theme(
 
 .bet-form-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface {
   min-width: min(980px, 98vw);
+  border-radius: 1.25rem;
+  overflow: hidden;
 }
 
 .bet-form-dialog-panel .mat-mdc-dialog-container {
@@ -253,25 +255,11 @@ $theme: mat.define-theme(
   padding-bottom: $space-5;
 }
 
-.bet-form-dialog-panel .mat-mdc-dialog-title.table-header {
+.bet-form-dialog-panel .mat-mdc-dialog-title.bet-form-dialog__header {
   flex-shrink: 0;
   margin: 0;
   width: 100%;
   box-sizing: border-box;
-  padding: $space-5 $space-6;
-  border-bottom: 1px solid $color-neutral-200;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  line-height: 1.3;
-  color: c.$vs-black;
-
-  &::before {
-    display: none;
-  }
-
-  @include down($bp-md) {
-    padding: $space-4;
-  }
 }
 
 @include down($bp-md) {

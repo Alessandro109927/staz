@@ -52,6 +52,11 @@
   @include down($bp-md) {
     padding: $space-4;
   }
+
+  &.odds-range-section__donuts {
+    display: grid;
+    flex-direction: unset;
+  }
 }
 
 // ─── Badge / pill ───────────────────────────────────────────

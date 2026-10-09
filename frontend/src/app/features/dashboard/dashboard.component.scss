@@ -1,314 +1,501 @@
+@use '../../../styles/colors' as c;
 @use '../../../styles/variables' as *;
 @use '../../../styles/mixins' as *;
 
-.kpi-main {
-  display: flex;
-  flex-direction: column;
+.dashboard-page {
   width: 100%;
+  max-width: none;
+  box-sizing: border-box;
 }
 
-.kpi-main__value-row {
+.dashboard-overview-header {
   display: flex;
-  align-items: center;
-  gap: $space-3;
-  flex-wrap: wrap;
-  margin-top: $space-2;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-6;
 
-  .vs-badge {
+  @include down($bp-md) {
+    flex-direction: column;
+    margin-bottom: $space-4;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: clamp(1.75rem, 4vw, $font-size-3xl);
+    font-weight: $font-weight-bold;
+    color: c.$staz-ink;
+    line-height: 1.15;
+  }
+
+  &__subtitle {
+    margin: $space-2 0 0;
+    max-width: 36rem;
     font-size: $font-size-base;
-    padding: $space-2 $space-3;
+    line-height: 1.5;
+    color: c.$staz-text-muted;
+  }
+}
 
-    mat-icon {
-      font-size: $icon-size-md;
-      width: $icon-size-md;
-      height: $icon-size-md;
+.dashboard-period-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: $space-1;
+  border-radius: $radius-full;
+  background: rgba(c.$staz-chrome-muted, 0.35);
+  gap: $space-1;
+
+  &__btn {
+    border: none;
+    background: transparent;
+    color: c.$staz-ink;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    font-family: inherit;
+    padding: $space-2 $space-4;
+    border-radius: $radius-full;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+
+    &--active {
+      background: c.$staz-white;
+      color: c.$staz-ink;
+      box-shadow: $shadow-sm;
+    }
+
+    &:hover:not(&--active) {
+      background: rgba(c.$staz-white, 0.45);
     }
   }
 }
 
-.kpi-main__value {
-  font-size: clamp(3.25rem, 7vw, 4.75rem);
-  font-weight: $font-weight-bold;
-  line-height: 1.05;
-  margin: 0;
+.dashboard-hero-card,
+.dashboard-kpi-card {
+  width: 100%;
+  box-sizing: border-box;
+}
 
-  &--positive {
-    color: $color-success;
+.dashboard-hero-card {
+  padding: $space-6;
+  border-radius: $radius-xl;
+  background: c.$staz-white;
+  box-shadow: $shadow-sm;
+  border: 1px solid c.$vs-border-muted;
+
+  @include down($bp-md) {
+    padding: $space-4;
   }
 
-  &--negative {
-    color: $color-danger;
+  &__primary {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $space-6;
+    width: 100%;
+    margin-bottom: $space-5;
+
+    @include down($bp-lg) {
+      flex-direction: column;
+      gap: $space-4;
+    }
+  }
+
+  &__label {
+    display: block;
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: c.$staz-text-muted;
+  }
+
+  &__value-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $space-3;
+    margin-top: $space-2;
+  }
+
+  &__value {
+    margin: 0;
+    font-size: clamp(2.5rem, 6vw, 3.5rem);
+    font-weight: $font-weight-bold;
+    line-height: 1.05;
+    color: c.$staz-green;
+
+    &--negative {
+      color: c.$vs-loss;
+    }
+  }
+
+  &__trend {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    padding: $space-1 $space-3;
+    border-radius: $radius-full;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    color: c.$staz-green;
+    background: rgba(c.$staz-green, 0.12);
+
+    mat-icon {
+      font-size: 1rem;
+      width: 1rem;
+      height: 1rem;
+    }
+
+    &--negative {
+      color: c.$vs-loss;
+      background: c.$vs-loss-soft;
+    }
+  }
+
+  &__stats {
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    padding: $space-3 $space-4;
+    border-radius: $radius-lg;
+    background: #EFF4FF;
+    gap: 0;
+
+    @include down($bp-sm) {
+      flex-direction: column;
+      width: 100%;
+    }
+  }
+
+  &__chart {
+    width: 100%;
+    padding: $space-2 0 0;
+    min-height: 240px;
   }
 }
 
-.kpi-main__chart-well {
-  flex: 1;
-  margin-top: $space-4;
-  padding: $space-3 $space-3 $space-2;
-  border-radius: $radius-md;
-  background: linear-gradient(180deg, $color-neutral-50 0%, rgba($color-neutral-50, 0.35) 100%);
-  min-height: 148px;
+.dashboard-kpi-card {
+  margin-top: $space-6;
+  padding: 0;
+  overflow: hidden;
+  border-radius: $radius-xl;
+  background: c.$staz-white;
+  box-shadow: $shadow-sm;
+  border: 1px solid c.$vs-border-muted;
+
+  .table-header {
+    border-bottom-color: c.$vs-border-muted;
+  }
+
+  .odds-range-section__donuts {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: stretch;
+    gap: $space-4;
+    width: 100%;
+    padding: $space-5 $space-6;
+    box-sizing: border-box;
+
+    @include down($bp-lg) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include down($bp-md) {
+      grid-template-columns: 1fr;
+      padding: $space-4;
+    }
+  }
 }
 
-.kpi-grid {
+.dashboard-hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  padding: 0 $space-5;
+  min-width: 7.5rem;
+
+  &:not(:last-child) {
+    border-right: 1px solid rgba(c.$staz-ink, 0.08);
+  }
+
+  @include down($bp-sm) {
+    padding: $space-2 0;
+    min-width: 0;
+
+    &:not(:last-child) {
+      border-right: none;
+      border-bottom: 1px solid rgba(c.$staz-ink, 0.08);
+    }
+  }
+
+  &__label {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: c.$staz-text-muted;
+  }
+
+  &__value {
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+    color: c.$staz-ink;
+    font-variant-numeric: tabular-nums;
+
+    &--negative {
+      color: c.$vs-loss;
+    }
+  }
+
+}
+
+.dashboard-hero-stat:first-child .dashboard-hero-stat__value:not(.dashboard-hero-stat__value--negative) {
+  color: c.$staz-green;
+}
+
+.dashboard-metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: $space-4;
   width: 100%;
+  margin-top: $space-6;
 
-  @include down($bp-lg) {
+  @include down($bp-xl) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   @include down($bp-md) {
     grid-template-columns: 1fr;
+    margin-top: $space-4;
   }
 }
 
-.kpi-mini {
+.dashboard-metric-card {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-}
+  min-width: 0;
+  padding: $space-5;
+  border-radius: $radius-xl;
+  background: c.$staz-white;
+  border: 1px solid c.$vs-border-muted;
+  box-shadow: $shadow-sm;
+  box-sizing: border-box;
 
-.kpi-mini__body {
-  .vs-value-md {
-    font-size: $font-size-xl;
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $space-3;
+    margin-bottom: $space-3;
+  }
+
+  &__title {
+    font-size: $font-size-md;
     font-weight: $font-weight-bold;
-    margin: 0;
-  }
-}
-
-.kpi-mini--donut {
-  .kpi-mini__body--donut {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: stretch;
-    align-items: stretch;
-    min-height: 0;
-    height: 100%;
-    padding-top: $space-2;
-    padding-bottom: $space-4;
-  }
-}
-
-.kpi-mini__chart-well {
-  flex: 1;
-  display: flex;
-  align-items: stretch;
-  margin-top: $space-3;
-  padding: $space-2 $space-2 0;
-  border-radius: $radius-md;
-  background: $color-neutral-50;
-  border: 1px solid $color-neutral-100;
-  min-height: 96px;
-}
-
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 0;
-}
-
-.stat-card__subtitle {
-  margin: $space-1 0 0;
-  font-size: $font-size-xs;
-  color: $color-neutral-600;
-  line-height: 1.35;
-}
-
-.stat-card--win-rate {
-  .stat-card__body {
-    gap: $space-2;
-  }
-}
-
-.win-rate-bar {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  padding: $space-2;
-  border-radius: $radius-md;
-  background: $color-neutral-50;
-  border: 1px solid $color-neutral-100;
-}
-
-.win-rate-meter__track {
-  display: flex;
-  width: 100%;
-  height: 10px;
-  flex-shrink: 0;
-  border-radius: $radius-full;
-  overflow: hidden;
-  background: $color-neutral-200;
-  gap: 2px;
-}
-
-.win-rate-meter__segment {
-  height: 100%;
-  min-width: 0;
-  transition: flex-grow 0.45s ease;
-
-  &--won {
-    background: $color-success;
-    border-radius: $radius-full 0 0 $radius-full;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: c.$staz-text-muted;
+    line-height: 1.35;
   }
 
-  &--lost {
-    background: $color-danger;
-    border-radius: 0 $radius-full $radius-full 0;
-  }
-
-  &--empty {
-    flex: 1;
-    background: $color-neutral-200;
-    border-radius: $radius-full;
-  }
-}
-
-.win-rate-stats {
-  flex: 0 0 auto;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: $space-2;
-}
-
-.win-rate-stat {
-  display: flex;
-  align-items: stretch;
-  gap: $space-2;
-  padding: $space-2 $space-3 $space-2 0;
-  border-radius: $radius-sm;
-  background: transparent;
-  border: 1px solid $color-neutral-200;
-  min-width: 0;
-  overflow: hidden;
-
-  &__accent {
-    width: 4px;
-    flex-shrink: 0;
-    border-radius: 0;
-  }
-
-  &__label {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    color: $color-neutral-600;
-  }
-
-  &__badges {
-    display: flex;
-    align-items: center;
-    gap: $space-2;
-    flex-shrink: 0;
-  }
-
-  &__count,
-  &__pct {
+  &__icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 2rem;
-    padding: $space-1 $space-3;
-    border-radius: $radius-sm;
-    font-size: $font-size-sm;
-    font-weight: $font-weight-semibold;
-    line-height: 1.35;
-    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: $radius-md;
+    background: rgba(c.$staz-blue, 0.1);
+    color: c.$staz-blue;
+
+    mat-icon {
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
+    }
   }
 
-  &--won {
-    .win-rate-stat__accent {
-      background: $color-success;
+  &__value {
+    margin: 0;
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: $font-weight-bold;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+
+    &--ink {
+      color: c.$staz-ink;
     }
 
-    .win-rate-stat__count {
-      background: $color-success-light;
-      color: $color-success;
-      border: 1px solid rgba($color-success, 0.18);
+    &--profit {
+      color: c.$staz-green;
     }
+
+    &--loss {
+      color: c.$vs-loss;
+    }
+  }
+
+  &__hint {
+    margin: $space-2 0 0;
+    font-size: $font-size-sm;
+    color: c.$staz-text-muted;
+    line-height: 1.4;
+  }
+
+  &__divider {
+    height: 1px;
+    margin: $space-4 0 $space-3;
+    background: c.$vs-border-muted;
+  }
+
+  &__foot-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-2;
+    margin-bottom: $space-2;
+    font-size: $font-size-sm;
+    color: c.$staz-text-muted;
+
+    strong {
+      color: c.$staz-ink;
+      font-weight: $font-weight-bold;
+    }
+  }
+
+  &--win-rate {
+    .dashboard-metric-card__divider {
+      margin-top: $space-3;
+    }
+  }
+}
+
+.dashboard-split-bar {
+  display: flex;
+  width: 100%;
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: $radius-full;
+  background: rgba(c.$staz-chrome-muted, 0.45);
+
+  &__segment {
+    height: 100%;
+    min-width: 0;
+    transition: width 0.35s ease;
+
+    &--muted {
+      background: rgba(c.$staz-chrome-muted, 0.85);
+    }
+
+    &--profit {
+      background: c.$staz-green;
+    }
+  }
+}
+
+.dashboard-progress-bar {
+  width: 100%;
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: $radius-full;
+  background: rgba(c.$staz-chrome-muted, 0.45);
+
+  &__fill {
+    display: block;
+    height: 100%;
+    border-radius: $radius-full;
+    background: c.$staz-green;
+    transition: width 0.35s ease;
+  }
+}
+
+.dashboard-win-rate__headline {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+
+.dashboard-win-rate__meta {
+  font-size: $font-size-sm;
+  color: c.$staz-text-muted;
+}
+
+.dashboard-win-bar {
+  display: flex;
+  width: 100%;
+  height: 0.625rem;
+  margin-top: $space-3;
+  overflow: hidden;
+  border-radius: $radius-full;
+  background: rgba(c.$staz-chrome-muted, 0.35);
+
+  &__won {
+    height: 100%;
+    background: c.$staz-green;
+    transition: width 0.35s ease;
+  }
+
+  &__lost {
+    height: 100%;
+    background: c.$vs-loss;
+    transition: width 0.35s ease;
+  }
+}
+
+.dashboard-win-rate__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: $space-3;
+}
+
+.dashboard-win-rate__stat {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  min-width: 0;
+}
+
+.dashboard-win-rate__stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $font-size-sm;
+  color: c.$staz-text-muted;
+}
+
+.dashboard-win-rate__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: $radius-full;
+
+  &--won {
+    background: c.$staz-green;
   }
 
   &--lost {
-    .win-rate-stat__accent {
-      background: $color-danger;
-    }
-
-    .win-rate-stat__count {
-      background: $color-danger-light;
-      color: $color-danger;
-      border: 1px solid rgba($color-danger, 0.18);
-    }
-  }
-
-  &--pending {
-    .win-rate-stat__accent {
-      background: $color-neutral-400;
-    }
-
-    .win-rate-stat__count {
-      background: $color-primary-light;
-      color: $color-primary;
-      border: 1px solid rgba($color-primary, 0.18);
-    }
-  }
-
-  &__pct {
-    background: $color-surface;
-    color: $color-neutral-800;
-    border: 1px solid $color-neutral-200;
+    background: c.$vs-loss;
   }
 }
 
-.stat-card__value {
-  font-size: $font-size-2xl;
+.dashboard-win-rate__stat-value {
+  font-size: $font-size-sm;
   font-weight: $font-weight-bold;
-  color: $color-neutral-900;
-  line-height: 1.1;
-  margin: 0;
-}
+  color: c.$staz-ink;
 
-.table-header .stat-card__meta {
-  font-size: $font-size-base;
-  color: $color-primary;
-  white-space: nowrap;
-
-  strong {
-    font-weight: $font-weight-bold;
-    font-size: $font-size-md;
+  &--won {
+    color: c.$staz-green;
   }
-}
 
-.stat-card__chart-well {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: $space-2;
-  border-radius: $radius-md;
-  background: $color-neutral-50;
-  border: 1px solid $color-neutral-100;
-
-  .stats-row & {
-    flex: 0 0 auto;
+  &--lost {
+    color: c.$vs-loss;
   }
-}
-
-.stat-card__chart-well--donut {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 0;
-  padding: $space-2;
 }
 
 .empty-state {
@@ -320,49 +507,179 @@
   }
 }
 
-.vs-badge mat-icon {
-  font-size: $icon-size-sm;
-  width: $icon-size-sm;
-  height: $icon-size-sm;
-  vertical-align: middle;
-  margin-right: 0.15rem;
+.odds-range-section__footnote {
+  margin: 0;
+  padding: 0 $space-4 $space-4;
+  font-size: $font-size-xs;
+  color: c.$staz-text-muted;
 }
 
-.vs-odds-btn mat-icon {
-  font-size: $icon-size-sm;
-  width: $icon-size-sm;
-  height: $icon-size-sm;
-}
+.dashboard-recent-bets {
+  margin-top: $space-6;
+  padding: $space-5 $space-6 $space-6;
 
-.stats-row {
-  display: flex;
-  align-items: stretch;
-  gap: $space-4;
-  margin-bottom: $space-6;
-  width: 100%;
-
-  .stat-card__value {
-    font-size: $font-size-xl;
-    line-height: 1.1;
+  @include down($bp-md) {
+    padding: $space-4;
   }
 
-  @include down($bp-lg) {
-    flex-direction: column;
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    margin-bottom: $space-5;
+    flex-wrap: wrap;
+  }
 
-    > .stat-card {
-      flex: none;
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    min-width: 0;
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: $radius-full;
+    background: rgba(c.$staz-green, 0.12);
+    color: c.$staz-green;
+
+    mat-icon {
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
     }
   }
 
-  @include down($bp-md) {
+  &__heading {
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: c.$staz-ink;
+    line-height: 1.25;
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    color: c.$staz-text-muted;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &-arrow {
+      flex-shrink: 0;
+    }
+
+    &:hover {
+      color: c.$staz-blue;
+    }
+  }
+
+  &__track {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: $space-3;
-    margin-bottom: $space-4;
+    width: 100%;
+
+    @include down($bp-xl) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    @include down($bp-md) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include down($bp-sm) {
+      grid-template-columns: 1fr;
+    }
   }
 }
 
+.dashboard-recent-bet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  min-width: 0;
+  width: 100%;
+  padding: $space-3 $space-4;
+  border-radius: $radius-lg;
+  background: c.$staz-bg;
+  box-sizing: border-box;
 
-@include down($bp-md) {
-  .vs-page-header {
-    margin-bottom: $space-4;
+  &__status {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: $space-1 $space-2;
+    border-radius: $radius-sm;
+    line-height: 1.2;
+  }
+
+  &__metrics {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: $space-2;
+    min-width: 0;
+  }
+
+  &__amount {
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  &__odds {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: c.$staz-text-muted;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  &--won {
+    .dashboard-recent-bet__status {
+      color: c.$staz-green;
+      background: rgba(c.$staz-green, 0.14);
+    }
+
+    .dashboard-recent-bet__amount {
+      color: c.$staz-green;
+    }
+  }
+
+  &--lost {
+    .dashboard-recent-bet__status {
+      color: c.$vs-loss;
+      background: c.$vs-loss-soft;
+    }
+
+    .dashboard-recent-bet__amount {
+      color: c.$vs-loss;
+    }
+  }
+
+  &--pending {
+    .dashboard-recent-bet__status {
+      color: c.$staz-blue;
+      background: rgba(c.$staz-blue, 0.12);
+    }
+
+    .dashboard-recent-bet__amount {
+      color: c.$staz-text-muted;
+    }
   }
 }

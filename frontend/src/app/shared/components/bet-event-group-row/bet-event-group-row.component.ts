@@ -15,7 +15,7 @@ export class BetEventGroupRowComponent {
   @Input({ required: true }) betId!: number;
   @Input({ required: true }) eventName!: string;
   @Input({ required: true }) picks!: BetEvent[];
-  @Input() variant: 'default' | 'slip' = 'default';
+  @Input() variant: 'default' | 'slip' | 'history' = 'default';
 
   @Output() resultChanged = new EventEmitter<void>();
 }

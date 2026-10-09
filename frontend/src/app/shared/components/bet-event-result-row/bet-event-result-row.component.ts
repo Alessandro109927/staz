@@ -20,7 +20,7 @@ export class BetEventResultRowComponent {
   @Input({ required: true }) event!: BetEvent;
   @Input() showEventName = true;
   /** default | slip-pick (riga esito sotto le squadre, toggle a sinistra). */
-  @Input() layout: 'default' | 'slip-pick' = 'default';
+  @Input() layout: 'default' | 'slip-pick' | 'history-slip' = 'default';
 
   @Output() resultChanged = new EventEmitter<void>();
 

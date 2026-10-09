@@ -8,6 +8,7 @@ import {
   deterministicExplanation,
   enrichPickWithEmpirical,
   patchFormStats,
+  patchStandingFromRows,
   type MatchDossier,
 } from './multigol-dossier.util';
 import { OUTCOME_HOME_1_6 } from './multigol-scout.constants';
@@ -656,7 +657,8 @@ export class MultigolScoutService implements OnModuleInit {
     const cached = this.getAnalysisCache(matchId);
     if (cached) {
       const withForm = await this.refreshFormOnDossier(cached, Boolean(options?.refresh));
-      const enriched = await this.attachApiFootballStats(withForm);
+      const withStanding = await this.ensureStandingDetails(withForm);
+      const enriched = await this.attachApiFootballStats(withStanding);
       if (enriched !== cached) {
         this.setAnalysisCache(matchId, enriched);
       }
@@ -735,9 +737,40 @@ export class MultigolScoutService implements OnModuleInit {
     };
 
     const withForm = await this.refreshFormOnDossier(result, Boolean(options?.refresh));
-    const enriched = await this.attachApiFootballStats(withForm);
+    const withStanding = await this.ensureStandingDetails(withForm);
+    const enriched = await this.attachApiFootballStats(withStanding);
     this.setAnalysisCache(matchId, enriched);
     return enriched;
+  }
+
+  private async ensureStandingDetails(
+    dossier: MultigolAnalysis,
+  ): Promise<MultigolAnalysis> {
+    const homeOk = dossier.stats.homeStandingDetail?.position != null;
+    const awayOk = dossier.stats.awayStandingDetail?.position != null;
+    if (homeOk && awayOk) {
+      return dossier;
+    }
+    try {
+      const table = await this.apiFootball.scoutStandingsTable(
+        dossier.leagueCode,
+        dossier.utcDate,
+      );
+      const homeRow = table.get(dossier.homeTeam.id);
+      const awayRow = table.get(dossier.awayTeam.id);
+      if (!homeRow && !awayRow) {
+        return dossier;
+      }
+      return {
+        ...dossier,
+        ...patchStandingFromRows(dossier, homeRow, awayRow),
+      };
+    } catch (err) {
+      this.logger.warn(
+        `Classifica non recuperata per match ${dossier.matchId}: ${String(err)}`,
+      );
+      return dossier;
+    }
   }
 
   private async refreshFormOnDossier(

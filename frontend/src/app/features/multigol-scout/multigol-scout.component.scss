@@ -1,10 +1,13 @@
-@use "../../../styles/variables" as *;
-@use "./multigol-card";
+@use '../../../styles/colors' as c;
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+@use './multigol-card';
 
 .multigol-page {
   display: flex;
   flex-direction: column;
   gap: $space-6;
+  width: 100%;
 }
 
 .multigol-header {
@@ -14,395 +17,380 @@
   gap: $space-4;
   flex-wrap: wrap;
 
-  .vs-heading-page {
-    margin: 0;
+  &__title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $space-3;
   }
 
-  .vs-text-muted {
+  &__title {
+    margin: 0;
+    font-size: clamp(1.75rem, 4vw, $font-size-3xl);
+    font-weight: $font-weight-bold;
+    color: c.$staz-ink;
+    line-height: 1.15;
+  }
+
+  &__meta {
     margin: $space-2 0 0;
-    max-width: 42rem;
+    max-width: 46rem;
+    font-size: $font-size-sm;
+    color: c.$staz-text-muted;
+    line-height: 1.45;
   }
 }
 
-.multigol-calibration {
-  padding: $space-4 $space-5;
+.multigol-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  background: rgba(c.$staz-green, 0.1);
+  color: c.$staz-green;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 
-  &__summary {
-    cursor: pointer;
-    font-weight: $font-weight-semibold;
-    font-size: $font-size-base;
-    color: $color-neutral-900;
+  &__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: $radius-full;
+    background: c.$staz-green;
+    box-shadow: 0 0 0 3px rgba(c.$staz-green, 0.2);
+  }
+}
+
+.multigol-btn-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-3 $space-5;
+  border: none;
+  border-radius: $radius-lg;
+  background: c.$staz-green;
+  color: c.$staz-white;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(c.$staz-green, 0.28);
+  transition: filter 0.15s ease;
+
+  mat-icon {
+    font-size: 1.125rem;
+    width: 1.125rem;
+    height: 1.125rem;
   }
 
-  &__summary-meta {
-    font-weight: $font-weight-normal;
-    color: $color-neutral-600;
-    font-size: $font-size-sm;
+  &:hover:not(:disabled) {
+    filter: brightness(1.05);
   }
 
-  &__intro {
-    margin: $space-3 0 $space-5;
-    max-width: 46rem;
-    line-height: 1.45;
-    font-size: $font-size-sm;
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
   }
+}
 
-  &__band {
-    margin-top: $space-3;
-    padding: $space-3 $space-4;
-    border: 1px solid $color-neutral-200;
-    border-radius: $radius-lg;
-    background: $color-neutral-50;
-  }
+$multigol-surface-shadow: 0 2px 8px rgba(c.$staz-ink, 0.06);
 
-  &__band-summary {
-    cursor: pointer;
-    font-weight: $font-weight-semibold;
-    font-size: $font-size-sm;
-    color: $color-neutral-900;
-  }
+.multigol-panel {
+  padding: $space-5 $space-6;
+  border-radius: $radius-xl;
+  background: c.$staz-white;
+  border: none;
+  box-shadow: $multigol-surface-shadow;
+  box-sizing: border-box;
 
-  &__band[open] > &__grid {
-    margin-top: $space-4;
-  }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: $space-4;
-
-    @media (max-width: 768px) {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  &__metric {
+  @include down($bp-md) {
     padding: $space-4;
-    border-radius: $radius-lg;
-    border: 1px solid $color-neutral-200;
-    background: $color-neutral-50;
   }
 
-  &__metric-label {
-    margin: 0 0 $space-2;
-    font-size: $font-size-sm;
-    font-weight: $font-weight-bold;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: $color-neutral-800;
+  &__head {
+    margin-bottom: $space-5;
   }
 
-  &__sample {
-    margin: 0;
-    font-size: $font-size-xl;
-    font-weight: $font-weight-bold;
-    font-variant-numeric: tabular-nums;
-    color: $color-neutral-900;
-  }
-
-  &__divider {
-    margin: $space-3 0;
-    border: 0;
-    border-top: 1px solid $color-neutral-200;
-  }
-
-  &__rates {
+  &__title-wrap {
     display: flex;
-    flex-direction: column;
+    align-items: flex-start;
     gap: $space-3;
   }
 
-  &__rate-line {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: $space-3;
-    margin: 0;
-    font-size: $font-size-sm;
-    color: $color-neutral-800;
-
-    strong {
-      font-size: $font-size-base;
-      font-variant-numeric: tabular-nums;
-    }
-  }
-
-  &__rate-key-wrap {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  &__rate-key {
-    font-weight: $font-weight-semibold;
-    text-transform: uppercase;
-    font-size: $font-size-xs;
-    letter-spacing: 0.04em;
-    color: $color-neutral-600;
-  }
-
-  &__info {
+  &__icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
-    margin: 0;
-    border: 0;
-    background: transparent;
-    color: $color-neutral-400;
-    cursor: help;
-    line-height: 1;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: $radius-md;
+    background: rgba(c.$staz-blue, 0.1);
+    color: c.$staz-blue;
 
     mat-icon {
-      width: 0.875rem;
-      height: 0.875rem;
-      font-size: 0.875rem;
-    }
-
-    &:hover,
-    &:focus-visible {
-      color: $color-neutral-800;
+      font-size: 1.375rem;
+      width: 1.375rem;
+      height: 1.375rem;
     }
   }
 
-  &__empty {
+  &__title {
     margin: 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: c.$staz-ink;
+  }
+
+  &__subtitle {
+    margin: $space-1 0 0;
     font-size: $font-size-sm;
-    line-height: 1.4;
+    color: c.$staz-text-muted;
   }
 }
 
+
 .multigol-error {
-  padding: $space-4;
-  color: $color-danger;
+  color: c.$vs-loss;
 }
 
 .multigol-progress {
-  padding: $space-5;
-
   &__label {
     margin: 0 0 $space-2;
     font-weight: $font-weight-semibold;
-  }
-}
-
-.multigol-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $space-6;
-  padding: $space-5;
-  align-items: flex-start;
-
-  &__block {
-    min-width: 0;
-
-    &--nations {
-      flex: 1 1 16rem;
-    }
-
-    &--leagues {
-      flex: 1 1 100%;
-    }
-  }
-
-  &__label {
-    margin: 0 0 $space-1;
-    font-weight: $font-weight-semibold;
-    font-size: $font-size-md;
-  }
-
-  &__count {
-    font-weight: $font-weight-medium;
-    color: $color-neutral-600;
+    color: c.$staz-ink;
   }
 
   &__hint {
-    margin: 0 0 $space-3;
-    font-size: $font-size-sm;
-  }
-
-  &__clear {
-    margin-top: $space-3;
-    padding: 0;
-    border: none;
-    background: none;
-    font-size: $font-size-sm;
-    font-weight: $font-weight-semibold;
-    color: $color-primary;
-    cursor: pointer;
-    text-decoration: underline;
-  }
-}
-
-.multigol-catalog {
-  padding: $space-4 $space-5;
-
-  &__summary {
-    cursor: pointer;
-    font-weight: $font-weight-semibold;
-  }
-
-  &__hint {
-    margin: $space-3 0;
-    font-size: $font-size-sm;
-  }
-
-  &__list {
     margin: 0;
-    padding: 0;
-    list-style: none;
-    max-height: 16rem;
-    overflow: auto;
-    display: grid;
-    gap: $space-1;
     font-size: $font-size-sm;
+    color: c.$staz-text-muted;
+  }
+}
+
+$multigol-filter-surface: #eff4ff;
+
+.multigol-monitored {
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    margin-bottom: $space-4;
+    flex-wrap: wrap;
   }
 
-  &__id {
-    display: inline-block;
-    min-width: 3rem;
+  &__title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $space-3;
+  }
+
+  &__eyebrow {
+    margin: 0;
+    font-size: $font-size-xs;
     font-weight: $font-weight-bold;
-    color: $color-neutral-600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: c.$staz-text-muted;
   }
 
-  &__area {
-    color: $color-neutral-600;
-    margin-right: $space-2;
+  &__scope-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: $space-1 $space-3;
+    border-radius: $radius-full;
+    background: $multigol-filter-surface;
+    color: c.$staz-blue;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    white-space: nowrap;
   }
-}
 
-.multigol-league-search {
-  width: 100%;
-  max-width: 24rem;
-  margin-bottom: $space-3;
-  padding: $space-2 $space-3;
-  border: 1px solid $color-neutral-200;
-  border-radius: $radius-md;
-  font: inherit;
-}
-
-.multigol-leagues {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $space-2;
-  max-height: 10rem;
-  overflow: auto;
-
-  &__more {
-    margin: 0;
+  &__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-4;
     font-size: $font-size-sm;
-    width: 100%;
+    font-weight: $font-weight-bold;
+
+    button {
+      padding: 0;
+      border: none;
+      background: none;
+      font: inherit;
+      font-weight: $font-weight-bold;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &__action--primary {
+    color: c.$staz-green;
+  }
+
+  &__action--muted {
+    color: c.$staz-text-muted;
+  }
+
+  .vs-field__label {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: c.$staz-text-muted;
+  }
+
+  .vs-select {
+    background: $multigol-filter-surface;
+    border: none;
+    box-shadow: none;
+
+    &:focus-within {
+      box-shadow: 0 0 0 2px rgba(c.$staz-blue, 0.22);
+    }
+  }
+
+  .vs-select__trigger {
+    font-weight: $font-weight-semibold;
+    color: c.$staz-ink;
+  }
+
+  .vs-select__chevron {
+    color: c.$staz-text-muted;
   }
 }
 
-.multigol-league-chip {
-  padding: $space-1 $space-3;
-  border: 1px solid $color-neutral-200;
-  border-radius: $radius-full;
-  background: $color-neutral-50;
-  font-size: $font-size-xs;
-  font-family: inherit;
-  cursor: pointer;
-
-  &.is-active {
-    border-color: $color-primary;
-    background: $color-primary-light;
-  }
-}
-
-.multigol-nations {
+.multigol-preset-chips {
   display: flex;
   flex-wrap: wrap;
   gap: $space-2;
+  margin-bottom: $space-5;
 }
 
-.multigol-nation-chip {
+.multigol-preset-chip {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.25rem;
-  padding: $space-1;
-  border-radius: $radius-sm;
-  border: 1px solid $color-neutral-200;
-  background: $color-neutral-50;
+  gap: $space-2;
+  padding: $space-2 $space-4;
+  border: none;
+  border-radius: $radius-full;
+  background: $multigol-filter-surface;
+  color: c.$staz-ink;
+  font-family: inherit;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
   transition:
     background 0.15s ease,
-    border-color 0.15s ease,
+    color 0.15s ease,
     box-shadow 0.15s ease;
 
-  &.is-active {
-    border-color: $color-primary;
-    background: $color-primary-light;
-    box-shadow: 0 0 0 1px $color-primary;
-  }
-
-  &:hover {
-    border-color: $color-neutral-400;
-  }
-
   &__emoji {
-    font-size: 1.35rem;
+    font-size: 1rem;
     line-height: 1;
   }
 
   &__flag {
     display: block;
-    width: 1.5rem;
+    width: 1.125rem;
     height: auto;
     border-radius: 2px;
     object-fit: cover;
-    box-shadow: 0 0 0 1px rgb(0 0 0 / 8%);
   }
 
-  &__fallback {
+  &__label {
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__count {
     font-size: $font-size-xs;
     font-weight: $font-weight-bold;
-    color: $color-neutral-600;
-  }
-}
-
-.multigol-list-toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: $space-3;
-
-  &__controls {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: $space-3;
-    align-items: end;
-    width: 100%;
+    color: c.$staz-text-muted;
+    font-variant-numeric: tabular-nums;
   }
 
-  &__outcome,
-  &__date,
-  &__min-prob,
-  &__sort {
-    min-width: 0;
-  }
+  &.is-active {
+    background: c.$staz-green;
+    color: c.$staz-white;
+    box-shadow: 0 4px 12px rgba(c.$staz-green, 0.22);
 
-  @media (max-width: 52rem) {
-    &__controls {
-      display: flex;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      padding-bottom: $space-1;
-      scrollbar-width: thin;
-
-      > * {
-        flex: 0 0 11.5rem;
-      }
+    .multigol-preset-chip__count {
+      color: rgba(c.$staz-white, 0.88);
     }
   }
 }
 
-.multigol-count {
-  margin: 1rem 0 0 0;
-  align-self: flex-end;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold !important;
+.multigol-list-toolbar {
+  margin-top: 0;
+  padding-top: 0;
+
+  &__controls {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: $space-4;
+    align-items: end;
+
+    @include down($bp-lg) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include down($bp-sm) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+.multigol-matches {
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    flex-wrap: wrap;
+    margin-bottom: $space-4;
+  }
+
+  &__title-wrap {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $space-3;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: c.$staz-ink;
+  }
+
+  &__badge {
+    padding: $space-1 $space-3;
+    border-radius: $radius-full;
+    background: rgba(c.$staz-green, 0.12);
+    color: c.$staz-green;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__meta {
+    margin: 0;
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: c.$staz-text-muted;
+  }
 }
 
 .multigol-list {
@@ -410,22 +398,14 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: $space-4;
 
-  @media (max-width: 1400px) {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
-  @media (max-width: 1100px) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  @media (max-width: 720px) {
+  @include down($bp-xl) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  @media (max-width: 480px) {
+  @include down($bp-md) {
     grid-template-columns: 1fr;
   }
 }

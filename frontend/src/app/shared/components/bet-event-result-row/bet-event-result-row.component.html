@@ -1,13 +1,20 @@
 <div
   class="event-result-row"
-  [class.event-result-row--slip-pick]="layout === 'slip-pick'"
+  [class.event-result-row--slip-pick]="layout === 'slip-pick' || layout === 'history-slip'"
+  [class.event-result-row--history-slip]="layout === 'history-slip'"
+  [class.event-result-row--won]="
+    (layout === 'history-slip' || layout === 'slip-pick') && event.resultStatus === 'WON'
+  "
+  [class.event-result-row--lost]="
+    (layout === 'history-slip' || layout === 'slip-pick') && event.resultStatus === 'LOST'
+  "
   [class.event-result-row--saving]="saving"
 >
   @if (showEventName) {
     <span class="event-result-row__name">{{ event.eventName }}</span>
   }
 
-  @if (layout === 'default' || layout === 'slip-pick') {
+  @if (layout === 'default' || layout === 'slip-pick' || layout === 'history-slip') {
     <app-event-result-toggle
       [resultStatus]="event.resultStatus ?? null"
       [disabled]="saving"
@@ -15,7 +22,18 @@
     />
   }
 
-  @if (layout === 'slip-pick') {
+  @if (layout === 'history-slip') {
+    <span class="event-result-row__pick">
+      @if (event.outcome) {
+        <span class="event-result-row__outcome">{{ event.outcome }}</span>
+      }
+    </span>
+    @if (event.odds) {
+      <span class="event-result-row__odds-at"
+        ><span aria-hidden="true">&#64;</span>{{ event.odds }}</span
+      >
+    }
+  } @else if (layout === 'slip-pick') {
     <span class="event-result-row__pick">
       @if (event.outcome) {
         <span class="event-result-row__outcome">{{ event.outcome }}</span>

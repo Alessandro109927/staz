@@ -27,8 +27,15 @@ export class OutcomeFieldComponent implements OnInit, OnDestroy {
 
   @Input({ required: true }) control!: FormControl<string | null>;
   @Input() options: OutcomeOption[] = [];
+  @Input() showLabel = true;
+  @Input() labelText = 'Esito';
   /** @deprecated Ignorato: usato il menu custom. */
   @Input() listId = '';
+
+  /** Apre l’elenco esiti (es. link «Sfoglia mercati»). */
+  openBrowsePanel(): void {
+    this.openPanel();
+  }
 
   filteredOptions: OutcomeOption[] = [];
   panelOpen = false;

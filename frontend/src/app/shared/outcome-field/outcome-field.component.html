@@ -1,5 +1,7 @@
 <label class="vs-field event-row__outcome outcome-field">
-  <span class="vs-field__label">Esito</span>
+  @if (showLabel) {
+    <span class="vs-field__label">{{ labelText }}</span>
+  }
 
   @if (hasPresetOptions) {
     <div class="outcome-field__control">

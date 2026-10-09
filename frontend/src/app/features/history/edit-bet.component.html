@@ -1,16 +1,34 @@
-<div mat-dialog-title class="table-header bet-form-dialog__title">Modifica scommessa</div>
+<div mat-dialog-title class="bet-form-dialog__header">
+  <div class="bet-form-dialog__header-main">
+    <span class="bet-form-dialog__header-icon" aria-hidden="true">
+      <mat-icon>description</mat-icon>
+    </span>
+    <div class="bet-form-dialog__header-text">
+      <div class="bet-form-dialog__title-row">
+        <h2 class="bet-form-dialog__title">Modifica scommessa</h2>
+        <span class="bet-form-dialog__kind-pill">{{ slipKindLabel }}</span>
+      </div>
+      <p class="bet-form-dialog__subtitle">
+        Inserimento analitico e tracciamento bankroll STAZ
+      </p>
+    </div>
+  </div>
+  <button type="button" class="bet-form-dialog__close" aria-label="Chiudi" (click)="cancel()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 
 <mat-dialog-content>
   <form [formGroup]="form" (ngSubmit)="submit()" class="new-bet-form">
     <div formArrayName="events" class="events-list">
       @for (event of events.controls; track $index; let i = $index) {
-        <div class="event-row" [formGroupName]="i">
-          <div class="event-header">
-            <strong>Evento {{ i + 1 }}</strong>
+        <div class="bet-event-card" [formGroupName]="i">
+          <div class="bet-event-card__head">
+            <span class="bet-event-card__index">Evento {{ i + 1 }}</span>
             @if (events.length > 1) {
               <button
-                mat-icon-button
                 type="button"
+                class="bet-event-card__remove"
                 aria-label="Rimuovi evento"
                 (click)="removeEvent(i)"
               >
@@ -19,29 +37,45 @@
             }
           </div>
 
-          <div class="event-row__fields">
-            <div class="event-row__teams">
-              <app-match-teams-field [group]="$any(event)" />
-            </div>
+          <div class="bet-event-card__teams">
+            <app-match-teams-field [group]="$any(event)" />
+          </div>
 
-            <div formArrayName="picks" class="event-picks">
-              @for (pick of picksAt(i).controls; track $index; let pi = $index) {
-                <div
-                  class="event-row__meta"
-                  [class.event-row__meta--scorer]="isScorerOutcomeLabel($any(pick).controls.outcome.value, outcomeOptions)"
-                  [formGroupName]="pi"
-                >
+          <div formArrayName="picks" class="bet-event-card__picks">
+            @for (pick of picksAt(i).controls; track $index; let pi = $index) {
+              <div
+                class="bet-event-card__pick"
+                [class.bet-event-card__pick--scorer]="
+                  isScorerOutcomeLabel($any(pick).controls.outcome.value, outcomeOptions)
+                "
+                [formGroupName]="pi"
+              >
+                <div class="bet-event-card__outcome-block">
+                  <div class="bet-event-card__outcome-top">
+                    <span class="bet-event-card__field-label">Esito</span>
+                    @if (outcomeOptions.length) {
+                      <button
+                        type="button"
+                        class="bet-event-card__markets-link"
+                        (click)="outcomeBrowse.openBrowsePanel()"
+                      >
+                        Sfoglia mercati ({{ outcomeOptions.length }})
+                      </button>
+                    }
+                  </div>
                   <app-outcome-field
+                    #outcomeBrowse
                     [control]="$any(pick).controls.outcome"
                     [options]="outcomeOptions"
                     [listId]="'edit-bet-outcome-' + i + '-' + pi"
+                    [showLabel]="false"
                   />
 
                   @if (isScorerOutcomeLabel($any(pick).controls.outcome.value, outcomeOptions)) {
-                    <label class="vs-field event-row__scorer">
-                      <span class="vs-field__label">Marcatore</span>
+                    <label class="vs-field bet-event-card__scorer">
+                      <span class="bet-event-card__field-label">Marcatore</span>
                       <input
-                        class="vs-input"
+                        class="vs-input bet-form-input"
                         type="text"
                         formControlName="scorerName"
                         placeholder="Nome giocatore"
@@ -49,73 +83,72 @@
                       />
                     </label>
                   }
+                </div>
 
-                  <label class="vs-field event-row__odds">
-                    <span class="vs-field__label">Quota</span>
+                <label class="vs-field bet-event-card__quota">
+                  <span class="bet-event-card__field-label">Quota</span>
+                  <div class="bet-event-card__quota-control">
                     <input
-                      class="vs-input"
+                      class="vs-input bet-form-input"
                       type="number"
                       step="0.01"
                       min="1.01"
                       formControlName="odds"
-                      placeholder="1.75"
+                      placeholder="1,75"
                     />
-                  </label>
+                  </div>
+                </label>
 
-                  @if (picksAt(i).length > 1) {
-                    <button
-                      mat-icon-button
-                      type="button"
-                      class="event-pick-remove"
-                      aria-label="Rimuovi esito"
-                      (click)="removePick(i, pi)"
-                    >
-                      <mat-icon>close</mat-icon>
-                    </button>
-                  }
-                </div>
-              }
-            </div>
-
-            <button
-              mat-stroked-button
-              type="button"
-              class="add-pick"
-              aria-label="Aggiungi esito"
-              (click)="addPick(i)"
-            >
-              <mat-icon>add</mat-icon>
-            </button>
+                @if (picksAt(i).length > 1) {
+                  <button
+                    type="button"
+                    class="bet-event-card__pick-remove"
+                    aria-label="Rimuovi esito"
+                    (click)="removePick(i, pi)"
+                  >
+                    <mat-icon>close</mat-icon>
+                  </button>
+                }
+              </div>
+            }
           </div>
+
+          <button
+            type="button"
+            class="bet-event-card__add-pick"
+            aria-label="Aggiungi esito"
+            (click)="addPick(i)"
+          >
+            <mat-icon>add</mat-icon>
+          </button>
         </div>
       }
     </div>
 
-    <button mat-flat-button color="primary" type="button" class="add-event" (click)="addEvent()">
+    <button type="button" class="bet-form-btn bet-form-btn--primary bet-form-add-event" (click)="addEvent()">
       <mat-icon>add</mat-icon>
       Aggiungi evento
     </button>
 
-    <div class="bet-summary">
-      <label class="vs-field">
-        <span class="vs-field__label">
-          {{ flattenedPickCount > 1 ? 'Quota comb.' : 'Quota' }}
-        </span>
+    <div class="bet-form-summary">
+      <label class="bet-form-summary__field">
+        <span class="bet-form-summary__label">Quota</span>
         <input
-          class="vs-input bet-summary__odds"
+          class="vs-input bet-form-input bet-form-summary__input"
           type="text"
           readonly
           tabindex="-1"
           [value]="combinedOdds != null ? (combinedOdds | number: '1.2-2') : ''"
           placeholder="—"
         />
+        <span class="bet-form-summary__hint">Totale moltiplicatore</span>
       </label>
 
-      <label class="vs-field">
-        <span class="vs-field__label">Stake</span>
-        <div class="vs-input-affix">
+      <label class="bet-form-summary__field">
+        <span class="bet-form-summary__label">Stake</span>
+        <div class="vs-input-affix bet-form-summary__affix">
           <input
-            class="vs-input"
+            class="vs-input bet-form-input"
             type="number"
             step="0.01"
             min="0.01"
@@ -126,12 +159,12 @@
         </div>
       </label>
 
-      <label class="vs-field">
-        <span class="vs-field__label">Puntata</span>
-        <div class="vs-input-affix">
+      <label class="bet-form-summary__field">
+        <span class="bet-form-summary__label">Puntata</span>
+        <div class="vs-input-affix bet-form-summary__affix">
           <span class="vs-input-affix__prefix">€</span>
           <input
-            class="vs-input"
+            class="vs-input bet-form-input"
             type="number"
             step="0.01"
             min="0.01"
@@ -141,34 +174,46 @@
         </div>
       </label>
 
-      <label class="vs-field">
-        <span class="vs-field__label">Vincita</span>
-        <div class="vs-input-affix">
-          <span class="vs-input-affix__prefix">€</span>
+      <div class="bet-form-summary__win">
+        <div class="bet-form-summary__win-head">
+          <span class="bet-form-summary__label bet-form-summary__label--win">Vincita</span>
+          <span class="bet-form-summary__net-pill"
+            >Netto: € {{ netWinAmount | number: '1.2-2' }}</span
+          >
+        </div>
+        <div class="bet-form-summary__win-field">
+          <span class="bet-form-summary__win-prefix" aria-hidden="true">€</span>
           <input
-            class="vs-input"
+            class="bet-form-summary__win-value"
             type="number"
             step="0.01"
             min="0.01"
             formControlName="potentialWin"
             placeholder="0,00"
+            aria-label="Vincita potenziale"
           />
         </div>
-      </label>
+        <span class="bet-form-summary__win-foot">Ritorno potenziale</span>
+      </div>
     </div>
-
   </form>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end" class="edit-bet-actions">
+<mat-dialog-actions class="bet-form-dialog__actions bet-form-dialog__actions--edit">
   @if (bet.status === 'PENDING') {
-    <button mat-button type="button" class="edit-bet-delete" (click)="deleteBet()">
+    <button type="button" class="bet-form-btn bet-form-btn--danger" (click)="deleteBet()">
       Elimina
     </button>
   }
-  <span class="edit-bet-actions__spacer"></span>
-  <button mat-button type="button" (click)="cancel()">Annulla</button>
-  <button mat-flat-button color="primary" type="button" [disabled]="form.invalid" (click)="submit()">
+  <span class="bet-form-dialog__actions-spacer"></span>
+  <button type="button" class="bet-form-btn bet-form-btn--ghost" (click)="cancel()">Annulla</button>
+  <button
+    type="button"
+    class="bet-form-btn bet-form-btn--primary"
+    [disabled]="form.invalid"
+    (click)="submit()"
+  >
+    <mat-icon>check</mat-icon>
     Salva modifiche
   </button>
 </mat-dialog-actions>

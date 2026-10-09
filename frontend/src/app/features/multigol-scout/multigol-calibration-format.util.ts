@@ -69,3 +69,90 @@ export function formatCalibrationPercent(value: number | null): string {
   }
   return `${value.toFixed(1).replace('.', ',')}%`;
 }
+
+export function calibrationDeltaPercent(
+  observed: number | null,
+  expected: number | null,
+): number | null {
+  if (observed == null || expected == null || !Number.isFinite(observed) || !Number.isFinite(expected)) {
+    return null;
+  }
+  return observed - expected;
+}
+
+export function formatCalibrationDelta(value: number | null): string {
+  if (value == null || !Number.isFinite(value)) {
+    return '—';
+  }
+  const sign = value >= 0 ? '+' : '';
+  return `${sign}${value.toFixed(1).replace('.', ',')}%`;
+}
+
+export function calibrationMetricTitle(label: string): string {
+  switch (label) {
+    case 'Sintesi':
+      return 'Modello sintesi';
+    case 'Poisson':
+      return 'Distribuzione Poisson';
+    case 'Empirica':
+      return 'Frequenza empirica';
+    default:
+      return label;
+  }
+}
+
+export function calibrationFeaturedBandTitle(bandLabel: string): string {
+  return `(${bandLabel})`;
+}
+
+export function calibrationMetricIcon(label: string): string {
+  switch (label) {
+    case 'Sintesi':
+      return 'task_alt';
+    case 'Poisson':
+      return 'functions';
+    case 'Empirica':
+      return 'schedule';
+    default:
+      return 'insights';
+  }
+}
+
+export type CalibrationObservedTone = 'strong' | 'neutral' | 'low';
+
+export function calibrationObservedTone(
+  observedPercent: number | null,
+): CalibrationObservedTone {
+  if (observedPercent == null || !Number.isFinite(observedPercent)) {
+    return 'neutral';
+  }
+  if (observedPercent < 50) {
+    return 'low';
+  }
+  if (observedPercent >= 75) {
+    return 'strong';
+  }
+  return 'neutral';
+}
+
+export function calibrationBandConcludedCount(
+  section: MultigolCalibrationBandSectionView,
+): number {
+  const synthesis = section.metrics.find((m) => m.label === METRIC_LABELS.synthesis);
+  return synthesis?.total ?? section.metrics[0]?.total ?? 0;
+}
+
+export function calibrationSynthesisRow(
+  section: MultigolCalibrationBandSectionView,
+): MultigolCalibrationRowView | null {
+  return (
+    section.metrics.find((m) => m.label === METRIC_LABELS.synthesis) ?? section.metrics[0] ?? null
+  );
+}
+
+export function calibrationBandHeadline(section: MultigolCalibrationBandSectionView): string {
+  if (section.id === '90-100') {
+    return calibrationFeaturedBandTitle(section.bandLabel);
+  }
+  return section.bandLabel;
+}

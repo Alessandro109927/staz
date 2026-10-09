@@ -1,0 +1,116 @@
+<section class="multigol-panel multigol-calibration-panel">
+  <header class="multigol-panel__head">
+    <div class="multigol-panel__title-wrap">
+      <span class="multigol-panel__icon" aria-hidden="true">
+        <mat-icon>bar_chart</mat-icon>
+      </span>
+      <div>
+        <h2 class="multigol-panel__title">Affidabilità algoritmo</h2>
+        <p class="multigol-panel__subtitle">
+          {{ calibration().labeledPickCount }} esiti verificati su
+          {{ calibration().opportunityCount }} partite scannerizzate nelle ultime 24 ore
+        </p>
+      </div>
+    </div>
+  </header>
+
+  @if (sections().length) {
+    <div
+      class="multigol-calibration-accordion"
+      [class.multigol-calibration-accordion--compact]="!anyBandOpen()"
+    >
+      @for (section of sections(); track section.id) {
+        <div
+          class="multigol-calibration-band"
+          [class.multigol-calibration-band--open]="isBandOpen(section.id)"
+        >
+          <button
+            type="button"
+            class="multigol-calibration-band__summary"
+            (click)="toggleBand(section.id)"
+            [attr.aria-expanded]="isBandOpen(section.id)"
+          >
+            <span class="multigol-calibration-feature__label">
+              <span class="multigol-calibration-status-dot" aria-hidden="true"></span>
+              Fascia {{ bandHeadline(section) }}
+            </span>
+            @if (bandConcludedCount(section); as concluded) {
+              @if (concluded > 0) {
+                <span class="multigol-calibration-feature__count">
+                  {{ concluded }} Selezioni Concluse
+                </span>
+              }
+            }
+            <mat-icon class="multigol-calibration-band__chevron" aria-hidden="true"
+              >expand_more</mat-icon
+            >
+          </button>
+
+          @if (isBandOpen(section.id)) {
+            <div @calibrationReveal class="multigol-calibration-band__body">
+              <div class="multigol-calibration-feature multigol-calibration-feature--metrics">
+                <div class="multigol-calibration-feature__grid">
+                  @for (row of section.metrics; track row.label) {
+                    <article class="multigol-calibration-metric">
+                      <div class="multigol-calibration-metric__head">
+                        <p class="multigol-calibration-metric__title">
+                          {{ metricTitle(row.label) }}
+                        </p>
+                        <mat-icon
+                          class="multigol-calibration-metric__icon"
+                          [class.multigol-calibration-metric__icon--accent]="
+                            row.label === 'Sintesi'
+                          "
+                          aria-hidden="true"
+                          >{{ metricIcon(row.label) }}</mat-icon
+                        >
+                      </div>
+                      @if (row.total > 0) {
+                        <div class="multigol-calibration-metric__hero">
+                          <p class="multigol-calibration-metric__sample">
+                            <span class="multigol-calibration-metric__sample-hits">{{
+                              row.hits
+                            }}</span
+                            ><span class="multigol-calibration-metric__sample-total"
+                              >/{{ row.total }}</span
+                            >
+                          </p>
+                          <span class="multigol-calibration-metric__real-pill">
+                            {{ formatPercent(row.observedPercent) }} Reale
+                          </span>
+                        </div>
+                        <div class="multigol-calibration-metric__bar" role="presentation">
+                          <span
+                            class="multigol-calibration-metric__bar-fill"
+                            [style.width.%]="row.observedPercent ?? 0"
+                          ></span>
+                        </div>
+                        <div class="multigol-calibration-metric__foot">
+                          <span class="multigol-calibration-metric__expected">
+                            Attesa:
+                            <strong>{{ formatPercent(row.expectedPercent) }}</strong>
+                          </span>
+                          <span
+                            class="multigol-calibration-metric__delta"
+                            [class.multigol-calibration-metric__delta--neg]="
+                              (delta(row) ?? 0) < 0
+                            "
+                          >
+                            Delta:
+                            <strong>{{ formatDelta(delta(row)) }}</strong>
+                          </span>
+                        </div>
+                      } @else {
+                        <p class="multigol-calibration-metric__empty">Nessuna pick in fascia.</p>
+                      }
+                    </article>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>
