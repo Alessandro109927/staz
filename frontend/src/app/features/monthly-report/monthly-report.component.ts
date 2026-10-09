@@ -46,7 +46,8 @@ export class MonthlyReportComponent implements OnInit {
 
   monthLabel(option: MonthOption): string {
     const date = new Date(option.year, option.month - 1, 1);
-    return date.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+    const label = date.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+    return label.charAt(0).toUpperCase() + label.slice(1);
   }
 
   get monthSelectOptions(): VsSelectOption[] {
@@ -62,6 +63,51 @@ export class MonthlyReportComponent implements OnInit {
 
   get activeOddsRanges(): OddsRangeKpi[] {
     return this.report?.oddsRanges.filter((kpi) => this.hasOddsRangeActivity(kpi)) ?? [];
+  }
+
+  volumeSharePercent(count: number): number {
+    const total = this.report?.total ?? 0;
+    if (total <= 0) {
+      return 0;
+    }
+    return (count / total) * 100;
+  }
+
+  settledOutcomes(): number {
+    if (!this.report) {
+      return 0;
+    }
+    return this.report.won + this.report.lost;
+  }
+
+  winRateBarWidth(): number {
+    const rate = Number(this.report?.winRate);
+    if (!Number.isFinite(rate)) {
+      return 0;
+    }
+    return Math.min(100, Math.max(0, rate));
+  }
+
+  profitBarWidth(): number {
+    if (!this.report) {
+      return 0;
+    }
+    const roi = Number(this.report.roi);
+    if (Number.isFinite(roi)) {
+      return Math.min(100, Math.max(8, Math.abs(roi) * 4 + 20));
+    }
+    return +this.report.profit >= 0 ? 72 : 18;
+  }
+
+  oddsSegmentTag(key: string): string {
+    const tags: Record<string, string> = {
+      '1-2': 'Basso rischio',
+      '2-3': 'Valore medio',
+      '3-4': 'Alta resa',
+      '4-5': 'Quota alta',
+      '5+': 'Outlier & combo',
+    };
+    return tags[key] ?? '';
   }
 
   private loadMonths(): void {

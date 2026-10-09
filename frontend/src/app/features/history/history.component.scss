@@ -348,22 +348,40 @@
   border-radius: 1rem;
   background: c.$staz-white;
   box-shadow: 0 4px 18px rgba(c.$staz-ink, 0.06);
+  overflow-x: clip;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  @include down($bp-md) {
+    padding-inline: $space-4;
+  }
 }
 
-.history-filter-bar {
+.history-toolbar-stack {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: $space-4;
-  flex-wrap: nowrap;
   width: 100%;
+  min-width: 0;
+
+  @include down($bp-lg) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: $space-3;
+  }
 }
 
 .history-tabs-shell {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-width: 0;
   padding: $space-1;
   border-radius: 0.875rem;
   background: #f0f4f9;
+
+  @include down($bp-lg) {
+    width: 100%;
+  }
 }
 
 .history-tabs {
@@ -432,13 +450,18 @@
   background: #c94a4a;
 }
 
-.history-filter-bar > app-vs-table-pagination.history-pagination {
-  margin-left: auto;
+.history-tabs__btn--pending .history-tabs__dot {
+  background: rgba(c.$staz-ink, 0.28);
 }
 
 .history-pagination {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   align-self: center;
+
+  @include down($bp-lg) {
+    width: 100%;
+    align-self: stretch;
+  }
 
   ::ng-deep .vs-table-pagination {
     display: flex;
@@ -797,24 +820,74 @@
 }
 
 .history-cards {
+  display: flex;
   flex-direction: column;
-  gap: $space-3;
+  gap: $space-4;
+  width: 100%;
+  min-width: 0;
 }
 
 .history-card {
   display: flex;
   flex-direction: column;
-  gap: $space-3;
-  padding: $space-4;
-  border-radius: 0.75rem;
-  background: c.$staz-bg;
+  gap: $space-4;
+  width: 100%;
+  min-width: 0;
+  padding: $space-5;
+  border: none;
+  border-radius: 1rem;
+  background: c.$staz-white;
+  box-shadow: 0 4px 18px rgba(c.$staz-ink, 0.06);
+  box-sizing: border-box;
 }
 
 .history-card__head {
   display: flex;
   align-items: center;
-  gap: $space-3;
-  flex-wrap: wrap;
+  gap: $space-2;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.history-card__date {
+  flex: 0 0 auto;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: c.$staz-ink;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.history-card__tags {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+.history-card__id {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: $space-1 $space-2;
+  border-radius: $radius-sm;
+  background: rgba(c.$staz-blue, 0.08);
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  color: c.$staz-blue;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.history-slip-type--inline {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.history-card__head .history-status-badge {
+  flex-shrink: 0;
+  margin-left: $space-1;
 }
 
 .history-card__metrics {
@@ -855,12 +928,51 @@
 
 @include down($bp-lg) {
   .history-pagination {
-    margin-left: auto;
-    flex: 0 0 auto;
+    max-width: 100%;
+    overflow: hidden;
 
     ::ng-deep .vs-table-pagination {
-      justify-content: flex-end;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      justify-content: center;
     }
+
+    ::ng-deep .vs-table-pagination__group {
+      width: auto;
+      max-width: 100%;
+      flex-wrap: nowrap;
+      justify-content: center;
+      gap: $space-2;
+      margin-left: 0;
+    }
+
+    ::ng-deep .vs-table-pagination__page-size {
+      padding-right: 0;
+      margin-right: 0;
+      border-right: 0;
+    }
+  }
+
+  .history-tabs {
+    flex-wrap: nowrap;
+    width: 100%;
+  }
+
+  .history-tabs__btn {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    gap: $space-1;
+    padding: $space-2 $space-1;
+  }
+
+  .history-tabs__label {
+    display: none;
+  }
+
+  .history-tabs__count {
+    font-size: $font-size-sm;
   }
 
   .history-page-header__actions {

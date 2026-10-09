@@ -1,6 +1,11 @@
 <article class="fascia-donut">
   <header class="fascia-donut__head">
-    <h3 class="fascia-donut__title">{{ kpi.label }}</h3>
+    @if (segmentTag) {
+      <h3 class="fascia-donut__range">{{ kpi.label }}</h3>
+      <p class="fascia-donut__segment-tag">{{ segmentTag }}</p>
+    } @else {
+      <h3 class="fascia-donut__title">{{ kpi.label }}</h3>
+    }
   </header>
 
   <div class="fascia-donut__body">

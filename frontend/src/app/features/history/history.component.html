@@ -129,14 +129,15 @@
 
   <div class="history-list">
     <div class="history-toolbar-card">
-      <div class="history-filter-bar">
+      <div class="history-toolbar-stack">
         <div class="history-tabs-shell">
-        <div class="history-tabs" role="tablist" aria-label="Filtro esito">
+          <div class="history-tabs" role="tablist" aria-label="Filtro esito">
           <button
             type="button"
             role="tab"
             class="history-tabs__btn"
             [class.history-tabs__btn--active]="activeStatusTab() === 'ALL'"
+            aria-label="Tutte"
             (click)="setStatusTab('ALL')"
           >
             <span class="history-tabs__label">Tutte</span>
@@ -147,6 +148,7 @@
             role="tab"
             class="history-tabs__btn history-tabs__btn--won"
             [class.history-tabs__btn--active]="activeStatusTab() === 'WON'"
+            aria-label="Vinte"
             (click)="setStatusTab('WON')"
           >
             <span class="history-tabs__dot" aria-hidden="true"></span>
@@ -158,6 +160,7 @@
             role="tab"
             class="history-tabs__btn history-tabs__btn--lost"
             [class.history-tabs__btn--active]="activeStatusTab() === 'LOST'"
+            aria-label="Perse"
             (click)="setStatusTab('LOST')"
           >
             <span class="history-tabs__dot" aria-hidden="true"></span>
@@ -167,14 +170,16 @@
           <button
             type="button"
             role="tab"
-            class="history-tabs__btn"
+            class="history-tabs__btn history-tabs__btn--pending"
             [class.history-tabs__btn--active]="activeStatusTab() === 'PENDING'"
+            aria-label="In corso"
             (click)="setStatusTab('PENDING')"
           >
+            <span class="history-tabs__dot" aria-hidden="true"></span>
             <span class="history-tabs__label">In corso</span>
             <span class="history-tabs__count">{{ stats?.pending ?? 0 }}</span>
           </button>
-        </div>
+          </div>
         </div>
 
         <app-vs-table-pagination
@@ -340,11 +345,11 @@
         @for (bet of paginatedBets; track bet.id) {
           <article class="history-card">
             <header class="history-card__head">
-              <div class="history-table__date">
-                <span class="history-table__date-label">{{ betDateLabel(bet.betDate) }}</span>
-                <span class="history-table__id">#{{ bet.id }}</span>
+              <span class="history-card__date">{{ betDateLabel(bet.betDate) }}</span>
+              <div class="history-card__tags">
+                <span class="history-slip-type history-slip-type--inline">{{ betSlipKind(bet) }}</span>
+                <span class="history-card__id">#{{ bet.id }}</span>
               </div>
-              <span class="history-slip-type">{{ betSlipKind(bet) }}</span>
               <span
                 class="history-status-badge"
                 [class]="statusBadgeClass(bet.status)"

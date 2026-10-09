@@ -18,6 +18,8 @@ import {
 })
 export class OddsRangeKpiDonutComponent implements OnChanges {
   @Input({ required: true }) kpi!: OddsRangeKpi;
+  /** Etichetta segmento (es. «BASSO RISCHIO») nel report mensile. */
+  @Input() segmentTag = '';
 
   chart?: ChartConfiguration<'doughnut'>;
   legend: FasciaDonutLegendItem[] = [];

@@ -15,6 +15,51 @@
 :host(.history-pagination) {
   width: auto;
   flex: 0 0 auto;
+  max-width: 100%;
+  min-width: 0;
+
+  @include down($bp-lg) {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  @include down($bp-lg) {
+    .vs-table-pagination {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      justify-content: center;
+    }
+
+    .vs-table-pagination__page-size-label,
+    .vs-table-pagination__range {
+      display: none;
+    }
+
+    .vs-table-pagination__group {
+      width: auto;
+      max-width: 100%;
+      flex-wrap: nowrap;
+      justify-content: center;
+      gap: $space-2;
+      margin-left: 0;
+    }
+
+    .vs-table-pagination__page-size {
+      gap: 0;
+      padding-right: 0;
+      margin-right: 0;
+      border-right: 0;
+    }
+
+    .vs-table-pagination__page-size-select {
+      min-width: 2.5rem;
+    }
+
+    .vs-table-pagination__page {
+      min-width: 2.5rem;
+    }
+  }
 }
 
 .vs-table-pagination {
@@ -175,6 +220,20 @@
       font-size: 1.125rem;
       width: 1.125rem;
       height: 1.125rem;
+    }
+  }
+}
+
+@include down($bp-lg) {
+  :host(.history-pagination) {
+    .vs-table-pagination {
+      overflow-x: hidden;
+    }
+
+    .vs-table-pagination__group {
+      flex-wrap: nowrap;
+      width: auto;
+      max-width: 100%;
     }
   }
 }

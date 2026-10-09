@@ -1,121 +1,189 @@
 <div class="vs-page monthly-report-page">
   <header class="monthly-report-header">
-    <div class="monthly-report-header__title">
-      <h1 class="vs-heading-page">Report mensile</h1>
-      <p class="vs-text-muted">
+    <div class="monthly-report-header__text">
+      <div class="monthly-report-header__title-row">
+        <h1 class="monthly-report-header__title">Report mensile</h1>
+        @if (report) {
+          <span class="monthly-report-header__badge">Consolidato</span>
+        }
+      </div>
+      <p class="monthly-report-header__subtitle">
         KPI del mese: profitto, esito scommesse e performance per fascia di quota.
       </p>
     </div>
 
     @if (months.length) {
-      <app-vs-select-field
-        class="monthly-report-filter"
-        label="Mese"
-        [control]="monthControl"
-        [options]="monthSelectOptions"
-      />
+      <div class="monthly-report-month-picker">
+        <mat-icon class="monthly-report-month-picker__icon" aria-hidden="true"
+          >calendar_month</mat-icon
+        >
+        <app-vs-select-field
+          class="monthly-report-month-picker__select"
+          [control]="monthControl"
+          [options]="monthSelectOptions"
+        />
+      </div>
     }
   </header>
 
   @if (loading) {
-    <section class="vs-card monthly-report-empty">
-      <p class="vs-text-muted">Caricamento...</p>
+    <section class="monthly-report-empty-card">
+      <p class="monthly-report-empty-card__text">Caricamento...</p>
     </section>
   } @else if (!months.length) {
-    <section class="vs-card monthly-report-empty">
+    <section class="monthly-report-empty-card">
       <mat-icon>calendar_month</mat-icon>
-      <h2 class="vs-heading-section">Nessun dato disponibile</h2>
-      <p class="vs-text-muted">Registra delle scommesse per generare i report mensili.</p>
+      <h2 class="monthly-report-empty-card__title">Nessun dato disponibile</h2>
+      <p class="monthly-report-empty-card__text">
+        Registra delle scommesse per generare i report mensili.
+      </p>
     </section>
   } @else if (report) {
-    <section class="monthly-report-kpis">
-      <article class="vs-card--flush monthly-kpi monthly-kpi--profit">
-        <div class="table-header">
-          <h2 class="vs-heading-section">Profitto</h2>
-        </div>
-        <div class="dashboard-card-body monthly-kpi__body">
+    <section class="monthly-report-kpis" aria-label="KPI mensili">
+      <article class="monthly-kpi-card monthly-kpi-card--profit">
+        <header class="monthly-kpi-card__head">
+          <span class="monthly-kpi-card__label">Profitto</span>
+          <span class="monthly-kpi-card__icon monthly-kpi-card__icon--profit" aria-hidden="true">
+            <mat-icon>account_balance_wallet</mat-icon>
+          </span>
+        </header>
+        <div class="monthly-kpi-card__body">
           <p
-            class="monthly-kpi__value"
-            [class.monthly-kpi__value--success]="+report.profit >= 0"
-            [class.monthly-kpi__value--danger]="+report.profit < 0"
+            class="monthly-kpi-card__value"
+            [class.monthly-kpi-card__value--success]="+report.profit >= 0"
+            [class.monthly-kpi-card__value--danger]="+report.profit < 0"
           >
             {{ +report.profit >= 0 ? '+' : '' }}€ {{ report.profit | number: '1.2-2' }}
           </p>
           @if (report.roi != null) {
-            <span class="monthly-kpi__meta">ROI {{ +report.roi >= 0 ? '+' : '' }}{{ report.roi }}%</span>
+            <span
+              class="monthly-kpi-card__roi-pill"
+              [class.monthly-kpi-card__roi-pill--negative]="+report.roi < 0"
+            >
+              <mat-icon>{{ +report.roi >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+              ROI {{ +report.roi >= 0 ? '+' : '' }}{{ report.roi }}%
+            </span>
           }
         </div>
-      </article>
-
-      <article class="vs-card--flush monthly-kpi">
-        <div class="table-header">
-          <h2 class="vs-heading-section">Vinte</h2>
-        </div>
-        <div class="dashboard-card-body monthly-kpi__body">
-          <p class="monthly-kpi__value monthly-kpi__value--success">{{ report.won }}</p>
+        <div class="monthly-kpi-card__bar" role="presentation">
+          <span
+            class="monthly-kpi-card__bar-fill monthly-kpi-card__bar-fill--success"
+            [style.width.%]="profitBarWidth()"
+          ></span>
         </div>
       </article>
 
-      <article class="vs-card--flush monthly-kpi">
-        <div class="table-header">
-          <h2 class="vs-heading-section">Perse</h2>
+      <article class="monthly-kpi-card">
+        <header class="monthly-kpi-card__head">
+          <span class="monthly-kpi-card__label">Vinte</span>
+          <span class="monthly-kpi-card__icon monthly-kpi-card__icon--success" aria-hidden="true">
+            <mat-icon>check_circle</mat-icon>
+          </span>
+        </header>
+        <div class="monthly-kpi-card__body">
+          <p class="monthly-kpi-card__value monthly-kpi-card__value--success">{{ report.won }}</p>
+          <p class="monthly-kpi-card__sub">
+            {{ volumeSharePercent(report.won) | number: '1.1-1' }}% del volume totale
+          </p>
         </div>
-        <div class="dashboard-card-body monthly-kpi__body">
-          <p class="monthly-kpi__value monthly-kpi__value--danger">{{ report.lost }}</p>
+        <div class="monthly-kpi-card__bar" role="presentation">
+          <span
+            class="monthly-kpi-card__bar-fill monthly-kpi-card__bar-fill--success"
+            [style.width.%]="volumeSharePercent(report.won)"
+          ></span>
         </div>
       </article>
 
-      <article class="vs-card--flush monthly-kpi">
-        <div class="table-header">
-          <h2 class="vs-heading-section">In attesa</h2>
+      <article class="monthly-kpi-card">
+        <header class="monthly-kpi-card__head">
+          <span class="monthly-kpi-card__label">Perse</span>
+          <span class="monthly-kpi-card__icon monthly-kpi-card__icon--danger" aria-hidden="true">
+            <mat-icon>cancel</mat-icon>
+          </span>
+        </header>
+        <div class="monthly-kpi-card__body">
+          <p class="monthly-kpi-card__value monthly-kpi-card__value--danger">{{ report.lost }}</p>
+          <p class="monthly-kpi-card__sub">
+            {{ volumeSharePercent(report.lost) | number: '1.1-1' }}% del volume totale
+          </p>
         </div>
-        <div class="dashboard-card-body monthly-kpi__body">
-          <p class="monthly-kpi__value">{{ report.pending }}</p>
+        <div class="monthly-kpi-card__bar" role="presentation">
+          <span
+            class="monthly-kpi-card__bar-fill monthly-kpi-card__bar-fill--danger"
+            [style.width.%]="volumeSharePercent(report.lost)"
+          ></span>
         </div>
       </article>
 
-      <article class="vs-card--flush monthly-kpi">
-        <div class="table-header">
-          <h2 class="vs-heading-section">Win rate</h2>
+      <article class="monthly-kpi-card">
+        <header class="monthly-kpi-card__head">
+          <span class="monthly-kpi-card__label">In attesa</span>
+          <span class="monthly-kpi-card__icon monthly-kpi-card__icon--muted" aria-hidden="true">
+            <mat-icon>hourglass_empty</mat-icon>
+          </span>
+        </header>
+        <div class="monthly-kpi-card__body">
+          <p class="monthly-kpi-card__value monthly-kpi-card__value--ink">{{ report.pending }}</p>
+          <p class="monthly-kpi-card__sub">{{ report.pending }} schedine aperte</p>
         </div>
-        <div class="dashboard-card-body monthly-kpi__body">
-          <p class="monthly-kpi__value">
+        <div class="monthly-kpi-card__bar" role="presentation">
+          <span
+            class="monthly-kpi-card__bar-fill monthly-kpi-card__bar-fill--muted"
+            [style.width.%]="volumeSharePercent(report.pending)"
+          ></span>
+        </div>
+      </article>
+
+      <article class="monthly-kpi-card">
+        <header class="monthly-kpi-card__head">
+          <span class="monthly-kpi-card__label">Win rate</span>
+          <span class="monthly-kpi-card__icon monthly-kpi-card__icon--profit" aria-hidden="true">
+            <mat-icon>percent</mat-icon>
+          </span>
+        </header>
+        <div class="monthly-kpi-card__body">
+          <p class="monthly-kpi-card__value monthly-kpi-card__value--ink">
             {{ report.winRate != null ? report.winRate + '%' : '—' }}
           </p>
-        </div>
-      </article>
-
-      <article class="vs-card--flush monthly-kpi">
-        <div class="table-header">
-          <h2 class="vs-heading-section">Media quota</h2>
-        </div>
-        <div class="dashboard-card-body monthly-kpi__body">
-          <p class="monthly-kpi__value">
-            {{ report.averageOdds ?? '—' }}
+          <p class="monthly-kpi-card__sub">
+            {{ report.won }} hit su {{ settledOutcomes() }} esiti
           </p>
+        </div>
+        <div class="monthly-kpi-card__bar" role="presentation">
+          <span
+            class="monthly-kpi-card__bar-fill monthly-kpi-card__bar-fill--success"
+            [style.width.%]="winRateBarWidth()"
+          ></span>
         </div>
       </article>
     </section>
 
-    <section class="vs-card--flush odds-range-section">
-      @if (activeOddsRanges.length) {
-        <div class="table-header">
-          <h2 class="vs-heading-section">Fasce di quota</h2>
+    <section class="monthly-fasce-card" aria-labelledby="monthly-fasce-title">
+      <header class="monthly-fasce-card__head">
+        <span class="monthly-fasce-card__icon" aria-hidden="true">
+          <mat-icon>track_changes</mat-icon>
+        </span>
+        <div class="monthly-fasce-card__head-text">
+          <div class="monthly-fasce-card__title-row">
+            <h2 id="monthly-fasce-title" class="monthly-fasce-card__title">Fasce di quota</h2>
+            <span class="monthly-fasce-card__badge">5 Segmenti monitorati</span>
+          </div>
+          <p class="monthly-fasce-card__subtitle">
+            Analisi della redditività e distribuzione strike rate suddivisa per moltiplicatore
+            quota
+          </p>
         </div>
+      </header>
 
-        <div class="odds-range-section__donuts odds-range-section__donuts--auto dashboard-card-body">
-          @for (kpi of activeOddsRanges; track kpi.key) {
-            <app-odds-range-kpi-donut [kpi]="kpi" />
-          }
-        </div>
-        <p class="odds-range-section__footnote">
-          Margine = profitto netto ÷ totale giocato sulle scommesse regolate.
-        </p>
-      } @else {
-        <p class="monthly-report-empty monthly-report-empty--inline">
-          Nessuna scommessa conclusa in questo mese.
-        </p>
-      }
+      <div class="monthly-fasce-card__grid">
+        @for (kpi of report.oddsRanges; track kpi.key) {
+          <app-odds-range-kpi-donut [kpi]="kpi" [segmentTag]="oddsSegmentTag(kpi.key)" />
+        }
+      </div>
+
+      <p class="monthly-fasce-card__footnote">
+        Margine = profitto netto ÷ totale giocato sulle scommesse regolate.
+      </p>
     </section>
   }
 </div>

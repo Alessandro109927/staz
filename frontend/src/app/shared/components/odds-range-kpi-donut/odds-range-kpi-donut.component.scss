@@ -27,13 +27,30 @@
   margin: 0;
 }
 
-.fascia-donut__title {
+.fascia-donut__title,
+.fascia-donut__range {
   margin: 0;
   font-size: $font-size-base;
   font-weight: $font-weight-bold;
   color: $color-neutral-900;
   line-height: 1.35;
   text-align: center;
+}
+
+.fascia-donut__range {
+  font-size: $font-size-md;
+  font-variant-numeric: tabular-nums;
+}
+
+.fascia-donut__segment-tag {
+  margin: $space-1 0 0;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  color: $color-neutral-600;
+  line-height: 1.3;
 }
 
 .fascia-donut__body {

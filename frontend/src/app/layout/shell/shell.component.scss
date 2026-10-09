@@ -560,7 +560,8 @@ $sidebar-rail-item: 2.625rem;
     height: auto;
     min-height: 60px;
     padding: $space-3 $space-4;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    gap: $space-2;
   }
 
   &__start,
@@ -572,11 +573,17 @@ $sidebar-rail-item: 2.625rem;
   }
 
   &__start {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+
+    @include down($bp-md) {
+      flex: 0 0 auto;
+    }
   }
 
   &__end {
-    flex-shrink: 0;
+    flex: 0 1 auto;
+    min-width: 0;
     justify-content: flex-end;
   }
 }
@@ -614,6 +621,10 @@ $sidebar-rail-item: 2.625rem;
   border-radius: $radius-full;
   background: rgba(c.$staz-chrome-muted, 0.35);
   min-width: 0;
+
+  @include down($bp-md) {
+    display: none;
+  }
 
   @include down($bp-sm) {
     padding: $space-2 $space-3;
@@ -654,15 +665,19 @@ $sidebar-rail-item: 2.625rem;
   display: inline-flex;
   align-items: center;
   gap: $space-3;
+  max-width: 100%;
+  min-width: 0;
   padding: $space-2 $space-4;
   box-shadow: 0 1px 0 rgba(c.$staz-ink, 0.04);
   border-radius: $radius-full;
   background: c.$staz-white;
   white-space: nowrap;
+  overflow: hidden;
 
   @include down($bp-md) {
     gap: $space-2;
     padding: $space-1 $space-3;
+    flex-shrink: 1;
   }
 
   @include down($bp-sm) {
