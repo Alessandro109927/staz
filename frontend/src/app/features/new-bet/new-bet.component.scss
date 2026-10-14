@@ -582,7 +582,17 @@ $bet-form-summary-foot-row: 1.25rem;
   }
 
   .bet-form-dialog__actions {
+    flex-direction: column;
+    align-items: stretch;
     padding-inline: $space-4 !important;
-    flex-wrap: wrap;
+    gap: $space-2;
+
+    .bet-form-dialog__actions-spacer {
+      display: none;
+    }
+
+    .bet-form-btn {
+      width: 100%;
+    }
   }
 }

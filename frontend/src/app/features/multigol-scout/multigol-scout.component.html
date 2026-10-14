@@ -13,7 +13,7 @@
           Dati in cache server · Ultima scansione completa:
           {{ snapshotBuiltAt | date: 'dd/MM/yyyy, HH:mm:ss' }}.
         } @else if (!loading && !allItems.length) {
-          Nessuno snapshot: usa <strong>Aggiorna dati</strong> per la prima scansione.
+          Nessuno snapshot: usa <strong>Aggiorna dati</strong> (incrementale o leghe filtrate).
         } @else {
           Dati in cache server · snapshot in caricamento…
         }

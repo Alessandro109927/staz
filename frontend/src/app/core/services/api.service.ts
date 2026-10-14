@@ -265,11 +265,16 @@ export class ApiService {
 
   refreshMultigolSnapshot(options?: {
     mode?: 'full' | 'incremental';
+    leagues?: string[];
     async?: boolean;
   }): Observable<{ started: boolean; mode: string }> {
     let params = new HttpParams();
-    if (options?.mode === 'incremental') {
+    if (options?.leagues?.length) {
+      params = params.set('leagues', options.leagues.join(','));
+    } else if (options?.mode === 'incremental') {
       params = params.set('mode', 'incremental');
+    } else if (options?.mode === 'full') {
+      params = params.set('mode', 'full');
     }
     if (options?.async !== false) {
       params = params.set('async', '1');

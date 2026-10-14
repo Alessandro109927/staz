@@ -26,12 +26,31 @@ export class MultigolScoutController {
   refreshSnapshot(
     @Query('mode') mode?: string,
     @Query('async') asyncFlag?: string,
+    @Query('leagues') leagues?: string,
   ) {
-    const incremental = mode === 'incremental';
     const background =
       asyncFlag === '1' ||
       asyncFlag === 'true' ||
       asyncFlag?.toLowerCase() === 'yes';
+
+    const leagueList = leagues
+      ?.split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (leagueList?.length) {
+      if (background) {
+        this.scout.refreshLeaguesSnapshotBackground(leagueList);
+        return { started: true, mode: 'leagues', leagues: leagueList };
+      }
+      return this.scout.refreshLeaguesSnapshot(leagueList).then((meta) => ({
+        started: false,
+        mode: 'leagues',
+        leagues: leagueList,
+        meta,
+      }));
+    }
+
+    const incremental = mode === 'incremental';
     if (incremental) {
       if (background) {
         void this.scout.runIncrementalSnapshotRefresh();

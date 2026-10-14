@@ -8,6 +8,7 @@ import {
   API_FOOTBALL_BASE,
   FD_CODE_TO_API_FOOTBALL_LEAGUE,
 } from './api-football.constants';
+import { SCOUT_LEAGUE_PRIORITY_CODES } from './multigol-scout.constants';
 import {
   apiFixtureToFdMatch,
   apiFixturesToH2h,
@@ -80,6 +81,22 @@ export class ApiFootballClient {
 
   rememberMatch(match: FdMatch): void {
     this.set(`fdm:${match.id}`, match);
+    const code = match.competition?.code;
+    if (!code) {
+      return;
+    }
+    const leagueId = this.leagueIdForCode(code);
+    if (leagueId == null) {
+      return;
+    }
+    const season =
+      match.competition?.season ?? this.seasonYearForKickoff(match.utcDate);
+    for (const team of [match.homeTeam, match.awayTeam]) {
+      this.teamIdCache.set(
+        `${leagueId}:${season}:${team.name.toLowerCase()}`,
+        team.id,
+      );
+    }
   }
 
   leagueIdForCode(code: string): number | null {
@@ -216,9 +233,11 @@ export class ApiFootballClient {
   async scoutHead2head(
     fixtureId: number,
     limit = 8,
+    knownMatch?: FdMatch,
   ): Promise<FdHead2HeadResponse> {
     this.requireConfigured();
-    const match = await this.scoutGetMatch(fixtureId);
+    const match =
+      knownMatch ?? (await this.scoutGetMatch(fixtureId));
     const cacheKey = `scout:h2h:${match.homeTeam.id}:${match.awayTeam.id}:${limit}`;
     const hit = this.get<FdHead2HeadResponse>(cacheKey);
     if (hit) {
@@ -245,6 +264,64 @@ export class ApiFootballClient {
   }
 
   /** Ultime gare finite **solo nel campionato** (lega + stagione API). */
+  /**
+   * Campionato domestico principale della squadra (es. Serie A per Milan), cache 7g.
+   */
+  async resolveDomesticLeagueCode(
+    teamId: number,
+    season: number,
+  ): Promise<string | null> {
+    const cacheKey = `domesticLeague:${teamId}:${season}`;
+    const hit = this.get<string>(cacheKey);
+    if (hit) {
+      return hit;
+    }
+
+    const raw = await this.fetchJson<ApiFootballLeagueListItem[]>(
+      `/leagues?team=${teamId}&season=${season}`,
+    ).catch(() => [] as ApiFootballLeagueListItem[]);
+
+    const candidates = raw.filter((item) => {
+      const type = (item.league.type ?? 'League').toLowerCase();
+      if (type !== 'league') {
+        return false;
+      }
+      const country = item.country?.name?.trim().toLowerCase() ?? '';
+      if (country === 'world') {
+        return false;
+      }
+      return (
+        this.leagueCodeForApiId(item.league.id) != null ||
+        this.leagueIdForCode(String(item.league.id)) != null
+      );
+    });
+
+    candidates.sort((a, b) => {
+      const codeA = this.leagueCodeForApiId(a.league.id) ?? '';
+      const codeB = this.leagueCodeForApiId(b.league.id) ?? '';
+      const pri = (code: string) => {
+        const idx = (SCOUT_LEAGUE_PRIORITY_CODES as readonly string[]).indexOf(
+          code,
+        );
+        return idx >= 0 ? idx : 999;
+      };
+      const d = pri(codeA) - pri(codeB);
+      if (d !== 0) {
+        return d;
+      }
+      return a.league.id - b.league.id;
+    });
+
+    const picked = candidates[0];
+    const code =
+      (picked ? this.leagueCodeForApiId(picked.league.id) : null) ??
+      (picked ? String(picked.league.id) : null);
+    if (code) {
+      this.set(cacheKey, code, 7 * 24 * 60 * 60 * 1000);
+    }
+    return code;
+  }
+
   async scoutTeamLeagueFinished(
     teamId: number,
     leagueCode: string,
@@ -315,6 +392,10 @@ export class ApiFootballClient {
     utcDate: string;
     homeTeamName: string;
     awayTeamName: string;
+    homeTeamId?: number;
+    awayTeamId?: number;
+    fixtureId?: number;
+    fixtureStatus?: string;
   }): Promise<{
     home: MultigolApiFootballSeasonStats | null;
     away: MultigolApiFootballSeasonStats | null;
@@ -330,38 +411,32 @@ export class ApiFootballClient {
     }
 
     const season = this.seasonYearForKickoff(input.utcDate);
-    await this.refreshStatusIfStale();
 
-    const homeId = await this.resolveTeamId(
-      input.homeTeamName,
-      leagueId,
-      season,
-    );
-    const awayId = await this.resolveTeamId(
-      input.awayTeamName,
-      leagueId,
-      season,
-    );
+    const homeId =
+      input.homeTeamId ??
+      (await this.resolveTeamId(input.homeTeamName, leagueId, season));
+    const awayId =
+      input.awayTeamId ??
+      (await this.resolveTeamId(input.awayTeamName, leagueId, season));
 
-    const home = homeId
-      ? await this.teamSeasonStats(homeId, leagueId, season)
-      : null;
-    const away = awayId
-      ? await this.teamSeasonStats(awayId, leagueId, season)
-      : null;
+    const [home, away] = await Promise.all([
+      homeId ? this.teamSeasonStats(homeId, leagueId, season) : null,
+      awayId ? this.teamSeasonStats(awayId, leagueId, season) : null,
+    ]);
 
     let fixture: MultigolApiFootballMatchStats | null = null;
     if (homeId && awayId) {
-      fixture = await this.fixtureStatisticsForMatch(
+      fixture = await this.fixtureStatisticsForMatch({
         homeId,
         awayId,
-        input.utcDate,
+        utcDate: input.utcDate,
         leagueId,
         season,
-      );
+        fixtureId: input.fixtureId,
+        fixtureStatus: input.fixtureStatus,
+      });
     }
 
-    await this.refreshStatusIfStale(0);
     return { home, away, fixture };
   }
 
@@ -575,17 +650,20 @@ export class ApiFootballClient {
       this.set(searchKey, items);
     }
 
-    if (!items?.length) {
+    if (!items?.length && q !== teamName) {
       items = await this.fetchJson<ApiFootballTeamSearchItem[]>(
         `/teams?search=${encodeURIComponent(teamName)}`,
       ).catch(() => []);
+      if (items?.length) {
+        this.set(searchKey, items);
+      }
     }
 
     const candidates = items
       .map((i) => i.team?.id)
       .filter((id): id is number => typeof id === 'number');
 
-    for (const id of candidates.slice(0, 6)) {
+    for (const id of candidates.slice(0, 3)) {
       const stats = await this.fetchJson<ApiFootballTeamStatistics | null>(
         `/teams/statistics?team=${id}&league=${leagueId}&season=${season}`,
       ).catch(() => null);
@@ -632,18 +710,51 @@ export class ApiFootballClient {
     return utcDate.slice(0, 10);
   }
 
-  private async fixtureStatisticsForMatch(
-    homeId: number,
-    awayId: number,
-    utcDate: string,
-    leagueId: number,
-    season: number,
-  ): Promise<MultigolApiFootballMatchStats | null> {
+  private isFinishedFixtureStatus(status: string | undefined): boolean {
+    const s = (status ?? '').toUpperCase();
+    return s === 'FT' || s === 'AET' || s === 'PEN' || s === 'FINISHED';
+  }
+
+  private async fixtureStatisticsForMatch(input: {
+    homeId: number;
+    awayId: number;
+    utcDate: string;
+    leagueId: number;
+    season: number;
+    fixtureId?: number;
+    fixtureStatus?: string;
+  }): Promise<MultigolApiFootballMatchStats | null> {
+    const { homeId, awayId, utcDate, leagueId, season, fixtureId } = input;
+    const status =
+      input.fixtureStatus ??
+      (fixtureId != null
+        ? this.get<FdMatch>(`fdm:${fixtureId}`)?.status
+        : undefined);
+
     const day = this.kickoffDateOnly(utcDate);
-    const cacheKey = `fxstat:${leagueId}:${season}:${day}:${homeId}:${awayId}`;
+    const cacheKey =
+      fixtureId != null
+        ? `fxstat:id:${fixtureId}`
+        : `fxstat:${leagueId}:${season}:${day}:${homeId}:${awayId}`;
     const hit = this.get<MultigolApiFootballMatchStats | null>(cacheKey);
     if (hit !== null) {
       return hit;
+    }
+
+    if (!this.isFinishedFixtureStatus(status)) {
+      this.set(cacheKey, null, 60 * 60 * 1000);
+      return null;
+    }
+
+    if (fixtureId != null) {
+      const mapped = await this.fixtureStatisticsById(
+        fixtureId,
+        homeId,
+        awayId,
+      );
+      if (mapped) {
+        return mapped;
+      }
     }
 
     const fixtures = await this.fetchJson<ApiFootballFixtureItem[]>(
@@ -651,9 +762,7 @@ export class ApiFootballClient {
     ).catch(() => [] as ApiFootballFixtureItem[]);
 
     const match = fixtures.find(
-      (f) =>
-        f.teams.home.id === homeId &&
-        f.teams.away.id === awayId,
+      (f) => f.teams.home.id === homeId && f.teams.away.id === awayId,
     );
     if (!match?.fixture?.id) {
       this.set(cacheKey, null);
@@ -752,6 +861,7 @@ export class ApiFootballClient {
     });
 
     const body = (await res.json()) as ApiFootballEnvelope<T>;
+    this.ingestRateLimitHeaders(res.headers);
     const errs = body?.errors;
     const hasErrors = Array.isArray(errs)
       ? errs.length > 0
@@ -787,6 +897,26 @@ export class ApiFootballClient {
       throw new Error(`API-Football HTTP ${res.status}`);
     }
     return body;
+  }
+
+  private ingestRateLimitHeaders(headers: Headers): void {
+    const remaining = headers.get('x-ratelimit-requests-remaining');
+    const limit = headers.get('x-ratelimit-requests-limit');
+    if (remaining != null && remaining !== '') {
+      const n = Number.parseInt(remaining, 10);
+      if (Number.isFinite(n)) {
+        this.dailyCurrent = n;
+      }
+    }
+    if (limit != null && limit !== '') {
+      const n = Number.parseInt(limit, 10);
+      if (Number.isFinite(n)) {
+        this.dailyLimit = n;
+      }
+    }
+    if (remaining != null || limit != null) {
+      this.lastStatusAt = Date.now();
+    }
   }
 
   private async fetchJson<T>(path: string): Promise<T> {

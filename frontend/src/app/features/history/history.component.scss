@@ -1,6 +1,6 @@
-@use '../../../styles/colors' as c;
-@use '../../../styles/variables' as *;
-@use '../../../styles/mixins' as *;
+@use "../../../styles/colors" as c;
+@use "../../../styles/variables" as *;
+@use "../../../styles/mixins" as *;
 
 .history-page {
   display: flex;
@@ -55,7 +55,9 @@
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  transition: filter 0.15s ease, background 0.15s ease;
+  transition:
+    filter 0.15s ease,
+    background 0.15s ease;
 
   mat-icon {
     width: 1.125rem;
@@ -405,7 +407,10 @@
   font-family: inherit;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease;
 
   &--active {
     background: c.$staz-white;
@@ -987,5 +992,4 @@
       flex: 1 1 100%;
     }
   }
-
 }

@@ -19,6 +19,9 @@ import {
   DEFAULT_TEAM_FORM_MATCH_LIMIT,
   SCOUT_LEAGUE_CODES,
   SCOUT_LEAGUE_PRIORITY_CODES,
+  SCOUT_UEFA_CUP_CODES,
+  SCOUT_UEFA_DOMESTIC_STANDING_MIN_GAMES,
+  isUefaCupLeagueCode,
   type ScoutCompetition,
 } from './multigol-scout.constants';
 
@@ -149,11 +152,11 @@ export class MultigolScoutService implements OnModuleInit {
       );
       await this.store.replaceAll(all, range.from, range.to);
       this.leagueScanCache.clear();
-      return this.store.getSnapshotMeta();
     } finally {
       this.scanRunning = false;
       await this.store.setScanInProgress(false);
     }
+    return this.store.getSnapshotMeta();
   }
 
   refreshFullSnapshotBackground(): void {
@@ -165,6 +168,116 @@ export class MultigolScoutService implements OnModuleInit {
       this.scanRunning = false;
       void this.store.setScanInProgress(false);
     });
+  }
+
+  refreshLeaguesSnapshotBackground(leagueKeys: string[]): void {
+    if (this.scanRunning) {
+      return;
+    }
+    void this.refreshLeaguesSnapshot(leagueKeys).catch((err) => {
+      this.logger.warn(`Scansione leghe fallita: ${String(err)}`);
+      this.scanRunning = false;
+      void this.store.setScanInProgress(false);
+    });
+  }
+
+  /**
+   * Ricalcola e sostituisce in DB solo le leghe indicate (merge snapshot, no wipe totale).
+   */
+  async refreshLeaguesSnapshot(
+    leagueKeys: string[],
+  ): Promise<MultigolScoutSnapshotMeta> {
+    await this.reconcileScanLock();
+    if (this.scanRunning) {
+      return this.store.getSnapshotMeta();
+    }
+    const tokens = this.normalizeLeagueRefreshTokens(leagueKeys);
+    if (!tokens.length) {
+      return this.store.getSnapshotMeta();
+    }
+
+    this.scanRunning = true;
+    await this.store.setScanInProgress(true);
+    try {
+      const range = await this.activeWindowRange();
+      const competitions = await this.getCompetitions();
+      const tokenSet = new Set(tokens);
+      const toScan = competitions.filter(
+        (c) =>
+          tokenSet.has(c.key.toUpperCase()) ||
+          (c.code != null && tokenSet.has(c.code.toUpperCase())) ||
+          tokenSet.has(String(c.id)),
+      );
+      if (!toScan.length) {
+        this.logger.warn(
+          `Scout: nessuna competizione per leghe ${tokens.join(', ')}`,
+        );
+        return this.store.getSnapshotMeta();
+      }
+
+      const scannedKeys = toScan.map((c) => c.key);
+      const fresh: MultigolOpportunity[] = [];
+      for (const league of toScan) {
+        fresh.push(
+          ...(await this.listLeagueOpportunities(
+            league.key,
+            range.from,
+            range.to,
+            { force: true },
+          )),
+        );
+      }
+      fresh.sort(
+        (a, b) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime(),
+      );
+
+      await this.store.deleteByLeagueKeys(scannedKeys);
+      await this.store.upsertMany(fresh);
+
+      const state = await this.store.getState();
+      const windowFrom =
+        state?.windowFrom && state.windowFrom < range.from
+          ? state.windowFrom
+          : range.from;
+      const windowTo =
+        state?.windowTo && state.windowTo > range.to ? state.windowTo : range.to;
+      await this.store.updateState({
+        windowFrom,
+        windowTo,
+        lastFullScanAt: new Date(),
+      });
+
+      for (const key of scannedKeys) {
+        for (const cacheKey of [...this.leagueScanCache.keys()]) {
+          if (cacheKey.startsWith(`${key}:`)) {
+            this.leagueScanCache.delete(cacheKey);
+          }
+        }
+      }
+
+      this.logger.log(
+        `Scout leghe [${tokens.join(', ')}]: ${fresh.length} pick salvate`,
+      );
+    } finally {
+      this.scanRunning = false;
+      await this.store.setScanInProgress(false);
+    }
+    return this.store.getSnapshotMeta();
+  }
+
+  private normalizeLeagueRefreshTokens(leagueKeys: string[]): string[] {
+    return [
+      ...new Set(
+        leagueKeys
+          .map((k) => k.trim())
+          .filter(Boolean)
+          .map((k) => (/^\d+$/.test(k) ? k : k.toUpperCase())),
+      ),
+    ];
+  }
+
+  defaultUefaCupRefreshTokens(): string[] {
+    return [...SCOUT_UEFA_CUP_CODES];
   }
 
   async runIncrementalSnapshotRefresh(): Promise<void> {
@@ -418,12 +531,28 @@ export class MultigolScoutService implements OnModuleInit {
       range.from,
     );
     const teamFormCache = new Map<string, FdMatch[]>();
+    const domesticTableCache = new Map<string, Map<number, FdStandingRow>>();
 
     const items: MultigolOpportunity[] = [];
     for (const match of fixtures) {
       this.apiFootball.rememberMatch(match);
-      const homeRow = table.get(match.homeTeam.id);
-      const awayRow = table.get(match.awayTeam.id);
+      const season = this.resolveLeagueSeason(leagueCode, match.utcDate, match);
+      const homeRow = await this.resolveStandingRowForScout(
+        match.homeTeam.id,
+        leagueCode,
+        table.get(match.homeTeam.id),
+        match.utcDate,
+        season,
+        domesticTableCache,
+      );
+      const awayRow = await this.resolveStandingRowForScout(
+        match.awayTeam.id,
+        leagueCode,
+        table.get(match.awayTeam.id),
+        match.utcDate,
+        season,
+        domesticTableCache,
+      );
 
       const dossier = buildDossier({
         match,
@@ -440,20 +569,19 @@ export class MultigolScoutService implements OnModuleInit {
       let awayForm: FdMatch[] = [];
       if (loadPickSideForm) {
         const isHomePick = dossier.pick.outcomeLabel === OUTCOME_HOME_1_6;
-        const season = this.resolveLeagueSeason(leagueCode, match.utcDate, match);
         if (isHomePick) {
-          homeForm = await this.cachedTeamFinished(
-            teamFormCache,
+          homeForm = await this.loadTeamFormForScout(
             match.homeTeam.id,
             leagueCode,
             season,
+            teamFormCache,
           );
         } else {
-          awayForm = await this.cachedTeamFinished(
-            teamFormCache,
+          awayForm = await this.loadTeamFormForScout(
             match.awayTeam.id,
             leagueCode,
             season,
+            teamFormCache,
           );
         }
       }
@@ -462,7 +590,7 @@ export class MultigolScoutService implements OnModuleInit {
         match.homeTeam.id,
         match.awayTeam.id,
         leagueCode,
-        this.resolveLeagueSeason(leagueCode, match.utcDate, match),
+        season,
         homeForm,
         awayForm,
       );
@@ -576,9 +704,19 @@ export class MultigolScoutService implements OnModuleInit {
     const teamId = isHomePick ? homeTeamId : awayTeamId;
     const form = isHomePick ? homeForm : awayForm;
     const venue = isHomePick ? ('home' as const) : ('away' as const);
+    let statsLeagueCode = leagueCode;
+    if (isUefaCupLeagueCode(leagueCode)) {
+      const domestic = await this.apiFootball.resolveDomesticLeagueCode(
+        teamId,
+        season,
+      );
+      if (domestic) {
+        statsLeagueCode = domestic;
+      }
+    }
     return this.apiFootball.resolveTeamVenueExpectedGoals(
       teamId,
-      leagueCode,
+      statsLeagueCode,
       season,
       venue,
       form,
@@ -602,25 +740,98 @@ export class MultigolScoutService implements OnModuleInit {
     return this.apiFootball.seasonYearForKickoff(utcDate);
   }
 
-  private async cachedTeamFinished(
-    cache: Map<string, FdMatch[]>,
-    teamId: number,
-    leagueCode: string,
-    season: number,
-  ): Promise<FdMatch[]> {
-    const cacheKey = `${leagueCode}:${season}:${teamId}`;
-    const hit = cache.get(cacheKey);
-    if (hit) {
-      return hit;
+  private mergeFormMatches(
+    primary: FdMatch[],
+    secondary: FdMatch[],
+    limit: number,
+  ): FdMatch[] {
+    const byId = new Map<number, FdMatch>();
+    for (const m of [...primary, ...secondary]) {
+      byId.set(m.id, m);
     }
-    const list = await this.apiFootball.scoutTeamLeagueFinished(
+    return [...byId.values()]
+      .sort(
+        (a, b) => new Date(b.utcDate).getTime() - new Date(a.utcDate).getTime(),
+      )
+      .slice(0, limit);
+  }
+
+  private async loadTeamFormForScout(
+    teamId: number,
+    competitionLeagueCode: string,
+    season: number,
+    memoryCache?: Map<string, FdMatch[]>,
+    skipApiCache = false,
+  ): Promise<FdMatch[]> {
+    const limit = this.teamFormMatchLimit();
+    const cacheKey = `${competitionLeagueCode}:${season}:${teamId}`;
+    if (!skipApiCache && memoryCache?.has(cacheKey)) {
+      return memoryCache.get(cacheKey)!;
+    }
+
+    const cup = await this.apiFootball.scoutTeamLeagueFinished(
       teamId,
-      leagueCode,
+      competitionLeagueCode,
       season,
-      this.teamFormMatchLimit(),
+      limit,
+      skipApiCache ? { skipCache: true } : undefined,
     );
-    cache.set(cacheKey, list);
-    return list;
+
+    let merged = cup;
+    if (isUefaCupLeagueCode(competitionLeagueCode)) {
+      const domesticCode = await this.apiFootball.resolveDomesticLeagueCode(
+        teamId,
+        season,
+      );
+      if (domesticCode && domesticCode !== competitionLeagueCode) {
+        const domestic = await this.apiFootball.scoutTeamLeagueFinished(
+          teamId,
+          domesticCode,
+          season,
+          limit,
+          skipApiCache ? { skipCache: true } : undefined,
+        );
+        merged = this.mergeFormMatches(cup, domestic, limit);
+      }
+    }
+
+    memoryCache?.set(cacheKey, merged);
+    return merged;
+  }
+
+  private async resolveStandingRowForScout(
+    teamId: number,
+    competitionLeagueCode: string,
+    cupRow: FdStandingRow | undefined,
+    refDate: string,
+    season: number,
+    domesticTableCache: Map<string, Map<number, FdStandingRow>>,
+  ): Promise<FdStandingRow | undefined> {
+    if (!isUefaCupLeagueCode(competitionLeagueCode)) {
+      return cupRow;
+    }
+    if (
+      cupRow &&
+      cupRow.playedGames >= SCOUT_UEFA_DOMESTIC_STANDING_MIN_GAMES
+    ) {
+      return cupRow;
+    }
+
+    const domesticCode = await this.apiFootball.resolveDomesticLeagueCode(
+      teamId,
+      season,
+    );
+    if (!domesticCode) {
+      return cupRow;
+    }
+
+    const tableKey = `${domesticCode}:${season}`;
+    let table = domesticTableCache.get(tableKey);
+    if (!table) {
+      table = await this.apiFootball.scoutStandingsTable(domesticCode, refDate);
+      domesticTableCache.set(tableKey, table);
+    }
+    return table.get(teamId) ?? cupRow;
   }
 
   private async loadLeagueFormForTeam(
@@ -637,12 +848,12 @@ export class MultigolScoutService implements OnModuleInit {
       match,
       seasonHint,
     );
-    return this.apiFootball.scoutTeamLeagueFinished(
+    return this.loadTeamFormForScout(
       teamId,
       leagueCode,
       season,
-      this.teamFormMatchLimit(),
-      { skipCache },
+      undefined,
+      skipCache,
     );
   }
 
@@ -656,7 +867,13 @@ export class MultigolScoutService implements OnModuleInit {
 
     const cached = this.getAnalysisCache(matchId);
     if (cached) {
-      const withForm = await this.refreshFormOnDossier(cached, Boolean(options?.refresh));
+      const needsFormRefresh =
+        Boolean(options?.refresh) ||
+        !cached.stats.homeFormGoalsDetail?.length ||
+        !cached.stats.awayFormGoalsDetail?.length;
+      const withForm = needsFormRefresh
+        ? await this.refreshFormOnDossier(cached, Boolean(options?.refresh))
+        : cached;
       const withStanding = await this.ensureStandingDetails(withForm);
       const enriched = await this.attachApiFootballStats(withStanding);
       if (enriched !== cached) {
@@ -698,19 +915,21 @@ export class MultigolScoutService implements OnModuleInit {
     const awayRow = seed?.awayRow ?? table.get(match.awayTeam.id);
 
     const h2hLimit = this.h2hMatchLimit();
-    const h2h = await this.apiFootball.scoutHead2head(matchId, h2hLimit);
-    const homeForm = await this.loadLeagueFormForTeam(
-      match.homeTeam.id,
-      leagueCode,
-      match.utcDate,
-      match,
-    );
-    const awayForm = await this.loadLeagueFormForTeam(
-      match.awayTeam.id,
-      leagueCode,
-      match.utcDate,
-      match,
-    );
+    const [h2h, homeForm, awayForm] = await Promise.all([
+      this.apiFootball.scoutHead2head(matchId, h2hLimit, match),
+      this.loadLeagueFormForTeam(
+        match.homeTeam.id,
+        leagueCode,
+        match.utcDate,
+        match,
+      ),
+      this.loadLeagueFormForTeam(
+        match.awayTeam.id,
+        leagueCode,
+        match.utcDate,
+        match,
+      ),
+    ]);
 
     const dossier = buildDossier({
       match,
@@ -736,11 +955,50 @@ export class MultigolScoutService implements OnModuleInit {
       aiEnabled: false,
     };
 
-    const withForm = await this.refreshFormOnDossier(result, Boolean(options?.refresh));
+    const withForm = options?.refresh
+      ? await this.refreshFormOnDossier(result, true)
+      : await this.applyFormAndXgToDossier(result, homeForm, awayForm);
     const withStanding = await this.ensureStandingDetails(withForm);
     const enriched = await this.attachApiFootballStats(withStanding);
     this.setAnalysisCache(matchId, enriched);
     return enriched;
+  }
+
+  private async applyFormAndXgToDossier(
+    dossier: MultigolAnalysis,
+    homeForm: FdMatch[],
+    awayForm: FdMatch[],
+  ): Promise<MultigolAnalysis> {
+    const seasonHint =
+      dossier.stats.apiFootballHome?.season ??
+      dossier.stats.apiFootballAway?.season ??
+      null;
+    const xg = dossier.pick
+      ? await this.resolvePickVenueXg(
+          dossier.pick.outcomeLabel,
+          dossier.homeTeam.id,
+          dossier.awayTeam.id,
+          dossier.leagueCode,
+          this.resolveLeagueSeason(
+            dossier.leagueCode,
+            dossier.utcDate,
+            undefined,
+            seasonHint,
+          ),
+          homeForm,
+          awayForm,
+        )
+      : { average: null, samples: 0 };
+    return {
+      ...dossier,
+      ...patchFormStats(
+        dossier,
+        homeForm,
+        awayForm,
+        xg.average,
+        xg.samples,
+      ),
+    };
   }
 
   private async ensureStandingDetails(
@@ -756,8 +1014,27 @@ export class MultigolScoutService implements OnModuleInit {
         dossier.leagueCode,
         dossier.utcDate,
       );
-      const homeRow = table.get(dossier.homeTeam.id);
-      const awayRow = table.get(dossier.awayTeam.id);
+      const season = this.resolveLeagueSeason(
+        dossier.leagueCode,
+        dossier.utcDate,
+      );
+      const domesticTableCache = new Map<string, Map<number, FdStandingRow>>();
+      const homeRow = await this.resolveStandingRowForScout(
+        dossier.homeTeam.id,
+        dossier.leagueCode,
+        table.get(dossier.homeTeam.id),
+        dossier.utcDate,
+        season,
+        domesticTableCache,
+      );
+      const awayRow = await this.resolveStandingRowForScout(
+        dossier.awayTeam.id,
+        dossier.leagueCode,
+        table.get(dossier.awayTeam.id),
+        dossier.utcDate,
+        season,
+        domesticTableCache,
+      );
       if (!homeRow && !awayRow) {
         return dossier;
       }
@@ -787,22 +1064,24 @@ export class MultigolScoutService implements OnModuleInit {
       dossier.stats.apiFootballHome?.season ??
       dossier.stats.apiFootballAway?.season ??
       null;
-    const homeForm = await this.loadLeagueFormForTeam(
-      dossier.homeTeam.id,
-      dossier.leagueCode,
-      dossier.utcDate,
-      undefined,
-      skipCache,
-      seasonHint,
-    );
-    const awayForm = await this.loadLeagueFormForTeam(
-      dossier.awayTeam.id,
-      dossier.leagueCode,
-      dossier.utcDate,
-      undefined,
-      skipCache,
-      seasonHint,
-    );
+    const [homeForm, awayForm] = await Promise.all([
+      this.loadLeagueFormForTeam(
+        dossier.homeTeam.id,
+        dossier.leagueCode,
+        dossier.utcDate,
+        undefined,
+        skipCache,
+        seasonHint,
+      ),
+      this.loadLeagueFormForTeam(
+        dossier.awayTeam.id,
+        dossier.leagueCode,
+        dossier.utcDate,
+        undefined,
+        skipCache,
+        seasonHint,
+      ),
+    ]);
     const xg = dossier.pick
       ? await this.resolvePickVenueXg(
           dossier.pick.outcomeLabel,
@@ -852,6 +1131,9 @@ export class MultigolScoutService implements OnModuleInit {
         utcDate: dossier.utcDate,
         homeTeamName: dossier.homeTeam.name,
         awayTeamName: dossier.awayTeam.name,
+        homeTeamId: dossier.homeTeam.id,
+        awayTeamId: dossier.awayTeam.id,
+        fixtureId: dossier.matchId,
       });
       return {
         ...dossier,

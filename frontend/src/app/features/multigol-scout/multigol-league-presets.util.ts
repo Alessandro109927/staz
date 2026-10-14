@@ -7,10 +7,13 @@ export type MultigolLeaguePresetId =
   | 'la-liga'
   | 'bundesliga'
   | 'ligue-1'
+  | 'uefa-cups'
   | 'allsvenskan'
   | 'super-league'
   | 'eredivisie'
   | 'mls';
+
+const UEFA_CUP_CODES = new Set(['UCL', 'UEL', 'UECL']);
 
 export type MultigolLeaguePresetDef = {
   id: Exclude<MultigolLeaguePresetId, 'tutti'>;
@@ -83,6 +86,25 @@ export const MULTIGOL_LEAGUE_PRESET_DEFS: MultigolLeaguePresetDef[] = [
     matches: (c) =>
       (areaCodes(c, 'FR') || areaName(c, /france|francia/i)) &&
       nameLike(c, 'ligue 1', 'ligue 2', 'ligue1', 'ligue2'),
+  },
+  {
+    id: 'uefa-cups',
+    label: 'Champions & Europa',
+    emoji: '🏆',
+    matches: (c) => {
+      const code = c.code?.trim().toUpperCase() ?? '';
+      if (UEFA_CUP_CODES.has(code)) {
+        return true;
+      }
+      return nameLike(
+        c,
+        'champions league',
+        'europa league',
+        'conference league',
+        'uefa champions',
+        'uefa europa',
+      );
+    },
   },
   {
     id: 'allsvenskan',

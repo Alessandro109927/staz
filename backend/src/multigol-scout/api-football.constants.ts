@@ -35,6 +35,9 @@ export const FD_CODE_TO_API_FOOTBALL_LEAGUE: Record<string, number> = {
   BSA: 71,
   MLS: 253,
   SAU: 307,
+  UCL: 2,
+  UEL: 3,
+  UECL: 848,
 };
 
 type LeagueMeta = {
@@ -90,6 +93,9 @@ export const SCOUT_LEAGUE_META: Record<string, LeagueMeta> = {
   BSA: meta(71, 'Campeonato Brasileiro Série A', 'Brazil', 'BR'),
   MLS: meta(253, 'Major League Soccer', 'USA', 'US'),
   SAU: meta(307, 'Pro League', 'Saudi Arabia', 'SA'),
+  UCL: meta(2, 'UEFA Champions League', 'World', 'WO'),
+  UEL: meta(3, 'UEFA Europa League', 'World', 'WO'),
+  UECL: meta(848, 'UEFA Europa Conference League', 'World', 'WO'),
 };
 
 const BASE = 'https://v3.football.api-sports.io';

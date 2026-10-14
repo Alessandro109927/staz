@@ -1,6 +1,6 @@
-@use '../../../styles/colors' as c;
-@use '../../../styles/variables' as *;
-@use '../../../styles/mixins' as *;
+@use "../../../styles/colors" as c;
+@use "../../../styles/variables" as *;
+@use "../../../styles/mixins" as *;
 
 :host {
   display: block;
@@ -110,7 +110,6 @@ $sidebar-rail-item: 2.625rem;
       outline-offset: 2px;
     }
   }
-
 }
 
 .shell-sidenav {
@@ -358,7 +357,9 @@ $sidebar-rail-item: 2.625rem;
     font-size: $font-size-base;
     font-weight: $font-weight-medium;
     border: none;
-    transition: background 0.15s, color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s;
     min-width: 0;
 
     .nav-label {
@@ -517,7 +518,9 @@ $sidebar-rail-item: 2.625rem;
   background: transparent;
   color: c.$staz-chrome-muted;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 
   mat-icon {
     font-size: 1.25rem;
@@ -735,7 +738,9 @@ $sidebar-rail-item: 2.625rem;
   background: transparent;
   color: c.$staz-slate;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 
   mat-icon {
     font-size: 1.5rem;

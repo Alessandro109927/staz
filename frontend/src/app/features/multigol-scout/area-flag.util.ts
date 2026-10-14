@@ -97,6 +97,11 @@ const AREA_TO_ISO: Record<string, string> = {
   TUN: 'tn',
   DZ: 'dz',
   ALG: 'dz',
+  /** API-Football: coppe UEFA (World / WO). */
+  WO: 'eu',
+  WORLD: 'eu',
+  EUR: 'eu',
+  EU: 'eu',
 };
 
 const AREA_NAME_TO_ISO: Record<string, string> = {
@@ -150,6 +155,10 @@ const AREA_NAME_TO_ISO: Record<string, string> = {
   morocco: 'ma',
   tunisia: 'tn',
   algeria: 'dz',
+  world: 'eu',
+  europe: 'eu',
+  europa: 'eu',
+  uefa: 'eu',
 };
 
 export type AreaFlagView =

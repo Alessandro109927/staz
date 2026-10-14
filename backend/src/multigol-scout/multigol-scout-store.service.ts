@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { MultigolScoutOpportunityEntity } from './entities/multigol-scout-opportunity.entity';
 import { MultigolScoutStateEntity } from './entities/multigol-scout-state.entity';
 import type { MultigolOpportunity } from './multigol-scout.types';
@@ -99,6 +99,15 @@ export class MultigolScoutStoreService {
         }),
       );
     }
+  }
+
+  async deleteByLeagueKeys(leagueKeys: readonly string[]): Promise<number> {
+    const keys = [...new Set(leagueKeys.map((k) => k.trim()).filter(Boolean))];
+    if (!keys.length) {
+      return 0;
+    }
+    const result = await this.oppRepo.delete({ leagueKey: In(keys) });
+    return result.affected ?? 0;
   }
 
   async deleteKickoffBefore(dayExclusive: string): Promise<number> {

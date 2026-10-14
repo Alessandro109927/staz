@@ -1,6 +1,6 @@
-@use '../../../styles/colors' as c;
-@use '../../../styles/variables' as *;
-@use '../../../styles/mixins' as *;
+@use "../../../styles/colors" as c;
+@use "../../../styles/variables" as *;
+@use "../../../styles/mixins" as *;
 
 .dashboard-page {
   width: 100%;
@@ -70,7 +70,10 @@
     padding: $space-2 $space-4;
     border-radius: $radius-full;
     cursor: pointer;
-    transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+    transition:
+      background 0.15s,
+      box-shadow 0.15s,
+      color 0.15s;
 
     @include down($bp-md) {
       flex: 1 1 0;
@@ -287,10 +290,10 @@
       color: c.$vs-loss;
     }
   }
-
 }
 
-.dashboard-hero-stat:first-child .dashboard-hero-stat__value:not(.dashboard-hero-stat__value--negative) {
+.dashboard-hero-stat:first-child
+  .dashboard-hero-stat__value:not(.dashboard-hero-stat__value--negative) {
   color: c.$staz-green;
 }
 

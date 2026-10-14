@@ -241,9 +241,19 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
 
   reload(): void {
     this.error = null;
-    this.progressLabel = 'Scansione completa in corso sul server…';
+    const leagues =
+      this.selectedLeagueKeys.size > 0 ? [...this.selectedLeagueKeys] : undefined;
+    this.progressLabel = leagues?.length
+      ? `Aggiornamento ${leagues.length} leghe selezionate…`
+      : 'Aggiornamento incrementale (nuovi giorni)…';
     this.serverScanInProgress = true;
-    this.api.refreshMultigolSnapshot({ mode: 'full', async: true }).subscribe({
+    this.api
+      .refreshMultigolSnapshot({
+        leagues,
+        mode: leagues?.length ? undefined : 'incremental',
+        async: true,
+      })
+      .subscribe({
       next: () => this.pollUntilScanDone(),
       error: (err) => {
         this.serverScanInProgress = false;

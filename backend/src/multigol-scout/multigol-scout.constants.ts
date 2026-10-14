@@ -1,4 +1,17 @@
 /** Campionati mostrati per primi durante la scansione (resto in ordine alfabetico). */
+/** Coppe UEFA: aggiornamento parziale snapshot (senza riscansione totale). */
+export const SCOUT_UEFA_CUP_CODES = ['UCL', 'UEL', 'UECL'] as const;
+
+/** Sotto questa soglia in classifica coppe si usa il campionato domestico per λ Poisson. */
+export const SCOUT_UEFA_DOMESTIC_STANDING_MIN_GAMES = 5;
+
+export function isUefaCupLeagueCode(code: string | null | undefined): boolean {
+  if (!code) {
+    return false;
+  }
+  return (SCOUT_UEFA_CUP_CODES as readonly string[]).includes(code.toUpperCase());
+}
+
 export const SCOUT_LEAGUE_PRIORITY_CODES = [
   'SA',
   'SB',
@@ -6,6 +19,9 @@ export const SCOUT_LEAGUE_PRIORITY_CODES = [
   'PD',
   'BL1',
   'FL1',
+  'UCL',
+  'UEL',
+  'UECL',
   'TR1',
   'CH1',
   'DK1',
@@ -34,6 +50,9 @@ export const SCOUT_LEAGUE_CODES = [
   'PPL',
   'PT2',
   'BE1',
+  'UCL',
+  'UEL',
+  'UECL',
   'AT1',
   'CH1',
   'DK1',
