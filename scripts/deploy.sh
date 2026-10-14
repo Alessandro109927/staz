@@ -17,6 +17,10 @@ git pull --ff-only
 echo "==> Build e avvio container..."
 docker compose --env-file "$ENV_FILE" -f docker-compose.prod.yml up -d --build
 
+echo "==> Snapshot Scout UEFA (se presente in repo)..."
+chmod +x scripts/apply-scout-uefa-export.sh
+ENV_FILE="$ENV_FILE" ./scripts/apply-scout-uefa-export.sh
+
 echo "==> Pulizia immagini obsolete..."
 docker image prune -f
 

@@ -95,6 +95,22 @@ docker compose --env-file .env.production -f docker-compose.prod.yml ps
 docker compose --env-file .env.production -f docker-compose.prod.yml logs -f backend
 ```
 
+### Scout Multigol — coppe UEFA da locale a produzione
+
+Il deploy **non copia** il database del tuo PC: aggiorna solo codice e container. Per avere in produzione le stesse pick UEFA generate in locale:
+
+1. In locale (con `.env` e DB): `cd backend && npm run multigol:refresh-uefa` — aggiorna `scout-multigol-uefa-cups.sql` in root repo.
+2. Commit e push del file SQL (e del codice).
+3. `./scripts/deploy.sh` — dopo il build importa automaticamente lo SQL in PostgreSQL (`scripts/apply-scout-uefa-export.sh`).
+
+Import manuale (es. hai già deployato senza SQL):
+
+```bash
+./scripts/apply-scout-uefa-export.sh
+```
+
+Per saltare l’import: `SCOUT_APPLY_UEFA_EXPORT=0 ./scripts/deploy.sh`.
+
 ---
 
 ## 5. HTTPS (Let's Encrypt)
