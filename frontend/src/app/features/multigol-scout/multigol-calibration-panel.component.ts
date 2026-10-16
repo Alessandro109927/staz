@@ -15,6 +15,16 @@ import {
   type MultigolCalibrationRowView,
 } from './multigol-calibration-format.util';
 
+const PANEL_OPEN_STORAGE_KEY = 'staz.multigol.calibrationPanelOpen';
+
+function readPanelOpen(): boolean {
+  try {
+    return localStorage.getItem(PANEL_OPEN_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 @Component({
   selector: 'app-multigol-calibration-panel',
   standalone: true,
@@ -34,12 +44,25 @@ import {
 })
 export class MultigolCalibrationPanelComponent {
   readonly calibration = input.required<MultigolScoutCalibrationSummary>();
+  readonly filtered = input(false);
 
   readonly sections = computed(() => calibrationBandSections(this.calibration().bands));
+
+  readonly panelOpen = signal(readPanelOpen());
 
   private readonly openBandIds = signal<ReadonlySet<string>>(new Set(['90-100']));
 
   readonly anyBandOpen = computed(() => this.openBandIds().size > 0);
+
+  togglePanel(): void {
+    const next = !this.panelOpen();
+    this.panelOpen.set(next);
+    try {
+      localStorage.setItem(PANEL_OPEN_STORAGE_KEY, next ? '1' : '0');
+    } catch {
+      // storage non disponibile (es. modalità privata)
+    }
+  }
 
   isBandOpen(bandId: string): boolean {
     return this.openBandIds().has(bandId);

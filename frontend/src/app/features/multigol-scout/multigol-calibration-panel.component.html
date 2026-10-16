@@ -1,5 +1,14 @@
-<section class="multigol-panel multigol-calibration-panel">
-  <header class="multigol-panel__head">
+<section
+  class="multigol-panel multigol-calibration-panel"
+  [class.multigol-calibration-panel--open]="panelOpen()"
+>
+  <button
+    type="button"
+    class="multigol-panel__head multigol-panel__head--toggle"
+    (click)="togglePanel()"
+    [attr.aria-expanded]="panelOpen()"
+    aria-controls="multigol-calibration-body"
+  >
     <div class="multigol-panel__title-wrap">
       <span class="multigol-panel__icon" aria-hidden="true">
         <mat-icon>bar_chart</mat-icon>
@@ -7,15 +16,24 @@
       <div>
         <h2 class="multigol-panel__title">Affidabilità algoritmo</h2>
         <p class="multigol-panel__subtitle">
-          {{ calibration().labeledPickCount }} esiti verificati su
-          {{ calibration().opportunityCount }} partite scannerizzate nelle ultime 24 ore
+          @if (filtered()) {
+            {{ calibration().labeledPickCount }} esiti verificati su
+            {{ calibration().opportunityCount }} partite filtrate
+            <span class="multigol-panel__filter-badge">Filtri attivi</span>
+          } @else {
+            {{ calibration().labeledPickCount }} esiti verificati su
+            {{ calibration().opportunityCount }} partite scannerizzate nelle ultime 24 ore
+          }
         </p>
       </div>
     </div>
-  </header>
+    <mat-icon class="multigol-panel__chevron" aria-hidden="true">expand_more</mat-icon>
+  </button>
 
-  @if (sections().length) {
+  @if (panelOpen() && sections().length) {
     <div
+      id="multigol-calibration-body"
+      @calibrationReveal
       class="multigol-calibration-accordion"
       [class.multigol-calibration-accordion--compact]="!anyBandOpen()"
     >

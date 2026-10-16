@@ -18,6 +18,40 @@ $surface-shadow: 0 2px 8px rgba(c.$staz-ink, 0.06);
 
   &__head {
     margin-bottom: $space-4;
+
+    &--toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: $space-3;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+
+      &:focus-visible {
+        outline: 2px solid rgba(c.$staz-blue, 0.45);
+        outline-offset: 4px;
+        border-radius: $radius-md;
+      }
+    }
+  }
+
+  &__chevron {
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 1.5rem;
+    color: c.$staz-chrome-muted;
+    transition: transform 0.22s ease;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 
   &__title-wrap {
@@ -54,6 +88,30 @@ $surface-shadow: 0 2px 8px rgba(c.$staz-ink, 0.06);
     margin: $space-1 0 0;
     font-size: $font-size-sm;
     color: c.$staz-text-muted;
+  }
+
+  &__filter-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: $space-2;
+    padding: 0 $space-2;
+    border-radius: $radius-full;
+    background: rgba(c.$staz-blue, 0.1);
+    color: c.$staz-blue;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+}
+
+.multigol-calibration-panel--open {
+  .multigol-panel__head--toggle {
+    margin-bottom: $space-4;
+  }
+
+  .multigol-panel__chevron {
+    transform: rotate(180deg);
   }
 }
 

@@ -24,6 +24,10 @@ export class MultigolScoutPickResultService {
     return this.results()[matchId] ?? null;
   }
 
+  all(): Readonly<Record<number, MultigolScoutPickResult | undefined>> {
+    return this.results();
+  }
+
   hydrate(
     pickResults: Record<number, MultigolScoutPickResultValue>,
     calibration: MultigolScoutCalibrationSummary,

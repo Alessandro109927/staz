@@ -40,6 +40,7 @@ import {
 } from './multigol-scout-list-filters.service';
 
 import { MultigolCalibrationPanelComponent } from './multigol-calibration-panel.component';
+import { calibrationForItems } from './multigol-calibration-filter.util';
 import type { MultigolScoutCalibrationSummary } from '../../core/models';
 import {
   MultigolScoutPickResultService,
@@ -114,6 +115,12 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
   /** Scansione server in corso (banner), senza bloccare tutta la pagina. */
   serverScanInProgress = false;
   calibration: MultigolScoutCalibrationSummary | null = null;
+  private filteredCalibrationCache: {
+    key: string;
+    base: MultigolScoutCalibrationSummary;
+    items: MultigolOpportunity[];
+    value: MultigolScoutCalibrationSummary;
+  } | null = null;
   private pollSub?: Subscription;
   private pollStartedAt = 0;
   private static readonly POLL_MS = 5000;
@@ -201,6 +208,22 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
   }
 
   get displayItems(): MultigolOpportunity[] {
+    const list = this.filteredItems();
+    const mode = this.sortControl.value;
+    const sorted = [...list];
+    if (mode === 'probability') {
+      sorted.sort(
+        (a, b) => this.synthesisPercent(b) - this.synthesisPercent(a),
+      );
+    } else {
+      sorted.sort(
+        (a, b) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime(),
+      );
+    }
+    return sorted;
+  }
+
+  private filteredItems(): MultigolOpportunity[] {
     let list = this.allItems;
     if (this.selectedNationKeys.size > 0) {
       list = list.filter((item) => {
@@ -225,18 +248,7 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
     if (minSynth > 0) {
       list = list.filter((item) => this.synthesisPercent(item) >= minSynth);
     }
-    const mode = this.sortControl.value;
-    const sorted = [...list];
-    if (mode === 'probability') {
-      sorted.sort(
-        (a, b) => this.synthesisPercent(b) - this.synthesisPercent(a),
-      );
-    } else {
-      sorted.sort(
-        (a, b) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime(),
-      );
-    }
-    return sorted;
+    return list;
   }
 
   reload(): void {
@@ -404,7 +416,25 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
   }
 
   get calibrationMeta(): MultigolScoutCalibrationSummary | null {
-    return this.pickResults.calibration() ?? this.calibration;
+    const base = this.pickResults.calibration() ?? this.calibration;
+    if (!base || !this.hasActiveFilters) {
+      return base;
+    }
+    const key = [
+      this.pickResults.revision(),
+      [...this.selectedNationKeys].sort().join(','),
+      [...this.selectedLeagueKeys].sort().join(','),
+      this.outcomeFilterControl.value.join(','),
+      this.dateFilterControl.value.join(','),
+      this.minSynthesisControl.value,
+    ].join('|');
+    const cache = this.filteredCalibrationCache;
+    if (cache && cache.key === key && cache.base === base && cache.items === this.allItems) {
+      return cache.value;
+    }
+    const value = calibrationForItems(base, this.filteredItems(), this.pickResults.all());
+    this.filteredCalibrationCache = { key, base, items: this.allItems, value };
+    return value;
   }
 
   isTopPick(item: MultigolOpportunity): boolean {

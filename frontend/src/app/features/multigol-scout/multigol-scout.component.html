@@ -30,10 +30,6 @@
     </button>
   </header>
 
-  @if (calibrationMeta; as cal) {
-    <app-multigol-calibration-panel [calibration]="cal" />
-  }
-
   @if (loading) {
     <div class="multigol-progress multigol-panel">
       <p class="multigol-progress__label">Caricamento snapshot…</p>
@@ -146,6 +142,10 @@
         </div>
       </div>
     </section>
+  }
+
+  @if (calibrationMeta; as cal) {
+    <app-multigol-calibration-panel [calibration]="cal" [filtered]="hasActiveFilters" />
   }
 
   @if (displayItems.length) {
