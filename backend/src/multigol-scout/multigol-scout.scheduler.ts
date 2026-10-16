@@ -12,18 +12,18 @@ export class MultigolScoutScheduler {
     private readonly config: ConfigService,
   ) {}
 
-  /** Notte (Europe/Rome): finestra +1 giorno, solo nuove partite. */
+  /** Notte (Europe/Rome): calcola sempre le partite del giorno successivo. */
   @Cron(CronExpression.EVERY_DAY_AT_3AM, { timeZone: 'Europe/Rome' })
   async nightlyIncremental(): Promise<void> {
     if (!this.cronEnabled()) {
       return;
     }
-    this.logger.log('Avvio aggiornamento incrementale Scout Multigol…');
+    this.logger.log('Avvio calcolo notturno Scout Multigol (giorno successivo)…');
     try {
-      await this.scout.runIncrementalSnapshotRefresh();
-      this.logger.log('Aggiornamento incrementale Scout completato.');
+      await this.scout.runNightlyRefresh();
+      this.logger.log('Calcolo notturno Scout completato.');
     } catch (err) {
-      this.logger.warn(`Scout incrementale fallito: ${String(err)}`);
+      this.logger.warn(`Calcolo notturno Scout fallito: ${String(err)}`);
     }
   }
 

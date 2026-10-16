@@ -1,0 +1,280 @@
+@if (data.insights; as ins) {
+  <section class="multigol-model">
+    <header class="multigol-model__head">
+      <h2 class="multigol-model__title">
+        <mat-icon aria-hidden="true">tune</mat-icon>
+        Dati del modello
+        <span class="multigol-model__badge">v{{ ins.modelVersion }}</span>
+      </h2>
+      <p class="multigol-model__subtitle">
+        Tutti i dati usati (o consultati) per calcolare la sintesi
+        @if (ins.pickTeamName) {
+          di <strong>{{ ins.pickTeamName }}</strong>
+        }
+        : fonti del λ, canali di probabilità, quote, segnatura reale, riposo e assenze.
+      </p>
+    </header>
+
+    @if (ins.breakdown; as b) {
+      <div class="multigol-model__grid">
+        <article class="multigol-model-card multigol-model-card--wide">
+          <h3 class="multigol-model-card__title">
+            Sintesi finale
+            <strong>{{ b.synthesisPercent | number: '1.1-1' }}%</strong>
+          </h3>
+          <div class="multigol-model-stack" role="presentation">
+            @for (c of b.components; track c.key) {
+              @if (c.share > 0) {
+                <span
+                  class="multigol-model-stack__seg"
+                  [class]="'multigol-model-stack__seg--' + c.key"
+                  [style.flex-grow]="c.share"
+                  [attr.title]="c.label + ' ' + (c.share * 100 | number: '1.0-0') + '%'"
+                ></span>
+              }
+            }
+          </div>
+          <table class="multigol-model-table">
+            <thead>
+              <tr>
+                <th>Canale</th>
+                <th class="num">Probabilità</th>
+                <th class="num">Peso</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of b.components; track c.key) {
+                <tr [class.is-off]="c.share === 0">
+                  <td>
+                    <span class="multigol-model-dot" [class]="'multigol-model-dot--' + c.key"></span>
+                    {{ c.label }}
+                    <small>{{ c.note }}</small>
+                  </td>
+                  <td class="num">
+                    @if (c.percent != null) {
+                      {{ c.percent | number: '1.1-1' }}%
+                    } @else {
+                      —
+                    }
+                  </td>
+                  <td class="num">{{ c.share * 100 | number: '1.0-0' }}%</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </article>
+
+        <article class="multigol-model-card">
+          <h3 class="multigol-model-card__title">
+            Fonti del λ (gol attesi)
+            <strong>{{ b.lambda.final | number: '1.2-2' }}</strong>
+          </h3>
+          <table class="multigol-model-table">
+            <tbody>
+              @for (s of b.lambda.sources; track s.key) {
+                <tr [class.is-off]="s.value == null">
+                  <td>
+                    {{ s.label }}
+                    <small>{{ s.note }}</small>
+                  </td>
+                  <td class="num">
+                    @if (s.value != null) {
+                      {{ s.value | number: '1.2-2' }}
+                    } @else {
+                      —
+                    }
+                  </td>
+                  <td class="num">{{ s.share * 100 | number: '1.0-0' }}%</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </article>
+
+        <article class="multigol-model-card">
+          <h3 class="multigol-model-card__title">Quota di mercato</h3>
+          @if (b.market; as m) {
+            <dl class="multigol-model-kv">
+              <div>
+                <dt>{{ m.betName }} · Over 0.5</dt>
+                <dd>{{ m.overOdd | number: '1.2-2' }}</dd>
+              </div>
+              <div>
+                <dt>Under 0.5</dt>
+                <dd>{{ m.underOdd | number: '1.2-2' }}</dd>
+              </div>
+              <div>
+                <dt>Probabilità implicita (con margine)</dt>
+                <dd>{{ m.impliedOverPercent | number: '1.1-1' }}%</dd>
+              </div>
+              <div>
+                <dt>Probabilità senza margine</dt>
+                <dd>
+                  <strong>{{ m.fairOverPercent | number: '1.1-1' }}%</strong>
+                  <small>(min {{ m.fairMinPercent | number: '1.1-1' }} · max {{ m.fairMaxPercent | number: '1.1-1' }})</small>
+                </dd>
+              </div>
+              <div>
+                <dt>Scarto mercato − Poisson</dt>
+                <dd>{{ m.fairOverPercent - b.poissonPercent | number: '1.1-1' }} pt</dd>
+              </div>
+              <div>
+                <dt>Bookmaker</dt>
+                <dd>{{ m.bookmakers }} <small>{{ m.bookmakerNames.join(', ') }}</small></dd>
+              </div>
+            </dl>
+          } @else {
+            <p class="multigol-model-card__empty">Quote non ancora disponibili per questa partita.</p>
+          }
+        </article>
+
+        <article class="multigol-model-card">
+          <h3 class="multigol-model-card__title">Segnatura reale (stagione, per venue)</h3>
+          <dl class="multigol-model-kv">
+            <div>
+              <dt>Gare senza segnare ({{ ins.pickTeamName }})</dt>
+              <dd>
+                @if (b.scoring.teamFailedToScorePercent != null) {
+                  {{ b.scoring.teamFailedToScorePercent | number: '1.1-1' }}%
+                  <small>su {{ b.scoring.teamVenueGames }} gare</small>
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Porta inviolata avversaria</dt>
+              <dd>
+                @if (b.scoring.oppCleanSheetPercent != null) {
+                  {{ b.scoring.oppCleanSheetPercent | number: '1.1-1' }}%
+                  <small>su {{ b.scoring.oppVenueGames }} gare</small>
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Probabilità di segnare 1–6 (diretta)</dt>
+              <dd>
+                @if (b.scoring.directPercent != null) {
+                  <strong>{{ b.scoring.directPercent | number: '1.1-1' }}%</strong>
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Empirica grezza → ridotta</dt>
+              <dd>
+                @if (b.empirical.rawPercent != null) {
+                  {{ b.empirical.rawPercent | number: '1.0-1' }}% →
+                  <strong>{{ b.empirical.shrunkPercent | number: '1.1-1' }}%</strong>
+                  <small>({{ b.empirical.hits }}/{{ b.empirical.matches }})</small>
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="multigol-model-card">
+          <h3 class="multigol-model-card__title">Contesto lega</h3>
+          @if (b.league; as lg) {
+            <dl class="multigol-model-kv">
+              <div>
+                <dt>Gol medi per squadra-gara</dt>
+                <dd>{{ lg.avgGoalsPerTeamGame | number: '1.2-2' }}</dd>
+              </div>
+              <div>
+                <dt>Media attesa su questo venue</dt>
+                <dd>{{ lg.venueAvgGoals | number: '1.2-2' }}</dd>
+              </div>
+              <div>
+                <dt>Forza attacco (1 = media lega)</dt>
+                <dd>×{{ lg.attackRelative | number: '1.2-2' }}</dd>
+              </div>
+              <div>
+                <dt>Debolezza difesa avversaria (1 = media)</dt>
+                <dd>×{{ lg.defenceRelative | number: '1.2-2' }}</dd>
+              </div>
+            </dl>
+          } @else {
+            <p class="multigol-model-card__empty">
+              Non disponibile (coppa UEFA o statistiche stagionali insufficienti).
+            </p>
+          }
+        </article>
+      </div>
+    }
+
+    <div class="multigol-model__context">
+      <article class="multigol-model-card">
+        <h3 class="multigol-model-card__title">Riposo (giorni dall'ultima gara)</h3>
+        <dl class="multigol-model-kv">
+          <div>
+            <dt>{{ data.homeTeam.name }}</dt>
+            <dd>
+              @if (ins.rest.home.days != null) {
+                <strong>{{ ins.rest.home.days }} gg</strong>
+                <small>{{ ins.rest.home.lastMatchDate | date: 'dd/MM' }}</small>
+              } @else {
+                —
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>{{ data.awayTeam.name }}</dt>
+            <dd>
+              @if (ins.rest.away.days != null) {
+                <strong>{{ ins.rest.away.days }} gg</strong>
+                <small>{{ ins.rest.away.lastMatchDate | date: 'dd/MM' }}</small>
+              } @else {
+                —
+              }
+            </dd>
+          </div>
+        </dl>
+        <p class="multigol-model-card__hint">Solo informativo: non entra nel calcolo.</p>
+      </article>
+
+      <article class="multigol-model-card multigol-model-card--wide">
+        <h3 class="multigol-model-card__title">Assenti e dubbi</h3>
+        @if (!ins.injuries.available) {
+          <p class="multigol-model-card__empty">Dato non disponibile (API non raggiungibile).</p>
+        } @else if (!ins.injuries.home.length && !ins.injuries.away.length) {
+          <p class="multigol-model-card__empty">Nessun assente segnalato.</p>
+        } @else {
+          <div class="multigol-model-injuries">
+            @for (side of [{ name: data.homeTeam.name, list: ins.injuries.home }, { name: data.awayTeam.name, list: ins.injuries.away }]; track side.name) {
+              <div>
+                <h4>{{ side.name }} ({{ side.list.length }})</h4>
+                @if (side.list.length) {
+                  <ul>
+                    @for (p of side.list; track p.player) {
+                      <li>
+                        <strong>{{ p.player }}</strong>
+                        <small>{{ p.type }}{{ p.reason ? ' · ' + p.reason : '' }}</small>
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="multigol-model-card__empty">Nessuno.</p>
+                }
+              </div>
+            }
+          </div>
+        }
+        <p class="multigol-model-card__hint">Solo informativo: non entra nel calcolo.</p>
+      </article>
+    </div>
+
+    @if (ins.notes.length) {
+      <ul class="multigol-model__notes">
+        @for (n of ins.notes; track n) {
+          <li>{{ n }}</li>
+        }
+      </ul>
+    }
+  </section>
+}

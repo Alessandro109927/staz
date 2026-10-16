@@ -7,7 +7,11 @@ import {
   estimateLambdasFromSeason,
   probabilityGoalsBetween,
 } from './multigol.poisson';
-import { blendSideLambda } from './multigol-xg.util';
+import {
+  computePickModel,
+  type MultigolModelBreakdown,
+  type MultigolModelContext,
+} from './multigol-model.util';
 import {
   MIN_BAND_PROBABILITY,
   MIN_LAMBDA_SIDE,
@@ -40,6 +44,10 @@ export type MultigolPick = MultigolPickCore & {
   xgSampleMatches: number;
   /** λ da soli gol reali in forma (prima del mix xG). */
   goalsLambdaSide: number;
+  /** Sintesi finale del modello v2 (0–100). Assente solo su pick legacy. */
+  synthesisPercent?: number;
+  /** Scomposizione completa del modello v2 (fonti λ, canali sintesi, mercato…). */
+  model?: MultigolModelBreakdown;
 };
 
 export type StandingSnapshot = {
@@ -483,6 +491,7 @@ export function enrichPickWithEmpirical(
   pAway1to6: number,
   xgLambdaSide: number | null = null,
   xgSampleMatches = 0,
+  modelCtx: MultigolModelContext | null = null,
 ): MultigolPick {
   return attachEmpiricalToPick(
     pick,
@@ -494,6 +503,7 @@ export function enrichPickWithEmpirical(
     pAway1to6,
     xgLambdaSide,
     xgSampleMatches,
+    modelCtx,
   )!;
 }
 
@@ -519,6 +529,7 @@ function attachEmpiricalToPick(
   pAway1to6: number,
   xgLambdaSide: number | null = null,
   xgSampleMatches = 0,
+  modelCtx: MultigolModelContext | null = null,
 ): MultigolPick | null {
   if (!pick) {
     return null;
@@ -528,27 +539,40 @@ function attachEmpiricalToPick(
   const form = isHome ? homeForm : awayForm;
   const venue = pickVenueScope(pick.outcomeLabel);
   const { hits, matches: n } = bandCount(teamId, form, venue ?? undefined);
-  const goalsLambdaSide =
-    venue != null ? lambdaFromMatches(teamId, form, venue) : pick.lambdaSide;
-  const lambdaSide = blendSideLambda(
-    goalsLambdaSide,
-    xgLambdaSide,
-    xgSampleMatches,
-  );
-  const probability =
-    venue != null
-      ? probabilityGoalsBetween(lambdaSide, 1, 6)
-      : poissonProbabilityForPick(pick, pHome1to6, pAway1to6);
+  if (venue == null) {
+    return {
+      ...pick,
+      goalsLambdaSide: pick.lambdaSide,
+      probability: poissonProbabilityForPick(pick, pHome1to6, pAway1to6),
+      empiricalProbability: n > 0 ? hits / n : null,
+      empiricalHits: hits,
+      empiricalMatches: n,
+      xgLambdaSide,
+      xgSampleMatches,
+    };
+  }
+  // `pick.lambdaSide` in ingresso è sempre il λ stagionale da classifica.
+  const model = computePickModel({
+    venue,
+    teamId,
+    seasonLambda: pick.lambdaSide,
+    form,
+    xgLambda: xgLambdaSide,
+    xgSamples: xgSampleMatches,
+    ctx: modelCtx ? { ...modelCtx, venue } : null,
+  });
   return {
     ...pick,
-    lambdaSide,
-    goalsLambdaSide,
-    probability,
+    lambdaSide: model.lambda.final,
+    goalsLambdaSide: model.lambda.form ?? pick.lambdaSide,
+    probability: model.poissonPercent / 100,
     empiricalProbability: n > 0 ? hits / n : null,
     empiricalHits: hits,
     empiricalMatches: n,
     xgLambdaSide,
     xgSampleMatches,
+    synthesisPercent: model.synthesisPercent,
+    model,
   };
 }
 
@@ -726,6 +750,7 @@ export function patchFormStats(
   awayForm: FdMatch[],
   xgLambdaSide: number | null = null,
   xgSampleMatches = 0,
+  modelCtx: MultigolModelContext | null = null,
 ): MatchDossier {
   const homeName = d.homeTeam.name;
   const awayName = d.awayTeam.name;
@@ -734,7 +759,9 @@ export function patchFormStats(
         {
           outcomeLabel: d.pick.outcomeLabel,
           probability: d.pick.probability,
-          lambdaSide: d.pick.lambdaSide,
+          // λ stagionale da classifica: il modello ricompone da sé le altre fonti.
+          lambdaSide:
+            d.pick.outcomeLabel === OUTCOME_HOME_1_6 ? d.lambdaHome : d.lambdaAway,
         },
         d.homeTeam.id,
         d.awayTeam.id,
@@ -744,6 +771,7 @@ export function patchFormStats(
         d.pAway1to6,
         xgLambdaSide,
         xgSampleMatches,
+        modelCtx,
       )
     : null;
   return {
@@ -820,8 +848,12 @@ export function deterministicExplanation(d: MatchDossier): string {
     d.pick.xgLambdaSide != null && d.pick.xgSampleMatches >= 3
       ? ` Media xG ${isHome ? 'in casa' : 'in trasferta'} ≈ ${d.pick.xgLambdaSide.toFixed(2)} (${d.pick.xgSampleMatches} gare).`
       : '';
+  const marketTxt = d.pick.model?.market
+    ? ` Il mercato (Over 0.5 squadra) implica ${d.pick.model.market.fairOverPercent.toFixed(1)}% senza margine.`
+    : '';
+  const shown = d.pick.synthesisPercent ?? p * 100;
   return (
-    `Per ${d.eventName} (${d.leagueName}), il modello stima ${(p * 100).toFixed(1)}% di probabilità per "${d.pick.outcomeLabel}": ` +
-    `gol attesi ${side} ≈ ${lambda.toFixed(2)} (mix gol reali + xG).${xgTxt}${bandTxt} ${d.stats.homeStanding} ${d.stats.awayStanding} ${d.stats.h2hSummary}`
+    `Per ${d.eventName} (${d.leagueName}), il modello stima ${shown.toFixed(1)}% di probabilità per "${d.pick.outcomeLabel}": ` +
+    `gol attesi ${side} ≈ ${lambda.toFixed(2)} (forma recente, media lega, xG).${xgTxt}${marketTxt}${bandTxt} ${d.stats.homeStanding} ${d.stats.awayStanding} ${d.stats.h2hSummary}`
   );
 }

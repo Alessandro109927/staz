@@ -19,6 +19,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "multigol:refresh-leagues": "nest build && node dist/cli/refresh-scout-leagues.js",
+    "multigol:recalc-day": "nest build && node dist/cli/recalc-scout-day.js",
     "multigol:refresh-uefa": "nest build && node dist/cli/refresh-scout-leagues.js UCL,UEL,UECL ../scout-multigol-uefa-cups.sql"
   },
   "dependencies": {

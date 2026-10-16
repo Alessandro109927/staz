@@ -1,6 +1,8 @@
 import { probabilityGoalsBetween } from './multigol.poisson';
 
 type PickBlendInput = {
+  /** Sintesi del modello v2 (se presente è la fonte di verità). */
+  synthesisPercent?: number;
   probability: number;
   empiricalProbability: number | null;
   empiricalMatches: number;
@@ -10,6 +12,10 @@ type PickBlendInput = {
 
 /** Sintesi Poisson (λ con xG) + empirica + canale xG puro (fino ~35%). */
 export function synthesisPercentFromPick(pick: PickBlendInput): number {
+  if (pick.synthesisPercent != null && Number.isFinite(pick.synthesisPercent)) {
+    return pick.synthesisPercent;
+  }
+  // Fallback legacy (modello v1) per pick senza breakdown (es. esiti non 1-6 per squadra).
   const xgPoisson =
     pick.xgLambdaSide != null && pick.xgSampleMatches >= 3
       ? probabilityGoalsBetween(pick.xgLambdaSide, 1, 6)

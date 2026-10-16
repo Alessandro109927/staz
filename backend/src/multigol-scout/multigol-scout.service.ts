@@ -11,8 +11,15 @@ import {
   patchStandingFromRows,
   type MatchDossier,
 } from './multigol-dossier.util';
-import { OUTCOME_HOME_1_6 } from './multigol-scout.constants';
+import { OUTCOME_AWAY_1_6, OUTCOME_HOME_1_6 } from './multigol-scout.constants';
 import { synthesisPercentFromPick } from './multigol-blend.util';
+import type { MultigolApiFootballSeasonStats } from './api-football.types';
+import {
+  MULTIGOL_MODEL_VERSION,
+  averageGoalsPerTeamGame,
+  buildInsights,
+  type MultigolModelContext,
+} from './multigol-model.util';
 import { MultigolNarrativeService } from './multigol-narrative.service';
 import {
   DEFAULT_H2H_MATCH_LIMIT,
@@ -74,6 +81,9 @@ export class MultigolScoutService implements OnModuleInit {
 
   onModuleInit(): void {
     void this.reconcileScanLock();
+    // Attende che il server sia su e il DB pronto prima di un eventuale ricalcolo.
+    const timer = setTimeout(() => void this.migrateModelVersion(), 20_000);
+    timer.unref?.();
   }
 
   private async reconcileScanLock(): Promise<void> {
@@ -304,6 +314,136 @@ export class MultigolScoutService implements OnModuleInit {
       windowTo: nextDay,
       lastIncrementalAt: new Date(),
     });
+  }
+
+  /** Data odierna (YYYY-MM-DD) nel fuso di Roma. */
+  private romeToday(): string {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Rome' });
+  }
+
+  /**
+   * Ricalcola con il modello corrente tutte le partite (non ancora iniziate) di un giorno,
+   * in tutte le competizioni. Upsert per `matchId`: le righe già giocate/etichettate
+   * non vengono mai cancellate.
+   */
+  async recalculateDay(
+    day: string,
+  ): Promise<{ day: string; leagues: number; items: number; skipped: boolean }> {
+    await this.reconcileScanLock();
+    if (this.scanRunning) {
+      this.logger.warn(`Ricalcolo ${day} saltato: scansione già in corso.`);
+      return { day, leagues: 0, items: 0, skipped: true };
+    }
+    this.scanRunning = true;
+    await this.store.setScanInProgress(true);
+    const started = Date.now();
+    let leagues = 0;
+    let total = 0;
+    try {
+      const competitions = await this.getCompetitions();
+      for (const league of competitions) {
+        try {
+          const fresh = await this.listLeagueOpportunities(league.key, day, day, {
+            force: true,
+          });
+          if (fresh.length) {
+            await this.store.upsertMany(fresh);
+            total += fresh.length;
+          }
+          leagues += 1;
+        } catch (err) {
+          this.logger.warn(`Ricalcolo ${day} ${league.key}: ${String(err)}`);
+        }
+      }
+      const state = await this.store.getState();
+      await this.store.updateState({
+        windowFrom:
+          state?.windowFrom && state.windowFrom < day ? state.windowFrom : day,
+        windowTo: state?.windowTo && state.windowTo > day ? state.windowTo : day,
+        lastIncrementalAt: new Date(),
+        // Oggi ricalcolato col modello corrente: evita un doppio ricalcolo al riavvio.
+        ...(day === this.romeToday()
+          ? { modelVersion: MULTIGOL_MODEL_VERSION }
+          : {}),
+      });
+      this.leagueScanCache.clear();
+      this.logger.log(
+        `Ricalcolo ${day} (modello v${MULTIGOL_MODEL_VERSION}): ${total} pick, ${leagues} competizioni in ${((Date.now() - started) / 1000).toFixed(0)}s`,
+      );
+    } finally {
+      this.scanRunning = false;
+      await this.store.setScanInProgress(false);
+    }
+    return { day, leagues, items: total, skipped: false };
+  }
+
+  /** Avvia il ricalcolo in background (non blocca la richiesta HTTP). */
+  recalculateDayInBackground(day: string): void {
+    void this.recalculateDay(day).catch((err) =>
+      this.logger.error(`Ricalcolo ${day} fallito: ${String(err)}`),
+    );
+  }
+
+  /**
+   * Job notturno: calcola SEMPRE il giorno successivo. Se il server è rimasto spento,
+   * recupera anche oggi (o i giorni mancanti dopo la fine della finestra).
+   */
+  async runNightlyRefresh(): Promise<void> {
+    const state = await this.store.getState();
+    if (!state || !(await this.store.hasAny())) {
+      await this.refreshFullSnapshot();
+      return;
+    }
+    const today = this.romeToday();
+    const tomorrow = this.addDays(today, 1);
+    const firstMissing = this.addDays(state.windowTo, 1);
+    const days: string[] = [];
+    for (
+      let d = firstMissing > today ? firstMissing : today;
+      d < tomorrow;
+      d = this.addDays(d, 1)
+    ) {
+      days.push(d);
+    }
+    days.push(tomorrow);
+    for (const day of days) {
+      await this.recalculateDay(day);
+    }
+    await this.store.updateState({ modelVersion: MULTIGOL_MODEL_VERSION });
+  }
+
+  /**
+   * Dopo un deploy con un nuovo modello le distribuzioni cambiano: ricalcola
+   * automaticamente oggi (e i giorni successivi fino a MULTIGOL_RECALC_DAYS).
+   */
+  private async migrateModelVersion(): Promise<void> {
+    try {
+      if (!this.apiFootball.isConfigured()) {
+        return;
+      }
+      const state = await this.store.getState();
+      if (!state || (state.modelVersion ?? 1) >= MULTIGOL_MODEL_VERSION) {
+        return;
+      }
+      const span = Math.max(
+        1,
+        Math.min(7, Math.floor(Number(this.config.get('MULTIGOL_RECALC_DAYS', 1)) || 1)),
+      );
+      this.logger.log(
+        `Scout Multigol: modello v${state.modelVersion ?? 1} → v${MULTIGOL_MODEL_VERSION}, ricalcolo ${span} giorno/i da oggi.`,
+      );
+      let day = this.romeToday();
+      for (let i = 0; i < span; i += 1) {
+        const res = await this.recalculateDay(day);
+        if (res.skipped) {
+          return;
+        }
+        day = this.addDays(day, 1);
+      }
+      await this.store.updateState({ modelVersion: MULTIGOL_MODEL_VERSION });
+    } catch (err) {
+      this.logger.error(`Migrazione modello Scout fallita: ${String(err)}`);
+    }
   }
 
   getApiFootballUsage() {
@@ -594,10 +734,20 @@ export class MultigolScoutService implements OnModuleInit {
         homeForm,
         awayForm,
       );
+      const modelCtx = await this.resolveModelContext({
+        outcomeLabel: dossier.pick.outcomeLabel,
+        homeTeamId: match.homeTeam.id,
+        awayTeamId: match.awayTeam.id,
+        leagueCode,
+        season,
+        fixtureId: match.id,
+        leagueTable: table,
+      });
       const pick = enrichPickWithEmpirical(
         {
           outcomeLabel: dossier.pick.outcomeLabel,
           probability: dossier.pick.probability,
+          // λ stagionale da classifica: il modello v2 lo fonde con forma, xG e lega.
           lambdaSide: dossier.pick.lambdaSide,
         },
         match.homeTeam.id,
@@ -608,6 +758,7 @@ export class MultigolScoutService implements OnModuleInit {
         dossier.pAway1to6,
         xg.average,
         xg.samples,
+        modelCtx,
       );
       const dossierWithEmpirical = { ...dossier, pick };
 
@@ -643,6 +794,9 @@ export class MultigolScoutService implements OnModuleInit {
         xgLambdaSide: pick.xgLambdaSide,
         xgSampleMatches: pick.xgSampleMatches,
         synthesisPercent: synthesisPercentFromPick(pick),
+        marketPercent: pick.model?.market?.fairOverPercent ?? null,
+        scoringRatePercent: pick.model?.scoring?.directPercent ?? null,
+        modelVersion: MULTIGOL_MODEL_VERSION,
         teaser: deterministicExplanation(dossierWithEmpirical).slice(0, 280) + '…',
       });
     }
@@ -875,7 +1029,10 @@ export class MultigolScoutService implements OnModuleInit {
         ? await this.refreshFormOnDossier(cached, Boolean(options?.refresh))
         : cached;
       const withStanding = await this.ensureStandingDetails(withForm);
-      const enriched = await this.attachApiFootballStats(withStanding);
+      const enriched = await this.attachInsights(
+        await this.attachApiFootballStats(withStanding),
+        Boolean(options?.refresh),
+      );
       if (enriched !== cached) {
         this.setAnalysisCache(matchId, enriched);
       }
@@ -953,15 +1110,58 @@ export class MultigolScoutService implements OnModuleInit {
       explanation: deterministic,
       aiExplanation: null,
       aiEnabled: false,
+      insights: null,
     };
 
     const withForm = options?.refresh
       ? await this.refreshFormOnDossier(result, true)
       : await this.applyFormAndXgToDossier(result, homeForm, awayForm);
     const withStanding = await this.ensureStandingDetails(withForm);
-    const enriched = await this.attachApiFootballStats(withStanding);
+    const enriched = await this.attachInsights(
+      await this.attachApiFootballStats(withStanding),
+      Boolean(options?.refresh),
+    );
     this.setAnalysisCache(matchId, enriched);
     return enriched;
+  }
+
+  /**
+   * Dati extra mostrati nel dettaglio: scomposizione del modello, quote,
+   * riposo e infortuni. Ricalcolati se il modello cambia versione.
+   */
+  private async attachInsights(
+    dossier: MultigolAnalysis,
+    force = false,
+  ): Promise<MultigolAnalysis> {
+    const breakdown = dossier.pick?.model ?? null;
+    if (
+      !force &&
+      dossier.insights &&
+      dossier.insights.modelVersion === MULTIGOL_MODEL_VERSION &&
+      (dossier.insights.breakdown?.synthesisPercent ?? null) ===
+        (breakdown?.synthesisPercent ?? null)
+    ) {
+      return dossier;
+    }
+    const injuries = await this.apiFootball
+      .fixtureInjuries(dossier.matchId)
+      .catch(() => null);
+    const insights = buildInsights({
+      breakdown,
+      pickTeamName:
+        dossier.pick?.outcomeLabel === OUTCOME_HOME_1_6
+          ? dossier.homeTeam.name
+          : dossier.pick?.outcomeLabel === OUTCOME_AWAY_1_6
+            ? dossier.awayTeam.name
+            : null,
+      homeTeamId: dossier.homeTeam.id,
+      awayTeamId: dossier.awayTeam.id,
+      homeFormDates: (dossier.stats.homeFormGoalsDetail ?? []).map((e) => e.utcDate),
+      awayFormDates: (dossier.stats.awayFormGoalsDetail ?? []).map((e) => e.utcDate),
+      kickoffUtc: dossier.utcDate,
+      injuries,
+    });
+    return { ...dossier, insights };
   }
 
   private async applyFormAndXgToDossier(
@@ -989,6 +1189,7 @@ export class MultigolScoutService implements OnModuleInit {
           awayForm,
         )
       : { average: null, samples: 0 };
+    const modelCtx = await this.modelContextForDossier(dossier, seasonHint);
     return {
       ...dossier,
       ...patchFormStats(
@@ -997,8 +1198,106 @@ export class MultigolScoutService implements OnModuleInit {
         awayForm,
         xg.average,
         xg.samples,
+        modelCtx,
       ),
     };
+  }
+
+  /** Contesto del modello (quote, stats casa/trasferta, media lega) per il dettaglio. */
+  private async modelContextForDossier(
+    dossier: MultigolAnalysis,
+    seasonHint: number | null,
+  ): Promise<MultigolModelContext | null> {
+    if (!dossier.pick) {
+      return null;
+    }
+    const leagueTable = isUefaCupLeagueCode(dossier.leagueCode)
+      ? null
+      : await this.apiFootball
+          .scoutStandingsTable(dossier.leagueCode, dossier.utcDate)
+          .catch(() => null);
+    return this.resolveModelContext({
+      outcomeLabel: dossier.pick.outcomeLabel,
+      homeTeamId: dossier.homeTeam.id,
+      awayTeamId: dossier.awayTeam.id,
+      leagueCode: dossier.leagueCode,
+      season: this.resolveLeagueSeason(
+        dossier.leagueCode,
+        dossier.utcDate,
+        undefined,
+        seasonHint,
+      ),
+      fixtureId: dossier.matchId,
+      leagueTable,
+    });
+  }
+
+  private async resolveModelContext(input: {
+    outcomeLabel: string;
+    homeTeamId: number;
+    awayTeamId: number;
+    leagueCode: string;
+    season: number;
+    fixtureId: number;
+    leagueTable?: Map<number, FdStandingRow> | null;
+  }): Promise<MultigolModelContext | null> {
+    if (!this.apiFootball.isConfigured()) {
+      return null;
+    }
+    const isHomePick = input.outcomeLabel === OUTCOME_HOME_1_6;
+    if (!isHomePick && input.outcomeLabel !== OUTCOME_AWAY_1_6) {
+      return null;
+    }
+    const venue = isHomePick ? 'home' : 'away';
+    const teamId = isHomePick ? input.homeTeamId : input.awayTeamId;
+    const oppId = isHomePick ? input.awayTeamId : input.homeTeamId;
+    const uefa = isUefaCupLeagueCode(input.leagueCode);
+    try {
+      const [teamSeason, oppSeason, market] = await Promise.all([
+        this.resolveSeasonStatsForModel(teamId, input.leagueCode, input.season, uefa),
+        this.resolveSeasonStatsForModel(oppId, input.leagueCode, input.season, uefa),
+        this.apiFootball.fixtureTeamTotalMarket(input.fixtureId, venue),
+      ]);
+      const leagueAvg =
+        !uefa && input.leagueTable
+          ? averageGoalsPerTeamGame(input.leagueTable.values())
+          : null;
+      return {
+        venue,
+        teamSeason,
+        oppSeason,
+        leagueAvgGoalsPerTeamGame: leagueAvg,
+        market,
+      };
+    } catch (err) {
+      this.logger.debug(
+        `Contesto modello non disponibile (match ${input.fixtureId}): ${String(err)}`,
+      );
+      return null;
+    }
+  }
+
+  /** Stats stagionali API-Football; per le coppe UEFA usa il campionato domestico. */
+  private async resolveSeasonStatsForModel(
+    teamId: number,
+    leagueCode: string,
+    season: number,
+    uefa: boolean,
+  ): Promise<MultigolApiFootballSeasonStats | null> {
+    let code: string | null = leagueCode;
+    if (uefa) {
+      code = await this.apiFootball.resolveDomesticLeagueCode(teamId, season);
+    }
+    if (!code) {
+      return null;
+    }
+    const leagueId = this.apiFootball.leagueIdForCode(code);
+    if (leagueId == null) {
+      return null;
+    }
+    return this.apiFootball
+      .getTeamSeasonStats(teamId, leagueId, season)
+      .catch(() => null);
   }
 
   private async ensureStandingDetails(
@@ -1098,12 +1397,14 @@ export class MultigolScoutService implements OnModuleInit {
           awayForm,
         )
       : { average: null, samples: 0 };
+    const modelCtx = await this.modelContextForDossier(dossier, seasonHint);
     const patched = patchFormStats(
       dossier,
       homeForm,
       awayForm,
       xg.average,
       xg.samples,
+      modelCtx,
     );
     if (
       !patched.stats.homeFormGoalsDetail?.length &&

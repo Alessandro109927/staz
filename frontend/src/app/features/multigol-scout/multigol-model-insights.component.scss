@@ -1,0 +1,284 @@
+@use "../../../styles/colors" as c;
+@use "../../../styles/variables" as *;
+@use "../../../styles/mixins" as *;
+
+:host {
+  display: block;
+}
+
+// ── Dati del modello (scomposizione sintesi, quote, assenze) ──────────────
+.multigol-model {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  padding: $space-6;
+  border-radius: 1.25rem;
+  background: c.$staz-white;
+  box-shadow: 0 4px 18px rgba(c.$staz-ink, 0.07);
+}
+
+.multigol-model__title {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin: 0;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: c.$staz-ink;
+
+  mat-icon {
+    width: 1.35rem;
+    height: 1.35rem;
+    font-size: 1.35rem;
+    color: c.$staz-blue;
+  }
+}
+
+.multigol-model__badge {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  background: rgba(c.$staz-blue, 0.12);
+  color: c.$staz-blue;
+}
+
+.multigol-model__subtitle {
+  margin: $space-2 0 0;
+  max-width: 46rem;
+  font-size: $font-size-sm;
+  line-height: 1.45;
+  color: c.$staz-text-muted;
+}
+
+.multigol-model__grid,
+.multigol-model__context {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-4;
+
+  @include down($bp-lg) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.multigol-model__context {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+
+  @include down($bp-lg) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.multigol-model-card {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  padding: $space-5;
+  border-radius: 1rem;
+  background: #eff4ff;
+  min-width: 0;
+
+  &--wide {
+    grid-column: 1 / -1;
+  }
+
+  .multigol-model__context &--wide {
+    grid-column: auto;
+  }
+}
+
+.multigol-model-card__title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-3;
+  margin: 0;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: c.$staz-ink;
+
+  strong {
+    font-size: $font-size-lg;
+    color: c.$staz-blue;
+  }
+}
+
+.multigol-model-card__empty,
+.multigol-model-card__hint {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: c.$staz-text-muted;
+}
+
+.multigol-model-card__hint {
+  font-size: $font-size-xs;
+  font-style: italic;
+}
+
+.multigol-model-stack {
+  display: flex;
+  height: 0.75rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(c.$staz-ink, 0.08);
+}
+
+.multigol-model-stack__seg {
+  flex-basis: 0;
+  min-width: 2px;
+
+  &--poisson {
+    background: #315988;
+  }
+  &--scoring {
+    background: #006c49;
+  }
+  &--empirical {
+    background: #b7791f;
+  }
+  &--market {
+    background: #7c3aed;
+  }
+}
+
+.multigol-model-dot {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+
+  &--poisson {
+    background: #315988;
+  }
+  &--scoring {
+    background: #006c49;
+  }
+  &--empirical {
+    background: #b7791f;
+  }
+  &--market {
+    background: #7c3aed;
+  }
+}
+
+.multigol-model-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $font-size-sm;
+  color: c.$staz-ink;
+
+  th {
+    text-align: left;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    color: c.$staz-text-muted;
+    padding-bottom: $space-2;
+  }
+
+  td {
+    padding: $space-2 0;
+    border-top: 1px solid c.$vs-border-muted;
+    vertical-align: top;
+  }
+
+  .num {
+    text-align: right;
+    white-space: nowrap;
+    padding-left: $space-3;
+    font-variant-numeric: tabular-nums;
+  }
+
+  small {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: $font-size-xs;
+    color: c.$staz-text-muted;
+  }
+
+  .is-off {
+    opacity: 0.5;
+  }
+}
+
+.multigol-model-kv {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-size: $font-size-sm;
+  color: c.$staz-ink;
+
+  > div {
+    display: flex;
+    justify-content: space-between;
+    gap: $space-3;
+    padding: $space-2 0;
+    border-top: 1px solid c.$vs-border-muted;
+
+    &:first-child {
+      border-top: none;
+    }
+  }
+
+  dt {
+    color: c.$staz-text-muted;
+  }
+
+  dd {
+    margin: 0;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+
+    small {
+      display: block;
+      font-size: $font-size-xs;
+      color: c.$staz-text-muted;
+    }
+  }
+}
+
+.multigol-model-injuries {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-4;
+
+  @include down($bp-md) {
+    grid-template-columns: 1fr;
+  }
+
+  h4 {
+    margin: 0 0 $space-2;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    color: c.$staz-ink;
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    flex-direction: column;
+    font-size: $font-size-sm;
+    color: c.$staz-ink;
+
+    small {
+      font-size: $font-size-xs;
+      color: c.$staz-text-muted;
+    }
+  }
+}
+
+.multigol-model__notes {
+  margin: 0;
+  padding-left: $space-5;
+  font-size: $font-size-sm;
+  color: c.$staz-text-muted;
+}

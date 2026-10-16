@@ -85,6 +85,10 @@ export function mapTeamSeasonStats(
     playedAway,
     cleanSheets: raw.clean_sheet?.total ?? null,
     failedToScore: raw.failed_to_score?.total ?? null,
+    cleanSheetsHome: raw.clean_sheet?.home ?? null,
+    cleanSheetsAway: raw.clean_sheet?.away ?? null,
+    failedToScoreHome: raw.failed_to_score?.home ?? null,
+    failedToScoreAway: raw.failed_to_score?.away ?? null,
     yellowCardsAvg:
       played && played > 0 && yellowTotal != null
         ? Math.round((yellowTotal / played) * 10) / 10

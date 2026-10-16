@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { MultigolModelInsightsComponent } from './multigol-model-insights.component';
 import { ApiService } from '../../core/services/api.service';
 import { ApiFootballUsageService } from '../../core/services/api-football-usage.service';
 import {
@@ -39,7 +40,7 @@ import {
 @Component({
   selector: 'app-multigol-scout-match',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatIconModule],
+  imports: [CommonModule, RouterLink, MatIconModule, MultigolModelInsightsComponent],
   templateUrl: './multigol-scout-match.component.html',
   styleUrl: './multigol-scout-match.component.scss',
 })
@@ -773,6 +774,9 @@ export class MultigolScoutMatchComponent implements OnInit {
     if (!pick) {
       return null;
     }
+    if (pick.synthesisPercent != null && Number.isFinite(pick.synthesisPercent)) {
+      return pick.synthesisPercent;
+    }
     return blendScoutProbabilityPercent(
       pick.probability * 100,
       pick.empiricalProbability != null ? pick.empiricalProbability * 100 : null,
@@ -784,6 +788,13 @@ export class MultigolScoutMatchComponent implements OnInit {
 
   pickSynthesisHint(data: MultigolAnalysis): string {
     const pick = data.pick;
+    const model = pick?.model;
+    if (model) {
+      const parts = model.components
+        .filter((c) => c.percent != null && c.share > 0)
+        .map((c) => `${c.label} ${Math.round(c.share * 100)}%`);
+      return `Sintesi modello v${model.version}: ${parts.join(' · ')}. Dettagli in "Dati del modello".`;
+    }
     return blendScoutProbabilityHint(
       pick?.empiricalMatches ?? 0,
       pick?.xgSampleMatches ?? 0,

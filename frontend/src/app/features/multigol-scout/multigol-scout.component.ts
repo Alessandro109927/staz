@@ -328,6 +328,20 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
   }
 
   synthesisHint(item: MultigolOpportunity): string {
+    if ((item.modelVersion ?? 1) >= 2) {
+      const extras = [
+        item.marketPercent != null ? `quota mercato ${item.marketPercent.toFixed(1)}%` : null,
+        item.scoringRatePercent != null
+          ? `tasso di segnatura ${item.scoringRatePercent.toFixed(1)}%`
+          : null,
+      ].filter(Boolean);
+      return (
+        `Sintesi modello v${item.modelVersion}: Poisson su λ fuso (classifica, forma recente, forza vs lega, xG) ` +
+        `+ segnatura reale + empirica ridotta + mercato.` +
+        (extras.length ? ` Qui: ${extras.join(', ')}.` : '') +
+        ' Apri il dettaglio per la scomposizione.'
+      );
+    }
     return blendScoutProbabilityHint(
       item.empiricalSampleMatches ?? 0,
       item.xgSampleMatches ?? 0,

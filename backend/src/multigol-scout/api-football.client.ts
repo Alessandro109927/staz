@@ -23,9 +23,17 @@ import {
   mapFixtureStatistics,
   mapTeamSeasonStats,
 } from './api-football.mapper';
+import {
+  mapInjuries,
+  parseTeamTotalMarket,
+  type MultigolInjuryEntry,
+  type MultigolMarketQuote,
+} from './multigol-model.util';
 import type {
   ApiFootballEnvelope,
   ApiFootballFixtureItem,
+  ApiFootballInjuryItem,
+  ApiFootballOddsItem,
   ApiFootballFixtureStatRow,
   ApiFootballLeagueListItem,
   ApiFootballStatusResponse,
@@ -359,6 +367,65 @@ export class ApiFootballClient {
       );
     }
     return list;
+  }
+
+  /**
+   * Quota "Total - Home/Away" Over/Under 0.5 (la squadra segna almeno un gol),
+   * mediana tra bookmaker e senza margine. 1 chiamata per partita, cache 3h.
+   */
+  async fixtureTeamTotalMarket(
+    fixtureId: number,
+    side: 'home' | 'away',
+  ): Promise<MultigolMarketQuote | null> {
+    if (!this.isConfigured()) {
+      return null;
+    }
+    const cacheKey = `odds:tt:${fixtureId}:${side}`;
+    const hit = this.get<{ quote: MultigolMarketQuote | null }>(cacheKey);
+    if (hit) {
+      return hit.quote;
+    }
+    const betId = side === 'home' ? 16 : 17;
+    let raw: ApiFootballOddsItem[] | null = null;
+    try {
+      raw = await this.fetchJson<ApiFootballOddsItem[]>(
+        `/odds?fixture=${fixtureId}&bet=${betId}`,
+      );
+    } catch (err) {
+      this.logger.debug(`API-Football odds ${fixtureId}: ${String(err)}`);
+      return null;
+    }
+    const quote = parseTeamTotalMarket(raw);
+    // Risposta vuota = quote non ancora pubblicate: riprova prima di domani.
+    this.set(
+      cacheKey,
+      { quote },
+      (quote ? 3 : 1) * 60 * 60 * 1000,
+    );
+    return quote;
+  }
+
+  /** Assenti/dubbi per la partita (`/injuries?fixture=`), cache 3h. Null se l'API fallisce. */
+  async fixtureInjuries(fixtureId: number): Promise<MultigolInjuryEntry[] | null> {
+    if (!this.isConfigured()) {
+      return null;
+    }
+    const cacheKey = `injuries:${fixtureId}`;
+    const hit = this.get<MultigolInjuryEntry[]>(cacheKey);
+    if (hit) {
+      return hit;
+    }
+    try {
+      const raw = await this.fetchJson<ApiFootballInjuryItem[]>(
+        `/injuries?fixture=${fixtureId}`,
+      );
+      const mapped = mapInjuries(raw);
+      this.set(cacheKey, mapped, 3 * 60 * 60 * 1000);
+      return mapped;
+    } catch (err) {
+      this.logger.debug(`API-Football injuries ${fixtureId}: ${String(err)}`);
+      return null;
+    }
   }
 
   seasonYearForKickoff(utcDate: string): number {

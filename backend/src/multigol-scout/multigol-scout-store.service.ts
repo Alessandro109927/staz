@@ -4,6 +4,7 @@ import { In, Repository } from 'typeorm';
 import { MultigolScoutOpportunityEntity } from './entities/multigol-scout-opportunity.entity';
 import { MultigolScoutStateEntity } from './entities/multigol-scout-state.entity';
 import type { MultigolOpportunity } from './multigol-scout.types';
+import { MULTIGOL_MODEL_VERSION } from './multigol-model.util';
 
 const STATE_ID = 'default';
 
@@ -39,6 +40,7 @@ export class MultigolScoutStoreService {
         lastFullScanAt: null,
         lastIncrementalAt: null,
         scanInProgress: false,
+        modelVersion: MULTIGOL_MODEL_VERSION,
       });
       await this.stateRepo.save(row);
     }
@@ -82,6 +84,7 @@ export class MultigolScoutStoreService {
       windowTo,
       lastFullScanAt: new Date(),
       scanInProgress: false,
+      modelVersion: MULTIGOL_MODEL_VERSION,
     });
   }
 

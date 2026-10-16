@@ -1,4 +1,5 @@
 import type { MatchDossier } from './multigol-dossier.util';
+import type { MultigolInsights } from './multigol-model.util';
 
 export type MultigolOpportunity = {
   matchId: number;
@@ -20,12 +21,20 @@ export type MultigolOpportunity = {
   synthesisPercent: number;
   xgLambdaSide: number | null;
   xgSampleMatches: number;
+  /** Probabilità di mercato (Over 0.5 squadra, senza margine) se disponibile. */
+  marketPercent?: number | null;
+  /** Tasso di segnatura reale (gare senza segnare / porta inviolata avversaria). */
+  scoringRatePercent?: number | null;
+  /** Versione del modello che ha prodotto questi numeri. */
+  modelVersion?: number;
   teaser: string;
 };
 
 export type MultigolAnalysis = MatchDossier & {
   areaName: string | null;
   areaCode: string | null;
+  /** Dati extra del modello (scomposizione, quote, infortuni, riposo). */
+  insights: MultigolInsights | null;
   analysis: string;
   explanation: string;
   aiExplanation: string | null;

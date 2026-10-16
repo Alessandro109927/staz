@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Importa in PostgreSQL lo snapshot UEFA generato in locale (scout-multigol-uefa-cups.sql).
+# ATTENZIONE: opt-in (SCOUT_APPLY_UEFA_EXPORT=1). Il server ricalcola già le pick col modello
+# corrente al boot/di notte; lo SQL può contenere numeri di un modello precedente.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -7,8 +9,8 @@ ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env.production}"
 SQL_FILE="$ROOT_DIR/scout-multigol-uefa-cups.sql"
 COMPOSE_FILE="${COMPOSE_FILE:-$ROOT_DIR/docker-compose.prod.yml}"
 
-if [[ "${SCOUT_APPLY_UEFA_EXPORT:-1}" == "0" ]]; then
-  echo "==> Skip import UEFA scout (SCOUT_APPLY_UEFA_EXPORT=0)"
+if [[ "${SCOUT_APPLY_UEFA_EXPORT:-0}" != "1" ]]; then
+  echo "==> Skip import UEFA scout (opt-in: SCOUT_APPLY_UEFA_EXPORT=1)"
   exit 0
 fi
 

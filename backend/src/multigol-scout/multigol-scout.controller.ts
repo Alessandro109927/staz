@@ -72,6 +72,24 @@ export class MultigolScoutController {
     }));
   }
 
+  /** Ricalcola con il modello corrente le partite di un giorno (default: oggi). */
+  @Post('snapshot/recalculate')
+  recalculate(@Query('day') day?: string, @Query('async') asyncFlag?: string) {
+    const target =
+      day && /^\d{4}-\d{2}-\d{2}$/.test(day)
+        ? day
+        : new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Rome' });
+    const background =
+      asyncFlag === '1' ||
+      asyncFlag === 'true' ||
+      asyncFlag?.toLowerCase() === 'yes';
+    if (background) {
+      this.scout.recalculateDayInBackground(target);
+      return { started: true, day: target };
+    }
+    return this.scout.recalculateDay(target);
+  }
+
   @Get('competitions')
   competitions() {
     return this.scout.getCompetitions();

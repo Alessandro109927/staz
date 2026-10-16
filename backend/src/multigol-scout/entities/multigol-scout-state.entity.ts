@@ -19,4 +19,8 @@ export class MultigolScoutStateEntity {
 
   @Column({ type: 'boolean', default: false })
   scanInProgress!: boolean;
+
+  /** Versione del modello con cui è stato calcolato lo snapshot (null = legacy v1). */
+  @Column({ type: 'integer', nullable: true })
+  modelVersion!: number | null;
 }

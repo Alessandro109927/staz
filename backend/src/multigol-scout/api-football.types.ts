@@ -89,6 +89,30 @@ export type ApiFootballFixtureStatRow = {
   statistics: { type: string; value: number | string | null }[];
 };
 
+/** Risposta `/odds` (mercati "Total - Home/Away"). */
+export type ApiFootballOddsItem = {
+  bookmakers?: {
+    id: number;
+    name: string;
+    bets?: {
+      id: number;
+      name: string;
+      values?: { value: string; odd: string }[];
+    }[];
+  }[];
+};
+
+/** Risposta `/injuries?fixture=`. */
+export type ApiFootballInjuryItem = {
+  player: {
+    id?: number;
+    name?: string;
+    type?: string | null;
+    reason?: string | null;
+  };
+  team: { id: number; name?: string };
+};
+
 export type MultigolApiFootballSeasonStats = {
   form: string | null;
   played: number | null;
@@ -108,6 +132,11 @@ export type MultigolApiFootballSeasonStats = {
   playedAway: number | null;
   cleanSheets: number | null;
   failedToScore: number | null;
+  /** Porta inviolata / gare senza segnare, divise per venue (modello v2). */
+  cleanSheetsHome: number | null;
+  cleanSheetsAway: number | null;
+  failedToScoreHome: number | null;
+  failedToScoreAway: number | null;
   yellowCardsAvg: number | null;
   redCardsAvg: number | null;
   formation: string | null;

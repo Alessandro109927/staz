@@ -101,7 +101,7 @@ Il deploy **non copia** il database del tuo PC: aggiorna solo codice e container
 
 1. In locale (con `.env` e DB): `cd backend && npm run multigol:refresh-uefa` — aggiorna `scout-multigol-uefa-cups.sql` in root repo.
 2. Commit e push del file SQL (e del codice).
-3. `./scripts/deploy.sh` — dopo il build importa automaticamente lo SQL in PostgreSQL (`scripts/apply-scout-uefa-export.sh`).
+3. `SCOUT_APPLY_UEFA_EXPORT=1 ./scripts/deploy.sh` — importa lo SQL in PostgreSQL (`scripts/apply-scout-uefa-export.sh`). **Di default l'import è disattivato**: il server ricalcola da solo le pick col modello corrente (vedi sotto) e lo SQL potrebbe contenere numeri di un modello precedente.
 
 Import manuale (es. hai già deployato senza SQL):
 
@@ -109,7 +109,12 @@ Import manuale (es. hai già deployato senza SQL):
 ./scripts/apply-scout-uefa-export.sh
 ```
 
-Per saltare l’import: `SCOUT_APPLY_UEFA_EXPORT=0 ./scripts/deploy.sh`.
+### Scout Multigol — modello di calcolo e ricalcolo
+
+- Il modello ha una versione (`MULTIGOL_MODEL_VERSION` in `multigol-model.util.ts`). Al **primo avvio dopo un deploy con versione nuova** il backend ricalcola da solo le partite di oggi (e, con `MULTIGOL_RECALC_DAYS=N`, i N giorni successivi, max 7), per tutte le competizioni, senza cancellare le partite già giocate.
+- **Ogni notte alle 03:00 (Europe/Rome)** calcola le partite del giorno successivo (recuperando eventuali giorni saltati).
+- Ricalcolo manuale: `POST /multigol-scout/snapshot/recalculate?day=YYYY-MM-DD&async=1` oppure, da `backend/`, `npm run multigol:recalc-day -- 2026-10-16`.
+- Il ricalcolo usa le chiamate API-Football (≈ 4–6 per partita: forma, statistiche casa/trasferta, quote, xG); controlla la quota in `/multigol-scout/api-football/usage`.
 
 ---
 

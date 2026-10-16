@@ -303,7 +303,99 @@ export interface MultigolOpportunity {
   synthesisPercent: number;
   xgLambdaSide?: number | null;
   xgSampleMatches?: number;
+  marketPercent?: number | null;
+  scoringRatePercent?: number | null;
+  /** Versione del modello che ha calcolato la riga (assente = v1). */
+  modelVersion?: number;
   teaser: string;
+}
+
+export interface MultigolMarketQuote {
+  betName: string;
+  line: number;
+  overOdd: number | null;
+  underOdd: number | null;
+  impliedOverPercent: number | null;
+  fairOverPercent: number;
+  fairMinPercent: number;
+  fairMaxPercent: number;
+  bookmakers: number;
+  bookmakerNames: string[];
+}
+
+export interface MultigolInjuryEntry {
+  teamId: number;
+  player: string;
+  type: string | null;
+  reason: string | null;
+}
+
+export interface MultigolLambdaSource {
+  key: 'season' | 'form' | 'leagueRelative' | 'xg';
+  label: string;
+  value: number | null;
+  share: number;
+  note: string;
+}
+
+export interface MultigolModelComponent {
+  key: 'poisson' | 'scoring' | 'empirical' | 'market';
+  label: string;
+  percent: number | null;
+  share: number;
+  note: string;
+}
+
+export interface MultigolModelBreakdown {
+  version: number;
+  venue: 'home' | 'away';
+  lambda: {
+    final: number;
+    form: number | null;
+    sources: MultigolLambdaSource[];
+  };
+  poissonPercent: number;
+  scoring: {
+    teamFailedToScorePercent: number | null;
+    teamVenueGames: number | null;
+    oppCleanSheetPercent: number | null;
+    oppVenueGames: number | null;
+    directPercent: number | null;
+  };
+  empirical: {
+    hits: number;
+    matches: number;
+    rawPercent: number | null;
+    shrunkPercent: number | null;
+  };
+  market: MultigolMarketQuote | null;
+  league: {
+    avgGoalsPerTeamGame: number;
+    venueAvgGoals: number;
+    attackRelative: number;
+    defenceRelative: number;
+  } | null;
+  components: MultigolModelComponent[];
+  synthesisPercent: number;
+}
+
+export interface MultigolRestInfo {
+  days: number | null;
+  lastMatchDate: string | null;
+}
+
+export interface MultigolInsights {
+  modelVersion: number;
+  pickSide: 'home' | 'away' | null;
+  pickTeamName: string | null;
+  breakdown: MultigolModelBreakdown | null;
+  rest: { home: MultigolRestInfo; away: MultigolRestInfo };
+  injuries: {
+    available: boolean;
+    home: MultigolInjuryEntry[];
+    away: MultigolInjuryEntry[];
+  };
+  notes: string[];
 }
 
 export interface MultigolOpportunitiesResponse {
@@ -438,7 +530,10 @@ export interface MultigolAnalysis {
     empiricalProbability: number | null;
     empiricalHits: number;
     empiricalMatches: number;
+    synthesisPercent?: number;
+    model?: MultigolModelBreakdown;
   } | null;
+  insights?: MultigolInsights | null;
   pHome1to6: number;
   pAway1to6: number;
   lambdaHome: number;
