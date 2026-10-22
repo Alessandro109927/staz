@@ -1,10 +1,9 @@
-/** Fasce allineate ai filtri sintesi min. in UI (+ estremi). */
+/** Soglia minima mostrata in affidabilità e in lista. Sotto non si accumula. */
+export const SCOUT_VISIBLE_MIN_SYNTHESIS = 87;
+
+/** Solo le fasce che interessano in UI. */
 export const MULTIGOL_SCOUT_CALIBRATION_BAND_DEFS = [
-  { id: '0-50', label: 'Sotto 50%', min: 0, max: 50, maxExclusive: true },
-  { id: '50-58', label: '50% – 57,9%', min: 50, max: 58, maxExclusive: true },
-  { id: '58-68', label: '58% – 67,9%', min: 58, max: 68, maxExclusive: true },
-  { id: '68-78', label: '68% – 77,9%', min: 68, max: 78, maxExclusive: true },
-  { id: '78-90', label: '78% – 90%', min: 78, max: 90.1, maxExclusive: true },
+  { id: '87-90', label: '87% – 90%', min: SCOUT_VISIBLE_MIN_SYNTHESIS, max: 90.1, maxExclusive: true },
   { id: '90-100', label: '90,1% – 100%', min: 90.1, max: 100, maxExclusive: false },
 ] as const;
 

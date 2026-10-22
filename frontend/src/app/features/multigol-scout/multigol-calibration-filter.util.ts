@@ -10,6 +10,9 @@ type MetricKey = 'synthesis' | 'poisson' | 'empirical';
 
 const METRICS: MetricKey[] = ['synthesis', 'poisson', 'empirical'];
 
+/** Allineata a MULTIGOL_MODEL_VERSION nel backend. Le pick precedenti non entrano. */
+export const CURRENT_MODEL_VERSION = 2;
+
 function metricPercent(opp: MultigolOpportunity, metric: MetricKey): number | null {
   const value =
     metric === 'synthesis'
@@ -51,8 +54,9 @@ export function calibrationForItems(
     empirical: emptyStats(),
   }));
 
+  const current = items.filter((item) => (item.modelVersion ?? 1) >= CURRENT_MODEL_VERSION);
   let labeledPickCount = 0;
-  for (const item of items) {
+  for (const item of current) {
     const result = pickResults[item.matchId];
     if (result !== 'WON' && result !== 'LOST') {
       continue;
@@ -79,7 +83,7 @@ export function calibrationForItems(
   return {
     bands,
     labeledPickCount,
-    opportunityCount: items.length,
+    opportunityCount: current.length,
     updatedAt: base.updatedAt,
   };
 }

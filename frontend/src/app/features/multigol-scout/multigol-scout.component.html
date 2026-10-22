@@ -63,76 +63,36 @@
           }
         </div>
         <div class="multigol-monitored__actions">
-          <button type="button" class="multigol-monitored__action--primary" (click)="selectAllMonitored()">
-            Seleziona tutti
-          </button>
           <button type="button" class="multigol-monitored__action--muted" (click)="resetMonitoredFilters()">
             Reset
           </button>
         </div>
       </header>
 
-      <div class="multigol-preset-chips">
-        <button
-          type="button"
-          class="multigol-preset-chip"
-          [class.is-active]="isMonitoredTuttiActive()"
-          (click)="clearMonitoredNationsAndLeagues()"
-        >
-          <span class="multigol-preset-chip__label">Tutti</span>
-          <span class="multigol-preset-chip__count">{{ allItems.length }}</span>
-        </button>
-        @for (nation of nationOptions; track nation.key) {
-          <button
-            type="button"
-            class="multigol-preset-chip"
-            [class.is-active]="isNationActive(nation.key)"
-            [attr.title]="nation.areaName"
-            [attr.aria-label]="nation.areaName"
-            (click)="toggleNation(nation.key)"
-          >
-            @if (nationFlag(nation.areaCode, nation.areaName); as flag) {
-              @if (flag.kind === 'emoji') {
-                <span class="multigol-preset-chip__emoji" aria-hidden="true">{{ flag.value }}</span>
-              } @else {
-                <img
-                  class="multigol-preset-chip__flag"
-                  [src]="flag.value"
-                  alt=""
-                  width="18"
-                  height="14"
-                  loading="lazy"
-                />
-              }
-            }
-            <span class="multigol-preset-chip__label">{{ nation.areaName }}</span>
-            <span class="multigol-preset-chip__count">{{ nationMatchCount(nation.key) }}</span>
-          </button>
-        }
-      </div>
-
       <div class="multigol-list-toolbar">
         <div class="multigol-list-toolbar__controls">
-          <app-vs-multi-select-field
-            class="multigol-filter-field multigol-list-toolbar__outcome"
-            label="Esito multigol"
-            placeholder="Casa e ospite (tutti)"
-            [control]="outcomeFilterControl"
-            [options]="outcomeFilterOptions"
-          />
-          <app-vs-multi-select-field
-            class="multigol-filter-field multigol-list-toolbar__date"
-            label="Finestra temporale"
-            placeholder="Prossime 48 ore"
-            [control]="dateFilterControl"
-            [options]="dateFilterOptions"
-          />
           <app-vs-select-field
-            class="multigol-filter-field multigol-list-toolbar__min-prob"
-            label="Sintesi algoritmica minima"
-            [control]="minSynthesisControl"
-            [options]="minSynthesisOptions"
+            class="multigol-filter-field multigol-list-toolbar__nation"
+            label="Nazione"
+            [control]="nationFilterControl"
+            [options]="nationFilterOptions"
           />
+          <label class="vs-field multigol-filter-field multigol-list-toolbar__date">
+            <span class="vs-field__label">Finestra temporale</span>
+            <span
+              class="multigol-date-field"
+              [class.is-empty]="!dateFilterControl.value"
+            >
+              <input
+                class="vs-input"
+                type="date"
+                [formControl]="dateFilterControl"
+                [attr.min]="dateFilterMin || null"
+                [attr.max]="dateFilterMax || null"
+              />
+              <mat-icon aria-hidden="true">calendar_today</mat-icon>
+            </span>
+          </label>
           <app-vs-select-field
             class="multigol-filter-field multigol-list-toolbar__sort"
             label="Criterio ordinamento"
@@ -156,7 +116,7 @@
           <span class="multigol-matches__badge">{{ displayItems.length }} match top-rating</span>
         </div>
         <p class="multigol-matches__meta">
-          Database globale: {{ allItems.length }} partite analizzate
+          Database globale: {{ relevantItems.length }} partite del modello attuale
         </p>
       </header>
 

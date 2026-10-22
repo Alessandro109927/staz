@@ -11,7 +11,19 @@
       aria-haspopup="listbox"
       (click)="togglePanel($event)"
     >
-      {{ displayLabel }}
+      <span class="vs-select-option__row">
+        @if (selectedOption?.flag; as flag) {
+          @if (flag.kind === 'emoji') {
+            <span class="vs-select-option__emoji" aria-hidden="true">{{ flag.value }}</span>
+          } @else {
+            <img class="vs-select-option__flag" [src]="flag.value" alt="" width="18" height="14" />
+          }
+        }
+        <span class="vs-select-option__label">{{ displayLabel }}</span>
+        @if (selectedOption?.count != null) {
+          <span class="vs-select-option__count">{{ selectedOption?.count }}</span>
+        }
+      </span>
     </button>
     <span class="vs-select__chevron" aria-hidden="true">
       <mat-icon>{{ panelOpen ? 'expand_less' : 'expand_more' }}</mat-icon>
@@ -30,7 +42,19 @@
             (mousedown)="$event.preventDefault()"
             (click)="selectOption(option)"
           >
-            <span class="vs-dropdown-option__label">{{ option.label }}</span>
+            <span class="vs-select-option__row">
+              @if (option.flag; as flag) {
+                @if (flag.kind === 'emoji') {
+                  <span class="vs-select-option__emoji" aria-hidden="true">{{ flag.value }}</span>
+                } @else {
+                  <img class="vs-select-option__flag" [src]="flag.value" alt="" width="18" height="14" />
+                }
+              }
+              <span class="vs-dropdown-option__label">{{ option.label }}</span>
+              @if (option.count != null) {
+                <span class="vs-select-option__count">{{ option.count }}</span>
+              }
+            </span>
             @if (option.description) {
               <span class="vs-dropdown-option__desc">{{ option.description }}</span>
             }

@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MULTIGOL_SCOUT_CALIBRATION_BAND_DEFS } from './multigol-scout-calibration.constants';
+import {
+  MULTIGOL_SCOUT_CALIBRATION_BAND_DEFS,
+  SCOUT_VISIBLE_MIN_SYNTHESIS,
+} from './multigol-scout-calibration.constants';
 import {
   MultigolScoutCalibrationEntity,
   CALIBRATION_ID,
@@ -9,6 +12,7 @@ import {
 import { MultigolScoutPickResultEntity } from './entities/multigol-scout-pick-result.entity';
 import { MultigolScoutOpportunityEntity } from './entities/multigol-scout-opportunity.entity';
 import {
+  emptyBandMetrics,
   emptyCalibrationStorage,
   type MultigolScoutBandStats,
   type MultigolScoutCalibrationStorage,
@@ -18,6 +22,7 @@ import {
 } from './multigol-scout-calibration.types';
 import type { MultigolOpportunity } from './multigol-scout.types';
 import { bandIdForPercent, isHit, metricPercent } from './multigol-scout-calibration.util';
+import { MULTIGOL_MODEL_VERSION } from './multigol-model.util';
 
 const METRICS: MultigolScoutMetricKey[] = ['synthesis', 'poisson', 'empirical'];
 
@@ -42,17 +47,38 @@ export class MultigolScoutCalibrationService {
   }
 
   async getSummary(): Promise<MultigolScoutCalibrationSummary> {
-    const [cal, labeledPickCount, opportunityCount] = await Promise.all([
+    const [cal, opportunityCount, labeledRows] = await Promise.all([
       this.ensureCalibrationRow(),
-      this.pickRepo.count(),
-      this.oppRepo.count(),
+      this.oppRepo
+        .createQueryBuilder('o')
+        .where(`(o.data->>'synthesisPercent')::float >= :min`, {
+          min: SCOUT_VISIBLE_MIN_SYNTHESIS,
+        })
+        .andWhere(`COALESCE((o.data->>'modelVersion')::int, 1) >= :model`, {
+          model: MULTIGOL_MODEL_VERSION,
+        })
+        .getCount(),
+      this.pickRepo
+        .createQueryBuilder('p')
+        .innerJoin(
+          MultigolScoutOpportunityEntity,
+          'o',
+          'o.matchId = p.matchId',
+        )
+        .where(`(o.data->>'synthesisPercent')::float >= :min`, {
+          min: SCOUT_VISIBLE_MIN_SYNTHESIS,
+        })
+        .andWhere(`COALESCE((o.data->>'modelVersion')::int, 1) >= :model`, {
+          model: MULTIGOL_MODEL_VERSION,
+        })
+        .getCount(),
     ]);
     const storage = cal.bands ?? emptyCalibrationStorage();
     return {
       bands: [...MULTIGOL_SCOUT_CALIBRATION_BAND_DEFS]
         .sort((a, b) => b.min - a.min)
         .map((def) => {
-        const slice = storage[def.id];
+        const slice = storage[def.id] ?? emptyBandMetrics();
         return {
           id: def.id,
           label: def.label,
@@ -63,7 +89,7 @@ export class MultigolScoutCalibrationService {
           empirical: { ...slice.empirical },
         };
       }),
-      labeledPickCount,
+      labeledPickCount: labeledRows,
       opportunityCount,
       updatedAt: cal.updatedAt?.toISOString() ?? null,
     };
@@ -145,6 +171,9 @@ export class MultigolScoutCalibrationService {
     remove: MultigolScoutPickResultValue | null,
     add: MultigolScoutPickResultValue | null,
   ): Promise<void> {
+    if ((opp.modelVersion ?? 1) < MULTIGOL_MODEL_VERSION) {
+      return;
+    }
     const row = await this.ensureCalibrationRow();
     const next = cloneStorage(row.bands ?? emptyCalibrationStorage());
 
@@ -178,9 +207,12 @@ export class MultigolScoutCalibrationService {
       await this.calRepo.save(row);
       return row;
     }
-    if (!row.bands) {
+    const bands = row.bands as Record<string, unknown> | null;
+    const staleModel = (row.modelVersion ?? 1) < MULTIGOL_MODEL_VERSION;
+    if (staleModel || !bands?.['87-90'] || !bands?.['90-100']) {
       row.bands = emptyCalibrationStorage();
       row.highBand = null;
+      row.modelVersion = MULTIGOL_MODEL_VERSION;
       await this.calRepo.save(row);
       await this.rebuildFromAllPickResults();
       row = (await this.calRepo.findOne({ where: { id: CALIBRATION_ID } }))!;
@@ -211,7 +243,7 @@ export class MultigolScoutCalibrationService {
 function cloneStorage(src: MultigolScoutCalibrationStorage): MultigolScoutCalibrationStorage {
   const out = emptyCalibrationStorage();
   for (const def of MULTIGOL_SCOUT_CALIBRATION_BAND_DEFS) {
-    const slice = src[def.id];
+    const slice = src[def.id] ?? emptyBandMetrics();
     out[def.id] = {
       synthesis: { ...slice.synthesis },
       poisson: { ...slice.poisson },

@@ -17,7 +17,7 @@ const DEFAULTS: MultigolScoutListFiltersState = {
   leagueKeys: [],
   outcomes: [],
   dates: [],
-  minSynthesis: '0',
+  minSynthesis: '87',
   sort: 'date',
   leagueSearch: '',
 };

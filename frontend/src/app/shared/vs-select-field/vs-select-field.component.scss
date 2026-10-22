@@ -10,3 +10,43 @@
 .vs-dropdown-panel--fixed {
   z-index: 1300;
 }
+
+.vs-select-option__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.vs-select-option__label,
+.vs-select-option__row .vs-dropdown-option__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vs-select-option__emoji {
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.vs-select-option__flag {
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: auto;
+  border-radius: 2px;
+  object-fit: cover;
+}
+
+.vs-select-option__count {
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-right: 0.85rem;
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #334155;
+}

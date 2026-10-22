@@ -18,6 +18,10 @@ export class MultigolScoutCalibrationEntity {
   @Column({ type: 'jsonb', nullable: true })
   highBand!: LegacyHighBandCalibration | null;
 
+  /** Modello da cui sono stati accumulati i conteggi. */
+  @Column({ type: 'int', nullable: true })
+  modelVersion!: number | null;
+
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt!: Date;
 }

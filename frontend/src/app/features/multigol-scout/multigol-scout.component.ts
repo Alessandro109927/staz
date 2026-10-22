@@ -15,7 +15,6 @@ import {
   MultigolScoutCompetition,
   MultigolScoutSnapshotResponse,
 } from '../../core/models';
-import { VsMultiSelectFieldComponent } from '../../shared/vs-multi-select-field/vs-multi-select-field.component';
 import {
   VsSelectFieldComponent,
   VsSelectOption,
@@ -40,12 +39,17 @@ import {
 } from './multigol-scout-list-filters.service';
 
 import { MultigolCalibrationPanelComponent } from './multigol-calibration-panel.component';
-import { calibrationForItems } from './multigol-calibration-filter.util';
+import {
+  calibrationForItems,
+  CURRENT_MODEL_VERSION,
+} from './multigol-calibration-filter.util';
 import type { MultigolScoutCalibrationSummary } from '../../core/models';
 import {
   MultigolScoutPickResultService,
   type MultigolScoutPickResult,
 } from './multigol-scout-pick-result.service';
+
+const MIN_LIST_SYNTHESIS = 87;
 
 type MultigolNationOption = {
   key: string;
@@ -63,7 +67,6 @@ type MultigolNationOption = {
     MatIconModule,
     MatTooltipModule,
     VsSelectFieldComponent,
-    VsMultiSelectFieldComponent,
     EventResultToggleComponent,
     MultigolCalibrationPanelComponent,
   ],
@@ -85,22 +88,8 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
   allItems: MultigolOpportunity[] = [];
   selectedNationKeys = new Set<string>();
   selectedLeagueKeys = new Set<string>();
-  outcomeFilterControl = new FormControl<string[]>([], { nonNullable: true });
-  dateFilterControl = new FormControl<string[]>([], { nonNullable: true });
-  minSynthesisControl = new FormControl<string>('0', { nonNullable: true });
-  leagueSearchControl = new FormControl('', { nonNullable: true });
-  readonly outcomeFilterOptions: VsSelectOption[] = [
-    { value: 'Multigol Casa 1-6', label: 'Multigol Casa 1–6' },
-    { value: 'Multigol Ospite 1-6', label: 'Multigol Ospite 1–6' },
-  ];
-  readonly minSynthesisOptions: VsSelectOption[] = [
-    { value: '0', label: 'Tutte le probabilità' },
-    { value: '50', label: '> 50,0%' },
-    { value: '58', label: '> 58,0%' },
-    { value: '68', label: '> 68,0%' },
-    { value: '78', label: '> 78,0%' },
-    { value: '90', label: '> 90,0% (Alta affidabilità)' },
-  ];
+  nationFilterControl = new FormControl<string>('', { nonNullable: true });
+  dateFilterControl = new FormControl<string>('', { nonNullable: true });
   sortControl = new FormControl<MultigolScoutSortMode>('probability', { nonNullable: true });
   readonly sortOptions: VsSelectOption[] = [
     { value: 'probability', label: 'Probabilità sintesi' },
@@ -155,10 +144,7 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
         });
       }
     };
-    for (const c of this.competitions) {
-      add(c.areaCode, c.areaName);
-    }
-    for (const item of this.allItems) {
+    for (const item of this.relevantItems) {
       add(item.areaCode, item.areaName);
     }
     return [...map.values()].sort((a, b) =>
@@ -166,45 +152,32 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
     );
   }
 
-  get leagueOptions(): MultigolScoutCompetition[] {
-    const q = this.leagueSearchControl.value.trim().toLowerCase();
-    let list = [...this.competitions];
-    if (q) {
-      list = list.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          (c.areaName?.toLowerCase().includes(q) ?? false) ||
-          (c.code?.toLowerCase().includes(q) ?? false) ||
-          String(c.id).includes(q),
-      );
+  get nationFilterOptions(): VsSelectOption[] {
+    const options: VsSelectOption[] = [
+      { value: '', label: 'Tutte le nazioni', count: this.relevantItems.length },
+    ];
+    for (const nation of this.nationOptions) {
+      const flag = this.nationFlag(nation.areaCode, nation.areaName);
+      options.push({
+        value: nation.key,
+        label: nation.areaName,
+        count: this.nationMatchCount(nation.key),
+        flag: flag ?? undefined,
+      });
     }
-    return list.sort((a, b) => {
-      const area = (a.areaName ?? '').localeCompare(b.areaName ?? '', 'it');
-      if (area !== 0) {
-        return area;
-      }
-      return a.name.localeCompare(b.name, 'it');
-    });
+    return options;
   }
 
-  get dateFilterOptions(): VsSelectOption[] {
-    const keys = new Set<string>();
-    for (const item of this.allItems) {
-      keys.add(this.itemDateKey(item.utcDate));
-    }
-    return [...keys]
-      .sort()
-      .map((key) => ({ value: key, label: this.itemDateLabel(key) }));
+  get dateFilterMin(): string {
+    return this.dateFilterBounds().min;
+  }
+
+  get dateFilterMax(): string {
+    return this.dateFilterBounds().max;
   }
 
   get hasActiveFilters(): boolean {
-    return (
-      this.selectedNationKeys.size > 0 ||
-      this.selectedLeagueKeys.size > 0 ||
-      this.outcomeFilterControl.value.length > 0 ||
-      this.dateFilterControl.value.length > 0 ||
-      this.minSynthesisControl.value !== '0'
-    );
+    return this.nationFilterControl.value !== '' || this.dateFilterControl.value !== '';
   }
 
   get displayItems(): MultigolOpportunity[] {
@@ -223,30 +196,24 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
     return sorted;
   }
 
+  /** Solo sintesi ≥ 87% calcolata col modello attuale. Le pick precedenti non si mostrano. */
+  get relevantItems(): MultigolOpportunity[] {
+    return this.allItems.filter(
+      (item) =>
+        (item.modelVersion ?? 1) >= CURRENT_MODEL_VERSION &&
+        this.synthesisPercent(item) >= MIN_LIST_SYNTHESIS,
+    );
+  }
+
   private filteredItems(): MultigolOpportunity[] {
-    let list = this.allItems;
-    if (this.selectedNationKeys.size > 0) {
-      list = list.filter((item) => {
-        const key = this.itemNationKey(item);
-        return key != null && this.selectedNationKeys.has(key);
-      });
+    let list = this.relevantItems;
+    const nation = this.nationFilterControl.value;
+    if (nation) {
+      list = list.filter((item) => this.itemNationKey(item) === nation);
     }
-    if (this.selectedLeagueKeys.size > 0) {
-      list = list.filter((item) => this.selectedLeagueKeys.has(this.itemLeagueKey(item)));
-    }
-    const outcomes = this.outcomeFilterControl.value;
-    if (outcomes.length > 0) {
-      const allow = new Set(outcomes);
-      list = list.filter((item) => allow.has(item.outcomeLabel));
-    }
-    const dates = this.dateFilterControl.value;
-    if (dates.length > 0) {
-      const allowDates = new Set(dates);
-      list = list.filter((item) => allowDates.has(this.itemDateKey(item.utcDate)));
-    }
-    const minSynth = Number(this.minSynthesisControl.value);
-    if (minSynth > 0) {
-      list = list.filter((item) => this.synthesisPercent(item) >= minSynth);
+    const date = this.dateFilterControl.value;
+    if (date) {
+      list = list.filter((item) => this.itemDateKey(item.utcDate) === date);
     }
     return list;
   }
@@ -393,15 +360,14 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
   }
 
   nationMatchCount(nationKey: string): number {
-    return this.allItems.filter((item) => this.itemNationKey(item) === nationKey).length;
+    return this.relevantItems.filter((item) => this.itemNationKey(item) === nationKey).length;
   }
 
   resetMonitoredFilters(): void {
     this.clearNations();
     this.clearLeagues();
-    this.outcomeFilterControl.setValue([]);
-    this.dateFilterControl.setValue([]);
-    this.minSynthesisControl.setValue('0');
+    this.nationFilterControl.setValue('');
+    this.dateFilterControl.setValue('');
     this.sortControl.setValue('probability');
     this.persistChipFilters();
   }
@@ -437,10 +403,8 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
     const key = [
       this.pickResults.revision(),
       [...this.selectedNationKeys].sort().join(','),
-      [...this.selectedLeagueKeys].sort().join(','),
-      this.outcomeFilterControl.value.join(','),
-      this.dateFilterControl.value.join(','),
-      this.minSynthesisControl.value,
+      this.nationFilterControl.value,
+      this.dateFilterControl.value,
     ].join('|');
     const cache = this.filteredCalibrationCache;
     if (cache && cache.key === key && cache.base === base && cache.items === this.allItems) {
@@ -510,24 +474,6 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
     return byId?.key ?? code;
   }
 
-  private itemDateKey(utcDate: string): string {
-    const d = new Date(utcDate);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  }
-
-  private itemDateLabel(key: string): string {
-    const [y, m, d] = key.split('-').map(Number);
-    const date = new Date(y, m - 1, d);
-    return date.toLocaleDateString('it-IT', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-    });
-  }
-
   private itemNationKey(item: MultigolOpportunity): string | null {
     if (!item.areaName?.trim() && !item.areaCode?.trim()) {
       return null;
@@ -540,6 +486,29 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
     return this.competitions.find((c) => c.key === key)?.name ?? key;
   }
 
+  private itemDateKey(utcDate: string): string {
+    const d = new Date(utcDate);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  private dateFilterBounds(): { min: string; max: string } {
+    let min = '';
+    let max = '';
+    for (const item of this.relevantItems) {
+      const key = this.itemDateKey(item.utcDate);
+      if (!min || key < min) {
+        min = key;
+      }
+      if (!max || key > max) {
+        max = key;
+      }
+    }
+    return { min, max };
+  }
+
   private setDefaultRange(): void {
     const start = new Date();
     const end = new Date(start.getTime() + 7 * 86400000);
@@ -549,38 +518,29 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
 
   private restoreListFilters(): void {
     const saved = this.listFilters.read();
-    this.selectedNationKeys = new Set(saved.nationKeys);
-    this.selectedLeagueKeys = new Set(saved.leagueKeys);
-    this.outcomeFilterControl.setValue(saved.outcomes, { emitEvent: false });
-    this.dateFilterControl.setValue(saved.dates, { emitEvent: false });
-    this.minSynthesisControl.setValue(saved.minSynthesis, { emitEvent: false });
+    this.selectedNationKeys = new Set();
+    this.selectedLeagueKeys = new Set();
+    this.nationFilterControl.setValue(saved.nationKeys[0] ?? '', { emitEvent: false });
+    this.dateFilterControl.setValue(saved.dates[0] ?? '', { emitEvent: false });
     this.sortControl.setValue(saved.sort, { emitEvent: false });
-    this.leagueSearchControl.setValue(saved.leagueSearch, { emitEvent: false });
   }
 
   private bindListFilterPersistence(): void {
     const persistToolbar = (): void => {
       this.listFilters.save({
-        outcomes: this.outcomeFilterControl.value,
-        dates: this.dateFilterControl.value,
-        minSynthesis: this.minSynthesisControl.value,
+        nationKeys: this.nationFilterControl.value ? [this.nationFilterControl.value] : [],
+        leagueKeys: [],
+        dates: this.dateFilterControl.value ? [this.dateFilterControl.value] : [],
         sort: this.sortControl.value,
-        leagueSearch: this.leagueSearchControl.value,
       });
     };
-    this.outcomeFilterControl.valueChanges
+    this.nationFilterControl.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => persistToolbar());
     this.dateFilterControl.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => persistToolbar());
-    this.minSynthesisControl.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => persistToolbar());
     this.sortControl.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => persistToolbar());
-    this.leagueSearchControl.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => persistToolbar());
   }
@@ -588,7 +548,6 @@ export class MultigolScoutComponent implements OnInit, OnDestroy {
   private persistChipFilters(): void {
     this.listFilters.save({
       nationKeys: [...this.selectedNationKeys],
-      leagueKeys: [...this.selectedLeagueKeys],
     });
   }
 

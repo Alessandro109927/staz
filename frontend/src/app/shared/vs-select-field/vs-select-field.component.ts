@@ -13,10 +13,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { Subject, fromEvent, takeUntil } from 'rxjs';
 import { syncFixedDropdownPanel } from './dropdown-panel.util';
 
+export type VsSelectFlag =
+  | { kind: 'emoji'; value: string }
+  | { kind: 'image'; value: string };
+
 export type VsSelectOption = {
   value: string;
   label: string;
   description?: string;
+  flag?: VsSelectFlag;
+  count?: number;
 };
 
 @Component({
@@ -60,9 +66,12 @@ export class VsSelectFieldComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  get selectedOption(): VsSelectOption | null {
+    return this.options.find((option) => option.value === this.control.value) ?? null;
+  }
+
   get displayLabel(): string {
-    const value = this.control.value;
-    return this.options.find((option) => option.value === value)?.label ?? value ?? '';
+    return this.selectedOption?.label ?? this.control.value ?? '';
   }
 
   togglePanel(event: MouseEvent): void {
