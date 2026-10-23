@@ -25,6 +25,21 @@ import {
   MultigolScoutSnapshotResponse,
 } from '../models';
 
+export type BetfairPaperStatus = {
+  active: boolean;
+  hasCapital: boolean;
+  thresholdPercent: number;
+  minVolume: number;
+  minOdd: number;
+  maxPicksPerMatch: number;
+  lastRunAt: string | null;
+  matchesSeen: number;
+  requestsUsed: number;
+  lastError: string | null;
+  openPicks: number;
+  placedPicks: number;
+};
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly baseUrl = environment.apiUrl;
@@ -33,6 +48,10 @@ export class ApiService {
 
   getCapital(): Observable<Capital | null> {
     return this.http.get<Capital | null>(`${this.baseUrl}/capital`);
+  }
+
+  getBetfairPaperStatus(): Observable<BetfairPaperStatus> {
+    return this.http.get<BetfairPaperStatus>(`${this.baseUrl}/betfair-paper/status`);
   }
 
   setCapital(initialCapital: number, reset = false): Observable<Capital> {

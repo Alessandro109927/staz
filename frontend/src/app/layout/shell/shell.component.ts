@@ -12,6 +12,8 @@ import { Capital, User, profitFromCapital, startingCapitalValue } from '../../co
 import { NewBetDialogService } from '../../features/new-bet/new-bet-dialog.service';
 import { ApiFootballUsageService } from '../../core/services/api-football-usage.service';
 import type { ApiFootballUsage } from '../../core/models';
+import { OrganizationService } from '../../core/services/organization.service';
+import { OrganizationSwitchComponent } from '../../shared/organization-switch/organization-switch.component';
 
 @Component({
   selector: 'app-shell',
@@ -23,6 +25,7 @@ import type { ApiFootballUsage } from '../../core/models';
     MatIconModule,
     MatTooltipModule,
     DecimalPipe,
+    OrganizationSwitchComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
@@ -33,6 +36,7 @@ export class ShellComponent implements OnInit {
   private readonly newBetDialog = inject(NewBetDialogService);
   private readonly betChange = inject(BetChangeService);
   private readonly apiFootballUsage = inject(ApiFootballUsageService);
+  private readonly organizations = inject(OrganizationService);
   private readonly destroyRef = inject(DestroyRef);
 
   capital: Capital | null = null;
@@ -41,6 +45,7 @@ export class ShellComponent implements OnInit {
   /** Solo desktop: rail stretta con sole icone. */
   sidebarCollapsed = false;
   user: User | null = this.auth.currentUser();
+  readonly showBet365Menu = this.organizations.slug() === 'bet365';
 
   private static readonly SIDEBAR_COLLAPSED_KEY = 'staz.sidebar.collapsed';
 
@@ -51,10 +56,12 @@ export class ShellComponent implements OnInit {
     }
     this.loadCapital();
     this.betChange.changed.subscribe(() => this.loadCapital());
-    this.apiFootballUsage.refresh();
-    interval(20_000)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.apiFootballUsage.refresh());
+    if (this.showBet365Menu) {
+      this.apiFootballUsage.refresh();
+      interval(20_000)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => this.apiFootballUsage.refresh());
+    }
   }
 
   apiUsageTitle(usage: ApiFootballUsage): string {

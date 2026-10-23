@@ -11,6 +11,14 @@ import { CapitalService } from '../capital/capital.service';
 import { BetStatus } from '../common/enums/bet-status.enum';
 import { formatMoney, parseMoney } from '../common/decimal.util';
 import { StakingRulesService } from '../staking-rules/staking-rules.service';
+import { BetfairPaperPick } from '../betfair-paper/entities/betfair-paper-pick.entity';
+import { ORG_BETFAIR } from '../organizations/organization.constants';
+import {
+  currentOrganization,
+  organizationIdForCreate,
+  organizationPredicate,
+  organizationScope,
+} from '../organizations/organization-context';
 import { normalizeEvents } from './bet.helpers';
 import { deriveBetStatusFromEvents } from './event-result.helpers';
 import {
@@ -38,6 +46,8 @@ export class BetsService {
     private readonly betRepository: Repository<Bet>,
     @InjectRepository(BetEvent)
     private readonly betEventRepository: Repository<BetEvent>,
+    @InjectRepository(BetfairPaperPick)
+    private readonly paperPicks: Repository<BetfairPaperPick>,
     @Inject(forwardRef(() => CapitalService))
     private readonly capitalService: CapitalService,
     private readonly stakingRulesService: StakingRulesService,
@@ -97,6 +107,7 @@ export class BetsService {
 
     const bet = this.betRepository.create({
       userId,
+      organizationId: organizationIdForCreate(),
       eventName: normalized.eventSummary,
       odds: formatMoney(normalized.combinedOdds),
       stakePercentageApplied: stakePercentage,
@@ -128,7 +139,8 @@ export class BetsService {
       await this.recalculateCapitalChain(userId);
     }
     const withEvents = await this.findBetWithEvents(userId, saved.id);
-    return this.mapBet(withEvents!);
+    const [mapped] = await this.attachPaperFlow(userId, [this.mapBet(withEvents!)]);
+    return mapped;
   }
 
   async updateEventResult(
@@ -169,7 +181,8 @@ export class BetsService {
     }
 
     const withEvents = await this.findBetWithEvents(userId, betId);
-    return this.mapBet(withEvents!);
+    const [mapped] = await this.attachPaperFlow(userId, [this.mapBet(withEvents!)]);
+    return mapped;
   }
 
   async findAll(userId: number, query: ListBetsQueryDto) {
@@ -177,22 +190,22 @@ export class BetsService {
       await this.syncScalataBetFlags(userId);
     }
 
-    const where: FindOptionsWhere<Bet> = { userId };
+    const extra: Record<string, unknown> = {};
 
     if (!this.shouldIncludeScalata(query)) {
-      where.isScalata = false;
+      extra.isScalata = false;
     }
 
     if (query.status) {
-      where.status = query.status;
+      extra.status = query.status;
     }
 
     if (query.from && query.to) {
-      where.betDate = Between(new Date(query.from), new Date(query.to));
+      extra.betDate = Between(new Date(query.from), new Date(query.to));
     }
 
     const bets = await this.betRepository.find({
-      where,
+      where: organizationScope(userId, extra) as FindOptionsWhere<Bet>[],
       relations: { events: true },
       order: {
         betDate: 'DESC',
@@ -201,7 +214,10 @@ export class BetsService {
       },
     });
 
-    return bets.map((bet) => this.mapBet(bet));
+    return this.attachPaperFlow(
+      userId,
+      bets.map((bet) => this.mapBet(bet)),
+    );
   }
 
   async findOne(userId: number, id: number) {
@@ -209,7 +225,8 @@ export class BetsService {
     if (!bet) {
       throw new NotFoundException(`Scommessa ${id} non trovata`);
     }
-    return this.mapBet(bet);
+    const [mapped] = await this.attachPaperFlow(userId, [this.mapBet(bet)]);
+    return mapped;
   }
 
   async settle(userId: number, id: number, dto: SettleBetDto) {
@@ -231,7 +248,8 @@ export class BetsService {
     }
 
     const withEvents = await this.findBetWithEvents(userId, id);
-    return this.mapBet(withEvents!);
+    const [mapped] = await this.attachPaperFlow(userId, [this.mapBet(withEvents!)]);
+    return mapped;
   }
 
   async update(userId: number, id: number, dto: UpdateBetDto) {
@@ -311,11 +329,14 @@ export class BetsService {
     }
 
     const withEvents = await this.findBetWithEvents(userId, id);
-    return this.mapBet(withEvents!);
+    const [mapped] = await this.attachPaperFlow(userId, [this.mapBet(withEvents!)]);
+    return mapped;
   }
 
   async remove(userId: number, id: number) {
-    const bet = await this.betRepository.findOne({ where: { id, userId } });
+    const bet = await this.betRepository.findOne({
+      where: organizationScope(userId, { id }),
+    });
     if (!bet) {
       throw new NotFoundException(`Scommessa ${id} non trovata`);
     }
@@ -334,7 +355,7 @@ export class BetsService {
     }
 
     const result = await this.betRepository.update(
-      { userId, id: In(betIds), isScalata: false },
+      organizationScope(userId, { id: In(betIds), isScalata: false }),
       { isScalata: true },
     );
 
@@ -343,12 +364,16 @@ export class BetsService {
 
   async getStats(userId: number) {
     await this.syncScalataBetFlags(userId);
-    const baseWhere = { userId, isScalata: false };
+    const base = { isScalata: false };
     const [won, lost, pending] = await Promise.all([
-      this.betRepository.count({ where: { ...baseWhere, status: BetStatus.WON } }),
-      this.betRepository.count({ where: { ...baseWhere, status: BetStatus.LOST } }),
       this.betRepository.count({
-        where: { ...baseWhere, status: BetStatus.PENDING },
+        where: organizationScope(userId, { ...base, status: BetStatus.WON }),
+      }),
+      this.betRepository.count({
+        where: organizationScope(userId, { ...base, status: BetStatus.LOST }),
+      }),
+      this.betRepository.count({
+        where: organizationScope(userId, { ...base, status: BetStatus.PENDING }),
       }),
     ]);
 
@@ -358,7 +383,7 @@ export class BetsService {
   async getOddsRangeStats(userId: number) {
     await this.syncScalataBetFlags(userId);
     const bets = await this.betRepository.find({
-      where: { userId, isScalata: false },
+      where: organizationScope(userId, { isScalata: false }),
       relations: { events: true },
       order: { betDate: 'DESC', id: 'DESC' },
     });
@@ -374,7 +399,7 @@ export class BetsService {
   async getAvailableMonths(userId: number) {
     await this.syncScalataBetFlags(userId);
     const bets = await this.betRepository.find({
-      where: { userId, isScalata: false },
+      where: organizationScope(userId, { isScalata: false }),
       select: { betDate: true },
       order: { betDate: 'DESC' },
     });
@@ -385,7 +410,7 @@ export class BetsService {
   async getMonthlyReport(userId: number, year: number, month: number) {
     await this.syncScalataBetFlags(userId);
     const bets = await this.betRepository.find({
-      where: { userId, isScalata: false },
+      where: organizationScope(userId, { isScalata: false }),
       relations: { events: true },
       order: { betDate: 'DESC', id: 'DESC' },
     });
@@ -398,7 +423,7 @@ export class BetsService {
     let running = await this.capitalService.getStartingCapitalValue(userId);
 
     const bets = await this.betRepository.find({
-      where: { userId },
+      where: organizationScope(userId),
       order: { betDate: 'ASC', id: 'ASC' },
     });
 
@@ -445,9 +470,11 @@ export class BetsService {
       `
         SELECT COALESCE(SUM(capital_adjustment), 0) AS total
         FROM scalata_runs
-        WHERE user_id = $1 AND capital_settled = true
+        WHERE user_id = $1
+          AND capital_settled = true
+          AND ${organizationPredicate('organization_id', 2)}
       `,
-      [userId],
+      [userId, currentOrganization().id],
     );
 
     return parseMoney(rows[0]?.total ?? '0');
@@ -468,16 +495,44 @@ export class BetsService {
         WHERE b.id = ss.bet_id
           AND sr.user_id = $1
           AND b.is_scalata = false
+          AND ${organizationPredicate('sr.organization_id', 2)}
+          AND ${organizationPredicate('b.organization_id', 2)}
       `,
-      [userId],
+      [userId, currentOrganization().id],
     );
   }
 
   private async findBetWithEvents(userId: number, id: number) {
     return this.betRepository.findOne({
-      where: { id, userId },
+      where: organizationScope(userId, { id }),
       relations: { events: true },
       order: { events: { sortOrder: 'ASC' } },
+    });
+  }
+
+  private async attachPaperFlow<T extends { id: number }>(userId: number, bets: T[]) {
+    if (!bets.length || currentOrganization().slug !== ORG_BETFAIR) {
+      return bets;
+    }
+
+    const picks = await this.paperPicks.find({
+      where: { userId, betId: In(bets.map((bet) => bet.id)) },
+    });
+    const byBetId = new Map(picks.map((pick) => [pick.betId, pick]));
+
+    return bets.map((bet) => {
+      const pick = byBetId.get(bet.id);
+      if (!pick) {
+        return bet;
+      }
+      return {
+        ...bet,
+        paperFlow: {
+          volume: formatMoney(pick.volume),
+          matchVolume: formatMoney(pick.matchVolume),
+          weight: formatMoney(pick.weight),
+        },
+      };
     });
   }
 

@@ -89,6 +89,12 @@ export interface StakePreview {
   events: Array<{ eventName: string; outcome: string; odds: string }>;
 }
 
+export interface BetPaperFlow {
+  volume: string;
+  matchVolume: string;
+  weight: string;
+}
+
 export interface Bet {
   id: number;
   eventName: string;
@@ -103,6 +109,7 @@ export interface Bet {
   status: BetStatus;
   betDate: string;
   settledAt: string | null;
+  paperFlow?: BetPaperFlow | null;
 }
 
 export interface BetStats {

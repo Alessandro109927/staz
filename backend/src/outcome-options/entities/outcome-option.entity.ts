@@ -8,6 +8,9 @@ export class OutcomeOption {
   @Column({ name: 'user_id', type: 'int' })
   userId: number;
 
+  @Column({ name: 'organization_id', type: 'int', nullable: true })
+  organizationId: number | null;
+
   @Column({ type: 'varchar', length: 120 })
   label: string;
 

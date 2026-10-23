@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, In, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Bet } from '../bets/entities/bet.entity';
 import { BetsService } from '../bets/bets.service';
 import { BetStatus } from '../common/enums/bet-status.enum';
@@ -21,6 +21,11 @@ import {
 import { ScalataRun } from './entities/scalata-run.entity';
 import { ScalataStep } from './entities/scalata-step.entity';
 import { buildScalataPlan } from './scalata.helpers';
+import {
+  applyOrganizationScope,
+  organizationIdForCreate,
+  organizationScope,
+} from '../organizations/organization-context';
 
 @Injectable()
 export class ScalataService {
@@ -45,6 +50,7 @@ export class ScalataService {
 
     const run = this.runRepository.create({
       userId,
+      organizationId: organizationIdForCreate(),
       status: ScalataRunStatus.ACTIVE,
       startBankroll: formatMoney(plan.startBankroll),
       targetProfit: formatMoney(plan.targetProfit),
@@ -79,13 +85,11 @@ export class ScalataService {
   }
 
   async findAll(userId: number, query: ListScalataQueryDto) {
-    const where: FindOptionsWhere<ScalataRun> = { userId };
-    if (query.status) {
-      where.status = query.status;
-    }
-
     const runs = await this.runRepository.find({
-      where,
+      where: organizationScope(
+        userId,
+        query.status ? { status: query.status } : {},
+      ),
       relations: { steps: true },
       order: { createdAt: 'DESC' },
     });
@@ -231,11 +235,12 @@ export class ScalataService {
     await this.runRepository.remove(run);
 
     if (betIds.length) {
-      await this.betRepository.delete({
-        userId,
-        id: In(betIds),
-        isScalata: true,
-      });
+      await this.betRepository.delete(
+        organizationScope(userId, {
+          id: In(betIds),
+          isScalata: true,
+        }),
+      );
     }
 
     await this.betsService.recalculateCapitalChain(userId);
@@ -320,7 +325,7 @@ export class ScalataService {
 
   private async findRunWithSteps(userId: number, id: number) {
     const run = await this.runRepository.findOne({
-      where: { id, userId },
+      where: organizationScope(userId, { id }),
       relations: { steps: { bet: { events: true } } },
     });
 
@@ -414,7 +419,7 @@ export class ScalataService {
 
   private async loadBetWithEvents(userId: number, betId: number) {
     return this.betRepository.findOne({
-      where: { id: betId, userId },
+      where: organizationScope(userId, { id: betId }),
       relations: { events: true },
     });
   }
@@ -435,6 +440,8 @@ export class ScalataService {
       .andWhere('bet.status = :status', { status: betStatus })
       .orderBy('bet.id', 'ASC');
 
+    applyOrganizationScope(query, 'bet.organization_id');
+
     if (strictTiming) {
       if (betStatus === BetStatus.PENDING) {
         const runDayStart = new Date(runStartedAt);
@@ -454,13 +461,15 @@ export class ScalataService {
   }
 
   private async getLinkedBetIdsForUser(userId: number): Promise<Set<number>> {
-    const rows = await this.stepRepository
+    const query = this.stepRepository
       .createQueryBuilder('step')
       .innerJoin('step.scalataRun', 'run')
       .where('run.user_id = :userId', { userId })
       .andWhere('step.bet_id IS NOT NULL')
-      .select('step.bet_id', 'betId')
-      .getRawMany<{ betId: string | number }>();
+      .select('step.bet_id', 'betId');
+
+    applyOrganizationScope(query, 'run.organization_id');
+    const rows = await query.getRawMany<{ betId: string | number }>();
 
     return new Set(rows.map((row) => Number(row.betId)));
   }

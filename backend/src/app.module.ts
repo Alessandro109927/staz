@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,6 +11,9 @@ import { StakingRulesModule } from './staking-rules/staking-rules.module';
 import { TeamsModule } from './teams/teams.module';
 import { OutcomeOptionsModule } from './outcome-options/outcome-options.module';
 import { MultigolScoutModule } from './multigol-scout/multigol-scout.module';
+import { OrganizationMiddleware } from './organizations/organization.middleware';
+import { OrganizationsModule } from './organizations/organizations.module';
+import { BetfairPaperModule } from './betfair-paper/betfair-paper.module';
 
 @Module({
   imports: [
@@ -38,7 +41,13 @@ import { MultigolScoutModule } from './multigol-scout/multigol-scout.module';
     TeamsModule,
     OutcomeOptionsModule,
     MultigolScoutModule,
+    OrganizationsModule,
+    BetfairPaperModule,
     DatabaseModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(OrganizationMiddleware).forRoutes('*');
+  }
+}

@@ -12,8 +12,12 @@ import {
 } from './dto/staking-rule.dto';
 import { StakingRule } from './entities/staking-rule.entity';
 import { formatMoney, parseMoney, toDecimal } from '../common/decimal.util';
+import {
+  organizationIdForCreate,
+  organizationScope,
+} from '../organizations/organization-context';
 
-const DEFAULT_RULES: Array<{
+export const DEFAULT_STAKING_RULES: Array<{
   minOdds: string;
   maxOdds: string | null;
   stakePercentage: string;
@@ -34,20 +38,23 @@ export class StakingRulesService {
 
   findAll(userId: number) {
     return this.stakingRuleRepository.find({
-      where: { userId },
+      where: organizationScope(userId),
       order: { minOdds: 'ASC' },
     });
   }
 
   async seedDefaults(userId: number) {
-    const count = await this.stakingRuleRepository.count({ where: { userId } });
+    const count = await this.stakingRuleRepository.count({
+      where: organizationScope(userId),
+    });
     if (count > 0) {
       return;
     }
 
+    const organizationId = organizationIdForCreate();
     await this.stakingRuleRepository.save(
-      DEFAULT_RULES.map((rule) =>
-        this.stakingRuleRepository.create({ userId, ...rule }),
+      DEFAULT_STAKING_RULES.map((rule) =>
+        this.stakingRuleRepository.create({ userId, organizationId, ...rule }),
       ),
     );
   }
@@ -55,6 +62,7 @@ export class StakingRulesService {
   async create(userId: number, dto: CreateStakingRuleDto) {
     const rule = this.stakingRuleRepository.create({
       userId,
+      organizationId: organizationIdForCreate(),
       minOdds: formatMoney(dto.minOdds),
       maxOdds: dto.maxOdds != null ? formatMoney(dto.maxOdds) : null,
       stakePercentage: formatMoney(dto.stakePercentage),
@@ -80,7 +88,7 @@ export class StakingRulesService {
 
   async findOne(userId: number, id: number) {
     const rule = await this.stakingRuleRepository.findOne({
-      where: { id, userId },
+      where: organizationScope(userId, { id }),
     });
     if (!rule) {
       throw new NotFoundException(`Regola ${id} non trovata`);

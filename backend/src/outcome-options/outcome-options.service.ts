@@ -11,6 +11,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Repository } from 'typeorm';
 import {
+  currentOrganization,
+  organizationIdForCreate,
+  organizationScope,
+} from '../organizations/organization-context';
+import {
   CreateOutcomeOptionDto,
   UpdateOutcomeOptionDto,
 } from './dto/outcome-option.dto';
@@ -56,7 +61,7 @@ export class OutcomeOptionsService implements OnModuleInit {
 
   async findAll(userId: number) {
     return this.repository.find({
-      where: { userId },
+      where: organizationScope(userId),
       order: { sortOrder: 'ASC', label: 'ASC', id: 'ASC' },
     });
   }
@@ -88,10 +93,12 @@ export class OutcomeOptionsService implements OnModuleInit {
     }
 
     if (replace) {
-      await this.repository.delete({ userId });
+      await this.repository.delete(organizationScope(userId));
     }
 
-    const existing = await this.repository.find({ where: { userId } });
+    const existing = await this.repository.find({
+      where: organizationScope(userId),
+    });
     const byLabel = new Map(
       existing.map((row) => [row.label.toLowerCase(), row]),
     );
@@ -109,6 +116,7 @@ export class OutcomeOptionsService implements OnModuleInit {
         toSave.push(
           this.repository.create({
             userId,
+            organizationId: organizationIdForCreate(),
             label: row.label,
             description: row.description,
             sortOrder: 0,
@@ -132,6 +140,7 @@ export class OutcomeOptionsService implements OnModuleInit {
 
     const row = this.repository.create({
       userId,
+      organizationId: organizationIdForCreate(),
       label,
       description: this.normalizeDescription(dto.description),
       sortOrder: 0,
@@ -186,7 +195,9 @@ export class OutcomeOptionsService implements OnModuleInit {
   }
 
   private async applyAlphabeticalOrder(userId: number) {
-    const rows = await this.repository.find({ where: { userId } });
+    const rows = await this.repository.find({
+      where: organizationScope(userId),
+    });
     rows.sort((a, b) => compareOutcomeLabels(a.label, b.label));
     rows.forEach((row, index) => {
       row.sortOrder = index;
@@ -197,6 +208,10 @@ export class OutcomeOptionsService implements OnModuleInit {
   }
 
   private async syncCatalogJsonFile(userId: number) {
+    if (currentOrganization().slug !== 'bet365') {
+      return;
+    }
+
     const path = resolveOutcomeCatalogSyncPath(
       this.configService.get<string>('OUTCOME_CATALOG_SYNC_PATH'),
     );
@@ -215,7 +230,9 @@ export class OutcomeOptionsService implements OnModuleInit {
   }
 
   private async findOne(userId: number, id: number) {
-    const row = await this.repository.findOne({ where: { id, userId } });
+    const row = await this.repository.findOne({
+      where: organizationScope(userId, { id }),
+    });
     if (!row) {
       throw new NotFoundException(`Esito ${id} non trovato`);
     }
@@ -227,7 +244,9 @@ export class OutcomeOptionsService implements OnModuleInit {
     label: string,
     excludeId?: number,
   ) {
-    const existing = await this.repository.find({ where: { userId } });
+    const existing = await this.repository.find({
+      where: organizationScope(userId),
+    });
     const clash = existing.some(
       (row) =>
         row.label.toLowerCase() === label.toLowerCase() &&

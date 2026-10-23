@@ -7,10 +7,11 @@ import { BetsController } from './bets.controller';
 import { BetsService } from './bets.service';
 import { BetEvent } from './entities/bet-event.entity';
 import { Bet } from './entities/bet.entity';
+import { BetfairPaperPick } from '../betfair-paper/entities/betfair-paper-pick.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Bet, BetEvent]),
+    TypeOrmModule.forFeature([Bet, BetEvent, BetfairPaperPick]),
     AuthModule,
     forwardRef(() => CapitalModule),
     StakingRulesModule,

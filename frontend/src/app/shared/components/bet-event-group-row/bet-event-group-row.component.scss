@@ -28,3 +28,19 @@
     min-width: 0;
   }
 }
+
+.bet-event-group__money {
+  margin: 0;
+  padding-left: $space-3;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-neutral-800;
+  line-height: 1.4;
+
+  span {
+    display: inline-block;
+    margin-left: $space-2;
+    font-weight: $font-weight-medium;
+    color: $color-neutral-600;
+  }
+}

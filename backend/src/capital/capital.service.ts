@@ -10,6 +10,11 @@ import { Repository } from 'typeorm';
 import { BetsService } from '../bets/bets.service';
 import { Bet } from '../bets/entities/bet.entity';
 import { BetStatus } from '../common/enums/bet-status.enum';
+import {
+  organizationIdForCreate,
+  organizationScope,
+} from '../organizations/organization-context';
+import { OrganizationsService } from '../organizations/organizations.service';
 import { Capital } from './entities/capital.entity';
 import { SetCapitalDto } from './dto/set-capital.dto';
 import {
@@ -27,6 +32,7 @@ export class CapitalService {
     private readonly betRepository: Repository<Bet>,
     @Inject(forwardRef(() => BetsService))
     private readonly betsService: BetsService,
+    private readonly organizations: OrganizationsService,
   ) {}
 
   async getCapital(userId: number) {
@@ -48,12 +54,21 @@ export class CapitalService {
 
   async setCapital(userId: number, dto: SetCapitalDto) {
     const pendingCount = await this.betRepository.count({
-      where: { userId, status: BetStatus.PENDING, isScalata: false },
+      where: organizationScope(userId, {
+        status: BetStatus.PENDING,
+        isScalata: false,
+      }),
     });
     const settledCount = await this.betRepository.count({
       where: [
-        { userId, status: BetStatus.WON, isScalata: false },
-        { userId, status: BetStatus.LOST, isScalata: false },
+        ...organizationScope(userId, {
+          status: BetStatus.WON,
+          isScalata: false,
+        }),
+        ...organizationScope(userId, {
+          status: BetStatus.LOST,
+          isScalata: false,
+        }),
       ],
     });
     const existing = await this.getCapitalEntity(userId);
@@ -92,11 +107,13 @@ export class CapitalService {
 
     const created = this.capitalRepository.create({
       userId,
+      organizationId: organizationIdForCreate(),
       initialCapital: formatted,
       startingCapital: formatted,
       currentCapital: formatted,
     });
     const saved = await this.capitalRepository.save(created);
+    await this.organizations.provisionWorkspace(userId);
     return this.mapCapital(saved);
   }
 
@@ -152,7 +169,9 @@ export class CapitalService {
   }
 
   private async getCapitalEntity(userId: number) {
-    return this.capitalRepository.findOne({ where: { userId } });
+    return this.capitalRepository.findOne({
+      where: organizationScope(userId),
+    });
   }
 
   private async ensureStartingCapital(record: Capital) {
@@ -162,8 +181,14 @@ export class CapitalService {
 
     const settledBets = await this.betRepository.find({
       where: [
-        { userId: record.userId ?? undefined, status: BetStatus.WON, isScalata: false },
-        { userId: record.userId ?? undefined, status: BetStatus.LOST, isScalata: false },
+        ...organizationScope(record.userId ?? 0, {
+          status: BetStatus.WON,
+          isScalata: false,
+        }),
+        ...organizationScope(record.userId ?? 0, {
+          status: BetStatus.LOST,
+          isScalata: false,
+        }),
       ],
     });
 

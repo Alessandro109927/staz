@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/services/api.service';
+import { OrganizationService } from '../../core/services/organization.service';
+import { OrganizationSwitchComponent } from '../../shared/organization-switch/organization-switch.component';
 
 @Component({
   selector: 'app-setup',
@@ -14,6 +16,7 @@ import { ApiService } from '../../core/services/api.service';
     ReactiveFormsModule,
     MatIconModule,
     MatSnackBarModule,
+    OrganizationSwitchComponent,
   ],
   templateUrl: './setup.component.html',
   styleUrl: './setup.component.scss',
@@ -23,6 +26,7 @@ export class SetupComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly organizations = inject(OrganizationService);
 
   loading = true;
   hasExistingCapital = false;
@@ -31,6 +35,14 @@ export class SetupComponent implements OnInit {
     initialCapital: [500, [Validators.required, Validators.min(0.01)]],
     reset: [false],
   });
+
+  get organizationLabel(): string {
+    return this.organizations.label();
+  }
+
+  get isBetfair(): boolean {
+    return this.organizations.slug() === 'betfair';
+  }
 
   ngOnInit(): void {
     this.api.getCapital().subscribe({

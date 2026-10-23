@@ -1,4 +1,36 @@
 <div class="vs-page dashboard-page">
+  @if (betfairDemo) {
+    <section class="vs-card paper-follow">
+      <span class="vs-label">Betfair</span>
+      <h2 class="paper-follow__title">Segui il denaro</h2>
+      <p class="paper-follow__text">
+        Parte una scommessa finta quando un esito pesa almeno il
+        {{ paper?.thresholdPercent ?? 30 }}% dei soldi live della partita
+        e ha almeno {{ (paper?.minVolume ?? 5000) | number }} € abbinati.
+        Quota minima 1.40.
+        Ogni partita che qualifica viene giocata, massimo
+        {{ paper?.maxPicksPerMatch ?? 2 }} esiti diversi.
+        Su Betfair la puntata è dimezzata: con quota da 1.40 a 2 è il 5% del capitale.
+        I dati Betwatch arrivano con 10 minuti di ritardo.
+      </p>
+      @if (paper && !paper.hasCapital) {
+        <p class="paper-follow__text">Imposta il capitale Betfair per far partire le scommesse finte.</p>
+      }
+      @if (paper) {
+        <p class="paper-follow__meta">
+          Partite live lette: {{ paper.matchesSeen }}.
+          Scommesse finte: {{ paper.placedPicks }}, aperte {{ paper.openPicks }}.
+          @if (paper.lastRunAt) {
+            Ultimo aggiornamento {{ paper.lastRunAt | date: 'HH:mm:ss' }}.
+          }
+          Richieste Betwatch in questa sessione: {{ paper.requestsUsed }}.
+        </p>
+      }
+      @if (paper?.lastError) {
+        <p class="paper-follow__error">{{ paper?.lastError }}</p>
+      }
+    </section>
+  }
   @if (!capital) {
     <div class="vs-card empty-state">
       <span class="vs-label">Benvenuto</span>

@@ -31,6 +31,10 @@
       </button>
     </div>
 
+    <div class="org-switch-slot">
+      <app-organization-switch />
+    </div>
+
     <nav class="nav-list">
       <a
         routerLink="/dashboard"
@@ -65,28 +69,30 @@
         <mat-icon>calendar_month</mat-icon>
         <span class="nav-label">Report mensile</span>
       </a>
-      <a
-        routerLink="/scalata"
-        routerLinkActive="active"
-        (click)="closeNav()"
-        matTooltip="Scalata"
-        [matTooltipDisabled]="!sidebarCollapsed"
-        matTooltipPosition="right"
-      >
-        <mat-icon>trending_up</mat-icon>
-        <span class="nav-label">Scalata</span>
-      </a>
-      <a
-        routerLink="/multigol-scout"
-        routerLinkActive="active"
-        (click)="closeNav()"
-        matTooltip="Scout Multigol"
-        [matTooltipDisabled]="!sidebarCollapsed"
-        matTooltipPosition="right"
-      >
-        <mat-icon>sports_soccer</mat-icon>
-        <span class="nav-label">Scout Multigol</span>
-      </a>
+      @if (showBet365Menu) {
+        <a
+          routerLink="/scalata"
+          routerLinkActive="active"
+          (click)="closeNav()"
+          matTooltip="Scalata"
+          [matTooltipDisabled]="!sidebarCollapsed"
+          matTooltipPosition="right"
+        >
+          <mat-icon>trending_up</mat-icon>
+          <span class="nav-label">Scalata</span>
+        </a>
+        <a
+          routerLink="/multigol-scout"
+          routerLinkActive="active"
+          (click)="closeNav()"
+          matTooltip="Scout Multigol"
+          [matTooltipDisabled]="!sidebarCollapsed"
+          matTooltipPosition="right"
+        >
+          <mat-icon>sports_soccer</mat-icon>
+          <span class="nav-label">Scout Multigol</span>
+        </a>
+      }
       <a
         routerLink="/settings"
         routerLinkActive="active"
@@ -167,20 +173,22 @@
           <mat-icon>menu</mat-icon>
         </button>
 
-        @if (apiUsage(); as usage) {
-          @if (usage.configured) {
-            <div class="header-api-badge" [attr.title]="apiUsageTitle(usage)">
-              <span class="header-api-badge__dot" aria-hidden="true"></span>
-              <p class="header-api-badge__text">
-                <span class="header-api-badge__service">API — FOOTBALL</span>
-                {{ usage.sessionCalls }} chiamate
-                @if (usage.dailyCurrent != null && usage.dailyLimit != null) {
-                  <strong class="header-api-badge__quota">
-                    {{ usage.dailyCurrent }}/{{ usage.dailyLimit }} oggi
-                  </strong>
-                }
-              </p>
-            </div>
+        @if (showBet365Menu) {
+          @if (apiUsage(); as usage) {
+            @if (usage.configured) {
+              <div class="header-api-badge" [attr.title]="apiUsageTitle(usage)">
+                <span class="header-api-badge__dot" aria-hidden="true"></span>
+                <p class="header-api-badge__text">
+                  <span class="header-api-badge__service">API — FOOTBALL</span>
+                  {{ usage.sessionCalls }} chiamate
+                  @if (usage.dailyCurrent != null && usage.dailyLimit != null) {
+                    <strong class="header-api-badge__quota">
+                      {{ usage.dailyCurrent }}/{{ usage.dailyLimit }} oggi
+                    </strong>
+                  }
+                </p>
+              </div>
+            }
           }
         }
       </div>

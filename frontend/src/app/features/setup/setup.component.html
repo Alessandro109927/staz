@@ -1,11 +1,20 @@
 <div class="setup-page">
   <div class="setup-card vs-card">
     <div class="setup-card__brand">
+      <div class="org-switch-host org-switch-host--light">
+        <app-organization-switch />
+      </div>
       <div class="setup-card__icon">
         <mat-icon>account_balance_wallet</mat-icon>
       </div>
-      <h1>Setup iniziale</h1>
-      <p>Imposta il capitale con cui iniziare a gestire le scommesse.</p>
+      <h1>{{ isBetfair ? 'Capitale Betfair' : 'Setup iniziale' }}</h1>
+      <p>
+        @if (isBetfair) {
+          Imposta il capitale di Betfair. Lo storico bet365 resta sull'altra organizzazione.
+        } @else {
+          Imposta il capitale con cui iniziare a gestire le scommesse.
+        }
+      </p>
     </div>
 
     @if (loading) {

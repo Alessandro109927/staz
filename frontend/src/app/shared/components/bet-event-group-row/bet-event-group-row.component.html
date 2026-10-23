@@ -24,4 +24,10 @@
       </li>
     }
   </ul>
+  @if (paperFlow) {
+    <p class="bet-event-group__money">
+      € {{ volumeLabel(paperFlow.volume) }} su questo esito
+      <span>€ {{ volumeLabel(paperFlow.matchVolume) }} sulla partita</span>
+    </p>
+  }
 </div>

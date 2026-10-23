@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { ChartConfiguration } from 'chart.js';
 import { MatIconModule } from '@angular/material/icon';
-import { forkJoin } from 'rxjs';
-import { ApiService } from '../../core/services/api.service';
+import { forkJoin, interval } from 'rxjs';
+import { ApiService, BetfairPaperStatus } from '../../core/services/api.service';
+import { OrganizationService } from '../../core/services/organization.service';
 import { BetChangeService } from '../../core/services/bet-change.service';
 import {
   Bet,
@@ -49,6 +51,9 @@ export interface DashboardPeriodOption {
 export class DashboardComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly betChange = inject(BetChangeService);
+  private readonly organizations = inject(OrganizationService);
+  private readonly destroyRef = inject(DestroyRef);
+  private paperSignature = '';
 
   readonly periodOptions: DashboardPeriodOption[] = [
     { days: 7, label: '7gg' },
@@ -59,6 +64,8 @@ export class DashboardComponent implements OnInit {
 
   selectedPeriod: CapitalChartPeriodDays = null;
 
+  readonly betfairDemo = this.organizations.slug() === 'betfair';
+  paper: BetfairPaperStatus | null = null;
   capital: Capital | null = null;
   stats: BetStats | null = null;
   oddsRangeKpis: OddsRangeKpi[] = [];
@@ -73,6 +80,24 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.loadData();
     this.betChange.changed.subscribe(() => this.loadData());
+    if (this.betfairDemo) {
+      this.refreshPaper();
+      interval(20_000)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => this.refreshPaper());
+    }
+  }
+
+  private refreshPaper(): void {
+    this.api.getBetfairPaperStatus().subscribe((status) => {
+      const signature = `${status.placedPicks}:${status.openPicks}:${status.lastRunAt}`;
+      const changed = this.paperSignature !== '' && signature !== this.paperSignature;
+      this.paperSignature = signature;
+      this.paper = status;
+      if (changed) {
+        this.loadData();
+      }
+    });
   }
 
   selectPeriod(days: CapitalChartPeriodDays): void {

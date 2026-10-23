@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { bet365FeaturesGuard } from './core/guards/bet365-features.guard';
 import { capitalGuard } from './core/guards/capital.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { ShellComponent } from './layout/shell/shell.component';
@@ -50,6 +51,7 @@ export const routes: Routes = [
       },
       {
         path: 'scalata/active',
+        canActivate: [bet365FeaturesGuard],
         loadComponent: () =>
           import('./features/scalata/scalata-active.component').then(
             (m) => m.ScalataActiveComponent,
@@ -57,6 +59,7 @@ export const routes: Routes = [
       },
       {
         path: 'scalata/:id',
+        canActivate: [bet365FeaturesGuard],
         loadComponent: () =>
           import('./features/scalata/scalata-run.component').then(
             (m) => m.ScalataRunComponent,
@@ -64,11 +67,13 @@ export const routes: Routes = [
       },
       {
         path: 'scalata',
+        canActivate: [bet365FeaturesGuard],
         loadComponent: () =>
           import('./features/scalata/scalata.component').then((m) => m.ScalataComponent),
       },
       {
         path: 'multigol-scout/:id',
+        canActivate: [bet365FeaturesGuard],
         loadComponent: () =>
           import('./features/multigol-scout/multigol-scout-match.component').then(
             (m) => m.MultigolScoutMatchComponent,
@@ -76,6 +81,7 @@ export const routes: Routes = [
       },
       {
         path: 'multigol-scout',
+        canActivate: [bet365FeaturesGuard],
         loadComponent: () =>
           import('./features/multigol-scout/multigol-scout.component').then(
             (m) => m.MultigolScoutComponent,

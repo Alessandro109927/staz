@@ -3,15 +3,20 @@ import {
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
 
 @Entity('capital')
+@Unique(['userId', 'organizationId'])
 export class Capital {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'user_id', type: 'int', unique: true, nullable: true })
+  @Column({ name: 'user_id', type: 'int', nullable: true })
   userId: number | null;
+
+  @Column({ name: 'organization_id', type: 'int', nullable: true })
+  organizationId: number | null;
 
   @Column({ type: 'decimal', precision: 14, scale: 2 })
   initialCapital: string;

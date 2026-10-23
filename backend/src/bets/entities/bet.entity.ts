@@ -10,6 +10,9 @@ export class Bet {
   @Column({ name: 'user_id', type: 'int', nullable: true })
   userId: number | null;
 
+  @Column({ name: 'organization_id', type: 'int', nullable: true })
+  organizationId: number | null;
+
   @Column({ name: 'event_name', type: 'varchar', length: 1000 })
   eventName: string;
 

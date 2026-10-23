@@ -144,6 +144,10 @@ $sidebar-rail-item: 2.625rem;
         letter-spacing: 0.14em;
       }
 
+      .org-switch-slot {
+        display: none;
+      }
+
       .nav-list {
         display: flex;
         flex-direction: column;
@@ -283,6 +287,11 @@ $sidebar-rail-item: 2.625rem;
     height: 60px;
     min-height: 60px;
   }
+}
+
+.org-switch-slot {
+  padding: 0 $space-4 $space-4;
+  color: c.$vs-text-inverse;
 }
 
 .brand__title {

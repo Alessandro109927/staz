@@ -8,6 +8,9 @@ export class StakingRule {
   @Column({ name: 'user_id', type: 'int', nullable: true })
   userId: number | null;
 
+  @Column({ name: 'organization_id', type: 'int', nullable: true })
+  organizationId: number | null;
+
   @Column({ type: 'decimal', precision: 8, scale: 2, name: 'min_odds' })
   minOdds: string;
 
