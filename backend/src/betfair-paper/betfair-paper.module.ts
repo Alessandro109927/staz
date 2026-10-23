@@ -11,6 +11,7 @@ import { BetfairPaperScheduler } from './betfair-paper.scheduler';
 import { BetfairPaperService } from './betfair-paper.service';
 import { BetwatchClient } from './betwatch.client';
 import { BetfairPaperPick } from './entities/betfair-paper-pick.entity';
+import { TelegramNotifier } from './telegram.notifier';
 
 @Module({
   imports: [
@@ -20,6 +21,6 @@ import { BetfairPaperPick } from './entities/betfair-paper-pick.entity';
     BetsModule,
   ],
   controllers: [BetfairPaperController],
-  providers: [BetwatchClient, BetfairPaperService, BetfairPaperScheduler],
+  providers: [BetwatchClient, BetfairPaperService, BetfairPaperScheduler, TelegramNotifier],
 })
 export class BetfairPaperModule {}

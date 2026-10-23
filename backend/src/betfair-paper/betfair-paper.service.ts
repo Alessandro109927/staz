@@ -14,6 +14,7 @@ import {
 } from '../organizations/organization-context';
 import { OrganizationsService } from '../organizations/organizations.service';
 import { BetwatchClient, BetwatchMatch } from './betwatch.client';
+import { TelegramNotifier } from './telegram.notifier';
 import { BetfairPaperPick } from './entities/betfair-paper-pick.entity';
 import {
   PAPER_MAX_PICKS_PER_MATCH,
@@ -51,6 +52,7 @@ export class BetfairPaperService {
 
   constructor(
     private readonly betwatch: BetwatchClient,
+    private readonly telegram: TelegramNotifier,
     private readonly organizations: OrganizationsService,
     private readonly bets: BetsService,
     @InjectRepository(BetfairPaperPick)
@@ -226,6 +228,16 @@ export class BetfairPaperService {
     );
     this.logger.log(
       `Scommessa finta ${home} - ${away}: ${candidate.runnerName} ${candidate.weight}%`,
+    );
+    await this.telegram.send(
+      [
+        'Scommessa finta Betfair',
+        `${home} - ${away}`,
+        `${candidate.marketName} — ${candidate.runnerName}`,
+        `Quota ${candidate.odd!.toFixed(2)} · peso ${Math.round(candidate.weight)}%`,
+        `Puntata € ${bet.amountStaked} (${bet.stakePercentageApplied}% del capitale)`,
+        `Vincita potenziale € ${bet.potentialWin}`,
+      ].join('\n'),
     );
   }
 
